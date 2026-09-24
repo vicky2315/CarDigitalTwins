@@ -1,0 +1,35 @@
+# Unreal generated
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Build/
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Raw CAD files (licenses usually forbid redistribution; see docs/ASSETS.md)
+*.stp
+*.step
+*.igs
+*.iges
+*.CATPart
+*.CATProduct
+*.SLDPRT
+*.SLDASM
+RawCAD/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
