@@ -17,3 +17,8 @@ Epic's MVVM is two layers:
   binding modes, conversion functions, ViewModel resolvers.
 
 **Notes:** PixelStreaming2 is the current plugin in 5.7; the older PixelStreaming plugin is legacy.
+
+**Decision:** $0 budget, no cloud hosting. Keeping a g4dn.xlarge (Windows, Mumbai) available is ~$60/month at 2 h/day or
+~$415/month always on; the cost comes from keeping it available, not from a single test. Pixel Streaming stays local (RTX 3070 Ti Laptop
+has NVENC); Day 14 becomes a deployment design. A one-off deploy-measure-terminate session (~$2–5) is kept as a future option.
+See COSTS.md.

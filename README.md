@@ -2,13 +2,13 @@
 
 A single car in Unreal Engine 5.7 driven by recorded / streamed telemetry, with a live dashboard, measured latency and browser delivery via Pixel Streaming.
 
-> Work in progress. See [PROGRESS.md](PROGRESS.md).
+> Work in progress. See [PROGRESS.md](docs/PROGRESS.md).
 
 ## What and why
 _TODO (Day 16)_
 
 ## Architecture
-_TODO: diagram (receiver → subsystem → actor / ViewModel → dashboard → Pixel Streaming)._ See [SPEC.md](SPEC.md).
+_TODO: diagram (receiver → subsystem → actor / ViewModel → dashboard → Pixel Streaming)._ See [SPEC.md](docs/SPEC.md).
 
 ## How to run
 ### File mode
@@ -18,12 +18,13 @@ _TODO (Day 7)_
 _TODO (Day 10)_
 
 ## Performance highlights
-_TODO: from [PERFORMANCE.md](PERFORMANCE.md) (Day 12)._
+_TODO: from [PERFORMANCE.md](docs/PERFORMANCE.md) (Day 12)._
 
 ## Assets and licenses
-See [ASSETS.md](ASSETS.md). Raw CAD files are not committed.
+See [docs/ASSETS.md](docs/ASSETS.md). Raw CAD files are not committed.
 
 ## Roadmap
+- Optional one-off cloud deployment (Pixel Streaming currently local only; see [docs/COSTS.md](docs/COSTS.md))
 - MQTT receiver behind `ITelemetryReceiver`
 - Phase B: fleet → SUMO traffic → Cesium city
 - Phase C: OpenUSD export + Omniverse Kit extension on the same relay stream

@@ -11,7 +11,7 @@ Current day: **Day 1: Foundation** (in progress)
 - [x] Git repo initialised with Unreal `.gitignore` and LFS for `*.uasset` / `*.umap`
 - [x] `docs/` created: README, SPEC, LEARNING_LOG, COSTS, ASSETS, PROGRESS
 - [x] First commit pushed to a remote (github.com/vicky2315/CarDigitalTwins)
-- [ ] COSTS.md: two monthly estimates (2 h/day and always-on)
+- [x] COSTS.md: two monthly estimates (2 h/day and always-on)
 - [ ] Check-your-understanding questions answered
 
 ### Day 2: Source the CAD model
@@ -71,15 +71,25 @@ Current day: **Day 1: Foundation** (in progress)
 ### Day 13: Pixel Streaming locally
 - [ ] Streams to local browser; camera controls; latency part (c)
 
-### Day 14: Cloud deployment
-- [ ] GPU VM, TURN if needed, auto-shutdown
-- [ ] Works on mobile data; real costs in COSTS.md
+### Day 14: Cloud deployment (design only, $0 path, decided 2026-09-25)
+- [ ] Deployment design doc in COSTS.md: VM choice, ports/security group, TURN (coturn) plan, auto-shutdown script design, start-on-demand flow
+- [ ] Local demo checklist for interviews (launch order, screen-share setup)
+- [ ] (Future option) Deploy once, measure, tear down: see "Future options" below
 
 ### Day 15: Polish and demo video
 - [ ] Camera presets, lighting, scripted demo run, video + GIF
 
 ### Day 16: Documentation and portfolio
-- [ ] README complete; portfolio section; runnable in < 15 min
+- [ ] README complete; portfolio section (demo video, no live link); runnable in < 15 min
+
+## Budget constraints ($0 project)
+- No cloud hosting: Pixel Streaming runs locally only (RTX 3070 Ti Laptop, NVENC).
+- GitHub LFS free tier (~1 GB storage, ~1 GB/month bandwidth): keep committed assets lean; large content goes to a Release zip / external link if needed.
+- Free tools and assets only (GrabCAD / free marketplace, OBS, DaVinci Resolve, Mosquitto, SUMO, Cesium ion free tier, Omniverse).
+
+## Future options
+- [ ] **One-off cloud deployment** (~$2–5): AWS Budget alert at $5 first → launch g4dn.xlarge on-demand for a 3–4 h session →
+      TURN + auto-shutdown tested from mobile data → real numbers in COSTS.md → terminate the VM and delete the EBS volume.
 
 ## Optional / later
 - [ ] MQTT upgrade
