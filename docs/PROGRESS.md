@@ -1,7 +1,7 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-09-25
-Current day: **Day 1: Foundation** (in progress)
+Current day: **Day 2: Source the CAD model** (Day 1 complete)
 
 ## Phase A: Single-car digital twin
 
@@ -12,7 +12,7 @@ Current day: **Day 1: Foundation** (in progress)
 - [x] `docs/` created: README, SPEC, LEARNING_LOG, COSTS, ASSETS, PROGRESS
 - [x] First commit pushed to a remote (github.com/vicky2315/CarDigitalTwins)
 - [x] COSTS.md: two monthly estimates (2 h/day and always-on)
-- [ ] Check-your-understanding questions answered
+- [x] Check-your-understanding questions answered
 
 ### Day 2: Source the CAD model
 - [ ] Shortlist 2–3 CAD files (link, format, size/parts, license, separate wheels/doors)
