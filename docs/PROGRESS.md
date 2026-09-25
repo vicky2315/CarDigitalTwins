@@ -1,7 +1,7 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-09-25
-Current day: **Day 2: Source the CAD model** (Day 1 complete)
+Current day: **Day 3: Datasmith import and tessellation** (Days 1–2 complete)
 
 ## Phase A: Single-car digital twin
 
@@ -15,9 +15,10 @@ Current day: **Day 2: Source the CAD model** (Day 1 complete)
 - [x] Check-your-understanding questions answered
 
 ### Day 2: Source the CAD model
-- [ ] Shortlist 2–3 CAD files (link, format, size/parts, license, separate wheels/doors)
-- [ ] Review shortlist
-- [ ] One file chosen; license and source recorded in ASSETS.md
+- [x] Shortlist 2–3 CAD files (link, format, size/parts, license, separate wheels/doors)
+- [x] Review shortlist
+- [x] One file chosen (2010 Jeep Wrangler Rubicon); license and source recorded in ASSETS.md
+- [x] Test import with Datasmith defaults (structure checked: doors/hood/tailgate share one body)
 
 ### Day 3: Datasmith import and tessellation
 - [ ] Two tessellation settings compared (triangle counts, visuals)
@@ -26,7 +27,8 @@ Current day: **Day 2: Source the CAD model** (Day 1 complete)
 
 ### Day 4: Cleanup, pivots and USD-ready naming
 - [ ] `AVehicleTwinActor` C++ base + `BP_VehicleTwin`
-- [ ] Wheel and door pivots fixed
+- [ ] Split `Split1[2]` into doors / hood / tailgate (PolyGroup split → Merge) and door glass out of `Windows`
+- [ ] Wheel and door pivots fixed (tailgate spare wheel excluded from spin)
 - [ ] `<Part>_<Position>` naming + component tags
 - [ ] Body paint MI with `StatusColor`
 - [ ] Mapping table in SPEC.md
@@ -83,7 +85,8 @@ Current day: **Day 2: Source the CAD model** (Day 1 complete)
 - [ ] README complete; portfolio section (demo video, no live link); runnable in < 15 min
 
 ## Budget constraints ($0 project)
-- No cloud hosting: Pixel Streaming runs locally only (RTX 3070 Ti Laptop, NVENC).
+- No cloud hosting: Pixel Streaming runs locally only (NVENC on either machine).
+- Machines: office laptop (RTX 4060 Ti) and personal laptop (RTX 3070 Ti Laptop). Tag every measurement with the machine.
 - GitHub LFS free tier (~1 GB storage, ~1 GB/month bandwidth): keep committed assets lean; large content goes to a Release zip / external link if needed.
 - Free tools and assets only (GrabCAD / free marketplace, OBS, DaVinci Resolve, Mosquitto, SUMO, Cesium ion free tier, Omniverse).
 
