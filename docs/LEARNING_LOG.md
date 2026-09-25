@@ -23,6 +23,34 @@ Epic's MVVM is two layers:
 has NVENC); Day 14 becomes a deployment design. A one-off deploy-measure-terminate session (~$2–5) is kept as a future option.
 See COSTS.md.
 
+1) Why .uasset files need Git LFS: partly right
+
+You're right that the files can be large. The deeper reason is that they're binary, and that matters even when a file is small:
+
+- Git can't diff or merge binary files. With a .cpp file, Git stores the lines that changed. With a .uasset, every save is an unreadable blob, so Git stores a full new copy each time.
+- Git keeps every version forever, and every clone downloads the whole history. Save a 50 MB mesh 20 times and the repo holds about 1 GB for that one asset, even though the current file is only 50 MB.
+- What LFS changes: Git stores only a small pointer file, and the real files live on the LFS server. A clone downloads only the versions it checks out.
+- Merge conflicts: because two people's edits to a .uasset can't be merged, LFS also offers file locking, where one person checks the file out and others wait. Studios rely on this.
+
+Game analogy: saving a full-world snapshot every time you autosave, instead of saving only what changed. The save folder grows even if the world itself never gets bigger.
+
+2) Why Pixel Streaming needs NVENC
+
+Here's what happens on every frame:
+1. UE renders the frame on the GPU.
+2. The frame is compressed into video (H.264, H.265 or AV1). Sending raw 1080p frames would need about 3 Gbps, and video brings that down to about 10 Mbps.
+3. WebRTC sends the compressed video to the browser.
+
+Step 2 has to happen 30–60 times a second, in real time. There are two ways to do it
+- Encode on the CPU: it's heavy, it competes with your game thread, and the finished frame first has to be copied from GPU memory to the CPU, which adds latency.
+- Encode with NVENC: NVENC is a separate hardware block on NVIDIA GPUs built only foe frame straight from GPU memory and barely affects rendering or latency.
+
+Game analogy: recording gameplay with OBS. The x264 (CPU) encoder drops your FPS, whhadowPlay, costs almost nothing. Pixel Streaming is the same thing running as a livestream.
+
+A correction to the roadmap: "NVIDIA specifically" is stronger than it needs to be. I believe Pixel Streaming can also use AMD's hardware encoder (AMF) and has software codec fallbacks, but I
+haven't checked this for 5.7. You can confirm it in the PixelStreaming2 plugin settilly about is hardware encoding, and NVIDIA is simply the most common andbest-supported option, especially on cloud GPUs like the T4. Your RTX 3070 Ti has NVENC, so you're covered either way.
+
+
 ## Day 2: 2026-09-25
 
 **Tried:** shortlisted three GrabCAD cars (Jeep Wrangler Rubicon, Jaguar Mark 2, Honda Civic Type-R) against format, part structure
