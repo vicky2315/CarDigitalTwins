@@ -1,7 +1,7 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
-Last updated: 2026-09-25
-Current day: **Day 3: Datasmith import and tessellation** (Days 1–2 complete)
+Last updated: 2026-09-26
+Current day: **Day 4: Cleanup, pivots and USD-ready naming** (Days 1–3 complete)
 
 ## Phase A: Single-car digital twin
 
@@ -21,9 +21,9 @@ Current day: **Day 3: Datasmith import and tessellation** (Days 1–2 complete)
 - [x] Test import with Datasmith defaults (structure checked: doors/hood/tailgate share one body)
 
 ### Day 3: Datasmith import and tessellation
-- [ ] Two tessellation settings compared (triangle counts, visuals)
-- [ ] Triangle budget set and justified
-- [ ] Settings, counts and screenshots logged
+- [x] Two tessellation settings compared (triangle counts, visuals)
+- [x] Triangle budget set and justified (setting A, ~1.4 M tris drawn/frame; see SPEC.md §7)
+- [x] Settings and counts logged in LEARNING_LOG (screenshots not taken)
 
 ### Day 4: Cleanup, pivots and USD-ready naming
 - [ ] `AVehicleTwinActor` C++ base + `BP_VehicleTwin`

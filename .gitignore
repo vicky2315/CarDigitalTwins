@@ -36,5 +36,6 @@ __pycache__/
 
 # Imported CAD meshes (derived from non-commercial GrabCAD model; redistribution decision pending, see docs/ASSETS.md)
 Content/CADImports/
+Content/Jeep/
 # Per-user editor folders
 Content/Developers/

@@ -37,3 +37,12 @@ for a measured comparison on Day 12.
 
 ## 6. MVVM data-flow diagram
 _TODO (Day 11)_
+
+## 7. Rendering budget (decided 2026-09-26)
+
+**Tessellation:** Datasmith setting A for all parts: Chord Tolerance 0.2 cm, Max Edge Length off, Normal Tolerance 20°, Stitching Heal.
+
+**Budget:** car ≈ 1.4 M triangles drawn per frame, ≈ 460 draw calls (RTX 3070 Ti Laptop, `stat rhi`). The finer setting doubled
+triangles with no visible gain except slightly smoother wheel rims. The GPU must also run Pixel Streaming encode and the dashboard,
+so triangles are kept low. Draw calls are the bigger cost for this car and are reduced by Day 4 merges.
+Exceptions are made per part with Datasmith Retessellate (see LEARNING_LOG Day 3).

@@ -72,3 +72,36 @@ and license; chose the Jeep. Test-imported the STEP with Datasmith defaults into
 
 **Decision:** GrabCAD models are non-commercial and need author credit + link. Raw CAD stays out of git; whether imported car meshes
 go in the public repo is still open (see ASSETS.md).
+
+## Day 3: 2026-09-26
+
+**Tried:** imported the Jeep STEP twice with different Datasmith tessellation settings and compared cost and looks.
+Measured on the personal laptop (RTX 3070 Ti Laptop), same scene, the other car hidden.
+
+| Setting | Chord Tolerance | Max Edge Length | Normal Tolerance | Stitching |
+|---------|-----------------|-----------------|------------------|-----------|
+| A (coarse, default) | 0.2 cm | 0 (off) | 20° | Heal |
+| B (fine) | 0.05 cm | 0 (off) | 10° | Heal |
+
+| Measurement | A | B | Change |
+|-------------|---|---|--------|
+| Triangles drawn per frame (`stat rhi`) | 1.4 M | 2.9 M | ×2.07 |
+| Draw calls (`stat rhi`) | 460 | 500 | +9% |
+| `Jeep Wheel` mesh triangles (Static Mesh Editor) | 65,000 | 125,169 | ×1.9 (×5 instances ≈ +300 k) |
+
+**Looks:** with a glossy test material (metallic 1, roughness 0.1) B was slightly smoother on the wheel rims and identical everywhere else.
+The default matte material hides faceting completely; wireframe (Alt+2), Lighting Only, or a glossy material is needed to see it.
+
+**Learned:**
+- `stat rhi` "Triangles drawn" counts every pass (depth prepass, base pass, each shadow cascade), so it is several times the mesh
+  triangle count. Stat commands measure the whole view, not the selected actor; `stat none` hides them all.
+- Tessellation changes GPU cost (triangles) but not CPU cost (draw calls): it adds triangles inside meshes, not new meshes or
+  material sections. The small draw-call difference is most likely camera/culling; use a camera bookmark (Ctrl+1) for repeatable shots.
+- For this car the draw calls (~460 for 41 bodies × material sections × passes) matter more than triangles; Day 4 merges address that.
+- **Datasmith can retessellate individual meshes** (right-click mesh → Datasmith → Retessellate) from the stored CAD data, so one
+  part can get finer settings without re-importing the whole car. Do it before editing a mesh: retessellation rebuilds it and
+  discards splits/merges. Tessellation must be settled before Day 4 cleanup for the same reason.
+
+**Decision:** setting A everywhere, including the wheels. B doubles the frame's triangles for no visible gain except slightly smoother
+rims, and upgrading only the wheel would cost ≈ 300 k extra triangles (60 k × 5 instances) for a barely visible difference.
+If the rims look faceted in the demo video, retessellate just `Jeep Wheel`.
