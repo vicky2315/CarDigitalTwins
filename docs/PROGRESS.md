@@ -90,6 +90,10 @@ Current day: **Day 4: Cleanup, pivots and USD-ready naming** (Days 1–3 complet
 - GitHub LFS free tier (~1 GB storage, ~1 GB/month bandwidth): keep committed assets lean; large content goes to a Release zip / external link if needed.
 - Free tools and assets only (GrabCAD / free marketplace, OBS, DaVinci Resolve, Mosquitto, SUMO, Cesium ion free tier, Omniverse).
 
+## Pending setup
+- [ ] **Private asset repo for `Content/Jeep/`** (needs personal laptop, WIP door split lives there): see ASSETS.md
+      "Syncing work-in-progress assets between machines". Until done, Jeep asset work happens on the personal laptop only.
+
 ## Future options
 - [ ] **One-off cloud deployment** (~$2–5): AWS Budget alert at $5 first → launch g4dn.xlarge on-demand for a 3–4 h session →
       TURN + auto-shutdown tested from mobile data → real numbers in COSTS.md → terminate the VM and delete the EBS volume.

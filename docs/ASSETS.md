@@ -52,6 +52,26 @@ Rejected: single-body STEP models (Toyota Supra, Kia Sportage, Porsche 911, Tesl
 Imported car meshes derived from the CAD file are a derivative of a non-commercial, attribution-required model.
 _Open decision:_ keep them out of the public repo (rebuild from the steps above) or ask the author for permission.
 
+## Syncing work-in-progress assets between machines (suggestion, 2026-09-28, not yet done)
+**Problem:** `Content/Jeep/` is gitignored, so edited meshes (door split, pivots) exist only on the machine that made them.
+A level pulled onto the other machine opens with empty actors, and re-saving it there can clear the missing references.
+Re-importing the STEP per machine loses manual edits.
+
+**Suggested fix (option A):** a separate **private** GitHub repo (e.g. `CarDigitalTwins-Assets`, Git LFS for `*.uasset` / `*.umap`)
+cloned into `Content/Jeep/`; the main repo keeps ignoring that folder. Private storage is not public redistribution, so the
+open decision above is unaffected.
+1. On the personal laptop: `git init` in `Content/Jeep/`, `git lfs track "*.uasset" "*.umap"`, commit the WIP door split, push.
+2. On the office laptop: clone into `Content/Jeep/`.
+3. Decide where levels that reference the Jeep live (likely the asset repo, since they only load where the Jeep exists).
+4. Switching machines: close the editor → commit + push **both** repos → pull both on the other machine.
+
+**Rules until then:** don't save levels that reference Jeep assets on a machine without them; never edit the same `.uasset`
+on both machines without syncing in between (binary, no merge). LFS quota is per account (private repos count); check it in
+GitHub → Settings → Billing.
+
+Alternatives considered: cloud drive / Syncthing (no history, half-synced files), re-import per machine (loses edits),
+making the main repo private (blocks going public without history rewrite).
+
 ## Other assets
 | Asset | Source | License |
 |-------|--------|---------|
