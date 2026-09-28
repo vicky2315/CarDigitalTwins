@@ -1,7 +1,7 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
-Last updated: 2026-09-26
-Current day: **Day 4: Cleanup, pivots and USD-ready naming** (Days 1–3 complete)
+Last updated: 2026-09-28
+Current day: **Day 11 core: custom MVVM framework** on the office laptop (Days 1–3 and 5 complete; Day 4 paused, needs personal laptop)
 
 ## Phase A: Single-car digital twin
 
@@ -34,8 +34,8 @@ Current day: **Day 4: Cleanup, pivots and USD-ready naming** (Days 1–3 complet
 - [ ] Mapping table in SPEC.md
 
 ### Day 5: Telemetry schema
-- [ ] Fields with units, trip.json format, stream message format, status thresholds in SPEC.md
-- [ ] `FVehicleTelemetry` compiles
+- [x] Fields with units, trip.json format, stream message format, status thresholds in SPEC.md
+- [x] `FVehicleTelemetry` compiles (office laptop)
 
 ### Day 6: Trip generator (Python)
 - [ ] `trip_generator.py` with phases, fixed seed, incidents
