@@ -114,10 +114,36 @@ for a measured comparison on Day 12.
 - Widgets bind in C++ (subscribe in `NativeConstruct`, unsubscribe in `NativeDestruct`) and never hold actor pointers.
 - Data flow: `ITelemetryReceiver` → `UTelemetrySubsystem` → ViewModel → widgets.
 
-**Open questions:** Blueprint exposure of bindings; how conversion (value → text/colour) is expressed.
+**Decisions (2026-09-28):**
+- **Two ViewModels.** `UVehicleTelemetryViewModel`: vehicle data, read-only, changes per sample. `UConnectionViewModel`:
+  connection state, latency, drops, and commands (pause, playback speed, source switch).
+- **Dashboard updates per sample (10 Hz)**, not per frame. Only the 3D car interpolates every frame (Day 8).
+- **Formatting in widgets** via shared helpers (`FormatSpeed`, `StatusToColor`); ViewModels hold plain numbers and enums.
+- **Blueprint: read + one event.** Subscribing/binding is C++; Blueprint gets getters, commands and one
+  `OnViewModelChanged` event.
+
+**Mechanics:**
+- Change event carries only a field mask (which fields changed); widgets pull values through getters ("notify, then pull").
+- Float fields have a per-field tolerance; changes smaller than it don't mark the field dirty.
+- Subscribing fires the callback once immediately with all fields set, so widgets never start blank.
+- Subscriptions are RAII handles (`FViewModelSubscription`); destroying the handle unsubscribes.
+- `UViewModelSubsystem` (GameInstance subsystem) creates ViewModels on first request, keeps them alive and flushes dirty
+  ones once per frame. Fields set during a flush are delivered on the next frame.
+- Setters are game-thread only.
+- Commands go down (widget → ViewModel → subsystem); the resulting state comes back up the normal path. Widgets never update
+  their own display optimistically.
 
 ## 6. MVVM data-flow diagram
-_TODO (Day 11)_
+
+```
+ JSON ─▶ Receiver ─▶ FVehicleTelemetry ─▶ UTelemetrySubsystem ──OnTelemetryUpdated──┬──▶ Car actor (interpolates every frame)
+                                              ▲                                     │
+                                              │ commands                            ▼
+ UViewModelSubsystem ──creates/holds/flushes──▶ ViewModels (telemetry, connection) ──OnFieldsChanged(mask)──▶ Widgets
+                                              ▲                                                               │
+                                              └──────────────── commands (pause, speed, source) ◀─────────────┘
+```
+Arrows into a box = that box subscribes to / is called by the arrow's source. The telemetry subsystem knows no UI class.
 
 ## 7. Rendering budget (decided 2026-09-26)
 

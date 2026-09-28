@@ -1,7 +1,8 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-09-28
-Current day: **Day 11 core: custom MVVM framework** on the office laptop (Days 1–3 and 5 complete; Day 4 paused, needs personal laptop)
+Current day: **Day 11 core: custom MVVM framework**, step-by-step rewrite, stopped before step 2 (see Day 11 below).
+Days 1–3 and 5 complete; Day 4 paused (needs personal laptop).
 
 ## Phase A: Single-car digital twin
 
@@ -59,10 +60,25 @@ Current day: **Day 11 core: custom MVVM framework** on the office laptop (Days 1
 - [ ] File ↔ WebSocket switch via one setting
 
 ### Day 11: MVVM dashboard (custom MVVM, option B)
+- [x] Design decided (two ViewModels, 10 Hz dashboard, formatting in widgets, BP read + one event; SPEC.md §5)
 - [ ] Custom ViewModel framework (field-enum notifications, dirty flags, per-frame flush)
 - [ ] `UVehicleTelemetryViewModel` + dashboard widgets
-- [ ] Data-flow diagram in SPEC.md
+- [x] Data-flow diagram in SPEC.md (§6)
 - [ ] (Comparison) Same dashboard on Epic's MVVM plugin
+
+**Core rewrite, step by step (started 2026-09-28, office laptop).** A first version was written in one go, built and passed
+9 automation tests, then parked on the local-only branch `mvvm-reference` (commit `9a9abe8`, not pushed, exists only on the
+office laptop). We now rebuild it on `main` one step at a time, with an explanation per step. Compare: `git diff main mvvm-reference`.
+
+- [x] 1. `Build.cs`: module root on the include path (`PublicIncludePaths.Add(ModuleDirectory)`), so `#include "MVVM/..."` works
+- [ ] 2. `FViewModelFieldMask` (`MVVM/ViewModelFieldMask.h`): uint64 bitmask, one bit per field ← **next: explained, not written yet**
+- [ ] 3. `UViewModelBase` part 1: dirty bits + `Flush` (multicast delegate)
+- [ ] 4. `UViewModelBase` part 2: `SetField` (compare-before-set, float tolerance)
+- [ ] 5. `UVehicleTelemetryViewModel`: field enum, getters, `ApplySample`
+- [ ] 6. Automation tests (`CarDigitalTwins.MVVM.Core`)
+- [ ] 7. `Subscribe` + `FViewModelSubscription` (RAII unsubscribe)
+- [ ] 8. `UViewModelSubsystem`: creates/holds ViewModels, once-per-frame flush
+- Then: `UConnectionViewModel`, `UViewModelWidget` base + BP helper library, formatting helpers, debug fake-sample command, first dashboard widget.
 
 ### Day 12: Profiling and latency
 - [ ] Insights trace; Invalidation/Retainer before/after
