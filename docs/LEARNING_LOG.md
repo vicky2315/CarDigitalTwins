@@ -105,3 +105,45 @@ The default matte material hides faceting completely; wireframe (Alt+2), Lightin
 **Decision:** setting A everywhere, including the wheels. B doubles the frame's triangles for no visible gain except slightly smoother
 rims, and upgrading only the wheel would cost ≈ 300 k extra triangles (60 k × 5 instances) for a barely visible difference.
 If the rims look faceted in the demo video, retessellate just `Jeep Wheel`.
+
+## Editor startup: shader compile time (2026-10-03)
+
+**Tried:** compared this project with another UE 5.7 project (bluetide) whose editor starts much faster on the same machine.
+
+**Broke:** nothing broken, but every editor start here spent a long time compiling shaders before the editor opened.
+**Learned:**
+- The cause was not a cache trick. Both projects use the same engine and the same shared Zen DDC (`%LOCALAPPDATA%\UnrealEngine\Common\Zen`).
+  The fast project has **no `[/Script/Engine.RendererSettings]` section**, so it runs on engine defaults where the expensive features
+  are off. This project came from the full template, which turns them on.
+- Every enabled rendering feature adds shader permutations to **every material**, so the cost multiplies with material count.
+  Engine C++ defaults (checked in the 5.7 source): `r.RayTracing` 0, `r.Substrate` 0, `r.SkinCache.CompileShaders` 0,
+  `r.Shadow.Virtual.Enable` 0, `r.GenerateMeshDistanceFields` 0. `r.PathTracing` defaults to 1 but only compiles anything when ray tracing is on.
+- `r.RayTracing` is the biggest lever: it pulls in ray tracing, path tracer and hardware Lumen permutations, and forces skin cache shaders on.
+- Renderer project settings like these need an editor restart, and the first start after changing them still compiles once.
+
+**Decision:** in `DefaultEngine.ini` turned off `r.RayTracing`, `r.PathTracing`, `r.Lumen.HardwareRayTracing`, `r.Substrate` (car uses
+plain Datasmith materials) and `r.SkinCache.CompileShaders` (no skeletal meshes). Kept Lumen (now software), virtual shadow maps and mesh
+distance fields (software Lumen needs them). Trade-off: glossy paint reflections are slightly worse without hardware ray tracing, which also
+frees GPU for Pixel Streaming (SPEC.md §7). If the demo video needs better reflections, re-enable hardware ray tracing for that capture only.
+_Startup time before/after not measured yet._
+
+## Unsaved Modeling Mode meshes (2026-10-03)
+
+**Broke:** opening the project, the split doors/hood/tailgate/glass from Day 4 (2026-09-27) were gone: the level showed actors with no
+static mesh.
+**Learned:**
+- Modeling Mode tools (PolyGroup split, Merge) create **new assets**, by default in `_GENERATED/<user>/` next to the current level, here
+  `/Game/Maps/_GENERATED/vigne/`. They were never in `/Game/Jeep/Cleaned` as I assumed.
+- **Ctrl+S saves only the current level**, not new or modified assets. The level was saved with 1119 references to meshes that existed only
+  in memory; closing the editor without "Save All" dropped them. Use **Save All** (Ctrl+Shift+S) after Modeling Mode work.
+- On 2026-09-26 the output folder had been typed as a disk path (`E:\...\Jeep\Cleaned`), which is not a content path: it created an empty
+  `Jeep/Cleaned` folder at the repo root and the assets never landed in `Content/`. Asset locations must be `/Game/...` paths.
+- Git was not the cause: GitHub Desktop's stash during the 2026-10-01 pull didn't include untracked files (checked the dangling stash commits).
+- **Recovery:** the editor autosaves dirty packages to `Saved/Autosaves/<package path>/<Name>_AutoN.uasset`. Copying the newest autosave of
+  each package back to `Content/<package path>/<Name>.uasset` (with the editor closed) is what the editor's own "Restore packages" does.
+  All 1119 referenced meshes had an autosave from 2026-09-27 21:26; after restoring, **Save All** turns them back into normal saved assets.
+- Moving assets must happen **inside the editor** (Content Browser move + Fix Up Redirectors), never in Explorer: the editor rewrites the
+  references in the level; a file-system move leaves them pointing at the old path.
+
+**Decision:** Modeling Mode asset location set to `/Game/Jeep/Cleaned`; Save All after every modeling session; set up the private asset repo
+(ASSETS.md) so the Jeep work exists somewhere other than one laptop's `Saved/` folder.

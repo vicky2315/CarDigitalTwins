@@ -51,6 +51,9 @@ Rejected: single-body STEP models (Toyota Supra, Kia Sportage, Porsche 911, Tesl
 ## Redistribution policy
 Imported car meshes derived from the CAD file are a derivative of a non-commercial, attribution-required model.
 _Open decision:_ keep them out of the public repo (rebuild from the steps above) or ask the author for permission.
+- 2026-10-03: attribution added to README (needed for public use regardless). A credit alone does not grant redistribution.
+- Permission request to the author via GrabCAD: _not sent yet_. When answered, record date and wording here. Yes → commit meshes to the
+  main repo; no / no reply → private asset repo (below).
 
 ## Syncing work-in-progress assets between machines (suggestion, 2026-09-28, not yet done)
 **Problem:** `Content/Jeep/` is gitignored, so edited meshes (door split, pivots) exist only on the machine that made them.

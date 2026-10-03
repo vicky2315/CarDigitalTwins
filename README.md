@@ -21,7 +21,14 @@ _TODO (Day 10)_
 _TODO: from [PERFORMANCE.md](docs/PERFORMANCE.md) (Day 12)._
 
 ## Assets and licenses
-See [docs/ASSETS.md](docs/ASSETS.md). Raw CAD files are not committed.
+**Vehicle model:** [2010 Jeep Wrangler Rubicon](https://grabcad.com/library/2010-jeep-wrangler-rubicon-1) by **Kostiantyn Abramov**,
+from the GrabCAD Community Library. Used for non-commercial purposes under the GrabCAD Community terms. All credit for the original
+model goes to the author.
+
+The CAD files and the Unreal meshes converted from them are **not included** in this repository. To run the project, download the model
+from the link above and follow the import steps in [docs/ASSETS.md](docs/ASSETS.md).
+
+This is a non-commercial portfolio project and is not affiliated with or endorsed by Jeep or Stellantis.
 
 ## Roadmap
 - Optional one-off cloud deployment (Pixel Streaming currently local only; see [docs/COSTS.md](docs/COSTS.md))
