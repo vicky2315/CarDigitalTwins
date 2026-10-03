@@ -1,10 +1,22 @@
 # Specification
 
-## 1. Part mapping table
-_TODO (Day 4)_
+## 1. Part mapping table (option A, 2026-10-04)
 
-| UE component | Telemetry field | Behaviour | Future USD prim path |
-|--------------|-----------------|-----------|----------------------|
+`BP_VehicleTwin` (`/Game/Jeep/Blueprints`, parent `AVehicleTwinActor`) is harvested from the untouched Datasmith import. C++ finds
+parts by **component tag**, never by name or asset path. Mesh names are CAD feature names (`Combine3` = wheel, etc.).
+
+| UE component | Tag | Telemetry field | Behaviour | Future USD prim path |
+|--------------|-----|-----------------|-----------|----------------------|
+| `CarRoot` | | | Orientation fix for the CAD axes: rotation X −90°, location Z 0. Front = +X, right = +Y | `/Vehicle` |
+| `WheelHub_FL` / `_FR` | `Wheel.FL` / `Wheel.FR` | `speedKmh`, `steerDeg` | Spin from speed ÷ measured tyre radius; yaw = steer | `/Vehicle/Wheels/FL`, `/FR` |
+| `WheelHub_RL` / `_RR` | `Wheel.RL` / `Wheel.RR` | `speedKmh` | Spin only | `/Vehicle/Wheels/RL`, `/RR` |
+| `Rim_XX`, `Tyre_XX` (`Combine3` / `Combine4`) | `Tyre` on the tyre | | Follow their hub | `/Vehicle/Wheels/XX/Rim`, `/Tyre` |
+| `Rim_Spare`, `Tyre_Spare` | | | Static (tailgate spare, never spins) | `/Vehicle/Body/SpareWheel` |
+| Body components _(list TBD)_ | `Paint` | derived status (§3) | `StatusColor` material parameter | `/Vehicle/Body/Paint` |
+| Doors, hood, tailgate (inside the body mesh) | | `openings` | Dashboard only; animation optional later | `/Vehicle/Body/Door_FL` … |
+
+**Hubs:** added in the Blueprint at 0,0,0. `AVehicleTwinActor` moves each onto its tyre's bounds centre and aligns it with the actor
+axes, keeping the meshes' world transforms. Mesh pivots (at the vehicle origin) and the 5× shared wheel meshes are left as imported.
 
 ## 2. Telemetry schema (v1, drafted 2026-09-28)
 

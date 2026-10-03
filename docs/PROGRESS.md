@@ -1,8 +1,33 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
-Last updated: 2026-10-03
-Current day: **Day 11 core: custom MVVM framework**, step-by-step rewrite, stopped before step 2 (see Day 11 below).
-Days 1–3 and 5 complete; Day 4 paused (needs personal laptop).
+Last updated: 2026-10-04
+Current day: **Day 4 (option A): `AVehicleTwinActor` wheel preview**, wheels spin around the wrong axis (see checkpoint below).
+Days 1–3 and 5 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
+
+## Checkpoint (2026-10-04, personal laptop, RTX 3070 Ti Laptop)
+
+**Where I stopped:** `BP_VehicleTwin` is reparented to `AVehicleTwinActor`; the editor preview finds all 4 hubs and spins them, but the
+wheels rotate "inside out" (wrong axis), not rolling.
+
+Done today:
+- Option A scope cut (Day 4 below). `BP_VehicleTwin` harvested from `ImportA` in `L_VehicleTwin`, components Movable, `CarRoot` X −90,
+  hubs `WheelHub_FL/FR/RL/RR` (+ an untagged `WheelHub_Spare`), tags `Wheel.*` / `Tyre` / `Paint` saved (verified in the asset).
+- `AVehicleTwinActor` (`Source/CarDigitalTwins/Vehicle/`): tag lookup, hub auto-centring on tyre bounds, spin/steer, `StatusColor`,
+  editor preview. Built OK. Fixes so far: tyre searched in all hub descendants (Harvest keeps a `Jeep_Wheel` group under each hub);
+  spin axis = tyre's thinnest bounds axis instead of fixed Y. The axis change "didn't do much".
+- Last edit (**not compiled yet**, editor was open): debug drawing in `Tick` while previewing: yellow = hub centre, red = spin axis,
+  blue = up, green circle = measured radius.
+
+**Resume:**
+1. Build (close editor → UBT, or Live Coding Ctrl+Alt+F11), tick Preview In Editor, look at the debug drawing on one wheel.
+2. Collect: screenshot of a wheel with the debug drawing; which motion it is (coin-spin / tumbling / orbiting off-centre / rim and tyre
+   differ); the `LogVehicleTwin` "axle along …, radius … cm" lines after Play.
+3. Suspects: hub rotation set to the actor rotation while `CarRoot` is X −90 (check the car really faces +X in world space);
+   `CalcBounds` on a rotated transform giving a loose box, so the thinnest axis is wrong; the `Jeep_Wheel` group carrying its own rotation.
+4. Then: body paint MI with `StatusColor`, move `BP_VehicleTwin` from `/Game/Blueprints` to `/Game/Jeep/Blueprints` (still untracked
+   there, don't commit), Day 4 done → Day 6 trip generator.
+
+**Not in git (local only):** `BP_VehicleTwin` (in `/Game/Blueprints`, to be moved), `L_VehicleTwin`, `ImportTestMap`, all of `Content/Jeep/`.
 
 ## Checkpoint (2026-09-27, personal laptop, RTX 3070 Ti Laptop)
 
@@ -34,6 +59,8 @@ Not done yet:
 - `Content/Maps/ImportTestMap.umap` holds car A; left uncommitted on purpose (scratch level that references ignored meshes).
   Plan: commit a proper `Maps/L_VehicleTwin` once `BP_VehicleTwin` is placed.
 - The office PC has an older import; re-download the model there if needed (see ASSETS.md).
+
+**Superseded 2026-10-04 by the option A scope cut (see Day 4 below); kept for the optional door animation.**
 
 **Resume with Day 4, in this order:**
 0. Move the recovered meshes to `/Game/Jeep/Cleaned` (above) and set up the private asset repo (Pending setup) so they exist in two places.
@@ -68,12 +95,18 @@ Not done yet:
 - [x] Settings and counts logged in LEARNING_LOG (screenshots not taken)
 
 ### Day 4: Cleanup, pivots and USD-ready naming
-- [ ] `AVehicleTwinActor` C++ base + `BP_VehicleTwin`
-- [ ] Split `Split1[2]` into doors / hood / tailgate (PolyGroup split → Merge) and door glass out of `Windows`
-- [ ] Wheel and door pivots fixed (tailgate spare wheel excluded from spin)
-- [ ] `<Part>_<Position>` naming + component tags
+**Scope cut (option A, 2026-10-04):** CAD splitting/merging is technical-artist work, not the programming focus. The car is built from
+the untouched Datasmith import (`ImportA`); doors/hood/tailgate don't animate, their `openings` state is shown on the dashboard only.
+The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door animation later.
+- [x] `BP_VehicleTwin`: Harvest Components from a fresh `ImportA` placement in `L_VehicleTwin`, all components Movable,
+      `CarRoot` (rotation X −90, Z 0), `WheelHub_FL/FR/RL/RR` with `Rim_*` / `Tyre_*` (`Combine3` / `Combine4`), spare unhubbed
+- [x] Component tags (`Wheel.*`, `Tyre`, `Paint`) set and saved
+- [x] `AVehicleTwinActor` C++ base (tag lookup, hub auto-centring, spin/steer, `StatusColor`, editor preview), BP reparented
+- [ ] Wheel spin axis correct in the editor preview (currently rotates "inside out")
+- [x] Wheel pivots: solved with hub components centred on the tyre bounds in C++; shared wheel meshes left untouched
 - [ ] Body paint MI with `StatusColor`
-- [ ] Mapping table in SPEC.md
+- [x] Mapping table in SPEC.md (§1; `Paint` component list still to fill)
+- [ ] (Optional, later) Door / hood / tailgate animation using the split meshes
 
 ### Day 5: Telemetry schema
 - [x] Fields with units, trip.json format, stream message format, status thresholds in SPEC.md
