@@ -170,3 +170,18 @@ spinning the wheels and tinting the body.
 
 **Decision:** status colour works per paint group (`Paint` body, `Trim` black parts), each with its own blend scale, so trim can be toned
 down later without code changes. Mirrors, headlights and inner grille materials are cosmetic: Day 15.
+
+## Day 6: trip generator (2026-10-05)
+
+**Tried:** `Tools/TripGenerator/trip_generator.py` writes a 190 s, 10 Hz trip with an overheating incident and a slow puncture.
+
+**Broke:** braking with the same exponential ease as accelerating made the car creep towards 0 km/h for ~15 s in 1st gear.
+**Learned:** an ease (`x += (target - x) * k`) never quite arrives, which suits speeding up and camera lag but not stopping. Braking
+uses a near-constant deceleration instead (1.0–2.8 m/s²), plus clutch in below 15 km/h, like a real driver.
+
+**Check your understanding:**
+1. *Why fix the random seed?* So the "random" noise is the same on every run: the same seed gives a byte-identical `trip.json`.
+   The trip is then a test fixture: a bug seen at 119 s happens at 119 s every time, a code change can be checked by diffing the
+   output, and the demo shows the same story every time. A different seed (`--seed 7`) still gives a new trip when wanted.
+2. *At 10 Hz, how many frames does a 3-minute trip contain?* 3 × 60 s × 10 frames/s = **1,800 frames**, one every 0.1 s.
+   The sample trip is 190 s, so 1,900 frames (`seq` 0–1899, last `sampleTimeS` 189.9).

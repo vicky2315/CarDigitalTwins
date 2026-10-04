@@ -1,8 +1,8 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-04
-Current day: **Day 6: trip generator** (Day 4 option A done 2026-10-05).
-Days 1–5 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
+Current day: **Day 7: ITelemetryReceiver + file receiver** (Day 6 done 2026-10-05).
+Days 1–6 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
 
 ## Checkpoint (2026-10-05, personal laptop, RTX 3070 Ti Laptop)
 
@@ -16,7 +16,7 @@ Summary of Day 4 (details in SPEC.md §1 and LEARNING_LOG):
 - Not checked in a Play log after the last build: per-group log lines and the `CarRoot` facing warning. Check on the next Play.
 
 **Resume:**
-1. Day 6: `trip_generator.py` (phases, fixed seed, incidents), plot/sanity check, sample trip committed. No editor needed.
+1. Day 7: `ITelemetryReceiver`, `UFileTelemetryReceiver` reading `Data/Trips/trip_sample.json` (SPEC.md §2.2), `UTelemetrySubsystem`; PIE logs 10 frames/s, looping. Day 6 (trip generator) done.
 2. Private asset repo for `Content/Jeep/` (see Pending setup): `BP_VehicleTwin` now lives there too and exists only on this laptop.
 
 **Not in git (local only):** all of `Content/Jeep/` (incl. `BP_VehicleTwin`), `L_VehicleTwin`, `ImportTestMap`.
@@ -109,8 +109,10 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
 - [x] `FVehicleTelemetry` compiles (office laptop)
 
 ### Day 6: Trip generator (Python)
-- [ ] `trip_generator.py` with phases, fixed seed, incidents
-- [ ] Plot/sanity check; sample trip committed
+- [x] `trip_generator.py` with phases, fixed seed, incidents (`Tools/TripGenerator/`, overheating + RR slow puncture, hood opens)
+- [x] Plot/sanity check (speed/gear, rpm, coolant, tyres; same seed → identical file)
+- [x] Sample trip committed (`Data/Trips/trip_sample.json`)
+- [x] Check-your-understanding questions answered (LEARNING_LOG)
 
 ### Day 7: ITelemetryReceiver + file receiver
 - [ ] `ITelemetryReceiver`, `UFileTelemetryReceiver`, `UTelemetrySubsystem`

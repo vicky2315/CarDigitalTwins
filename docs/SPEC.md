@@ -83,6 +83,13 @@ One JSON object: a header plus fixed-rate frames. Each frame is exactly a §2.1 
   ]
 }
 ```
+**Generator (Day 6):** `Tools/TripGenerator/trip_generator.py` (`--seed`, `--rate`, `--out`, `--plot`) writes
+`Data/Trips/trip_sample.json`: 190 s at 10 Hz (1900 frames, ~570 KB), seed 42, one frame per line so git diffs stay readable.
+It validates every frame against §2.1 and prints when §3 thresholds are crossed. Phases: idle 10 s → accelerate 20 s → cruise 115 s →
+brake 15 s → idle 10 s → parked 20 s (engine off). Incidents: cooling failure at 70 s (coolant warning ~91 s, critical ~119 s, the
+driver pulls over); rear-right slow puncture from 40 s (warning ~148 s, ends ~150 kPa, above critical); door FL opens at 173 s, hood at
+178 s. rpm uses the Wrangler 6-speed ratios, final drive 4.10 and the 42.2 cm tyre radius measured in UE.
+
 Size check: ~300 bytes/frame × 10 Hz × 30 min ≈ 5.4 MB. Fine to parse at load. If trips get long, switch to JSON Lines (one
 frame per line) so the relay can stream instead of loading the whole file.
 
