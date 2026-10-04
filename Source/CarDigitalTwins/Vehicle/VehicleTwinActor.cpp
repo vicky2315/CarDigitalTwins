@@ -6,6 +6,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInterface.h"
 #include "StaticMeshResources.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogVehicleTwin, Log, All);
@@ -16,6 +17,7 @@ namespace VehicleTwinTags
 	static const FName Wheels[] = { TEXT("Wheel.FL"), TEXT("Wheel.FR"), TEXT("Wheel.RL"), TEXT("Wheel.RR") };
 	static const FName Tyre = TEXT("Tyre");
 	static const FName Paint = TEXT("Paint");
+	static const FName Trim = TEXT("Trim");
 }
 
 namespace VehicleTwinComponentLookup
@@ -58,6 +60,11 @@ namespace VehicleTwinComponentLookup
 AVehicleTwinActor::AVehicleTwinActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	FVehicleTwinPaintGroup& BodyPaintGroup = PaintGroups.AddDefaulted_GetRef();
+	BodyPaintGroup.ComponentTag = VehicleTwinTags::Paint;
+	FVehicleTwinPaintGroup& TrimPaintGroup = PaintGroups.AddDefaulted_GetRef();
+	TrimPaintGroup.ComponentTag = VehicleTwinTags::Trim;
 }
 
 void AVehicleTwinActor::OnConstruction(const FTransform& Transform)
@@ -66,6 +73,17 @@ void AVehicleTwinActor::OnConstruction(const FTransform& Transform)
 
 	// Runs on every edit in the editor, so problems are only logged from BeginPlay.
 	SetUpWheels(false);
+
+	if (bPreviewStatusColor)
+	{
+		CreatePaintMaterials(false);
+		SetStatusColor(PreviewStatusColor, PreviewStatusBlend);
+	}
+	else if (!PaintMaterials.IsEmpty())
+	{
+		// Preview was just switched off: back to the original paint.
+		SetStatusColor(FLinearColor::White, 0.f);
+	}
 }
 
 void AVehicleTwinActor::BeginPlay()
@@ -74,7 +92,12 @@ void AVehicleTwinActor::BeginPlay()
 
 	// Placed actors in a cooked build don't rerun construction, so resolve the wheels here as well.
 	SetUpWheels(true);
-	CreatePaintMaterials();
+	CreatePaintMaterials(true);
+
+	if (bPreviewStatusColor)
+	{
+		SetStatusColor(PreviewStatusColor, PreviewStatusBlend);
+	}
 }
 
 void AVehicleTwinActor::Tick(float DeltaSeconds)
@@ -123,16 +146,21 @@ void AVehicleTwinActor::UpdateWheels(float SpeedKmh, float SteerDeg, float Delta
 	}
 }
 
-void AVehicleTwinActor::SetStatusColor(FLinearColor NewStatusColor)
+void AVehicleTwinActor::SetStatusColor(FLinearColor NewStatusColor, float NewStatusBlend)
 {
 	if (PaintMaterials.IsEmpty())
 	{
-		CreatePaintMaterials();
+		CreatePaintMaterials(false);
 	}
 
-	for (UMaterialInstanceDynamic* PaintMaterialInstance : PaintMaterials)
+	const float ClampedStatusBlend = FMath::Clamp(NewStatusBlend, 0.f, 1.f);
+	for (int32 PaintMaterialIndex = 0; PaintMaterialIndex < PaintMaterials.Num(); ++PaintMaterialIndex)
 	{
-		PaintMaterialInstance->SetVectorParameterValue(StatusColorParameter, NewStatusColor);
+		if (UMaterialInstanceDynamic* PaintMaterialInstance = PaintMaterials[PaintMaterialIndex])
+		{
+			PaintMaterialInstance->SetVectorParameterValue(StatusColorParameter, NewStatusColor);
+			PaintMaterialInstance->SetScalarParameterValue(StatusBlendParameter, ClampedStatusBlend * PaintMaterialStatusBlendScales[PaintMaterialIndex]);
+		}
 	}
 }
 
@@ -324,27 +352,60 @@ float AVehicleTwinActor::MeasureTyreRadius(const UPrimitiveComponent* TyreCompon
 	return TyreComponent->CalcBounds(TyreComponent->GetComponentTransform()).SphereRadius;
 }
 
-void AVehicleTwinActor::CreatePaintMaterials()
+void AVehicleTwinActor::CreatePaintMaterials(bool bLogProblems)
 {
 	PaintMaterials.Reset();
+	PaintMaterialStatusBlendScales.Reset();
 
-	TArray<UPrimitiveComponent*> PaintedMeshComponents;
 	TInlineComponentArray<USceneComponent*> AllSceneComponents(this);
-	for (USceneComponent* PaintCandidateComponent : AllSceneComponents)
+	for (const FVehicleTwinPaintGroup& PaintGroup : PaintGroups)
 	{
-		if (PaintCandidateComponent->ComponentHasTag(VehicleTwinTags::Paint))
+		TArray<UPrimitiveComponent*> GroupMeshComponents;
+		for (USceneComponent* GroupCandidateComponent : AllSceneComponents)
 		{
-			VehicleTwinComponentLookup::CollectMeshComponentsForTaggedComponent(PaintCandidateComponent, PaintedMeshComponents);
-		}
-	}
-
-	for (UPrimitiveComponent* PaintedMeshComponent : PaintedMeshComponents)
-	{
-		for (int32 MaterialIndex = 0; MaterialIndex < PaintedMeshComponent->GetNumMaterials(); ++MaterialIndex)
-		{
-			if (UMaterialInstanceDynamic* PaintMaterialInstance = PaintedMeshComponent->CreateDynamicMaterialInstance(MaterialIndex))
+			if (GroupCandidateComponent->ComponentHasTag(PaintGroup.ComponentTag))
 			{
-				PaintMaterials.Add(PaintMaterialInstance);
+				VehicleTwinComponentLookup::CollectMeshComponentsForTaggedComponent(GroupCandidateComponent, GroupMeshComponents);
+			}
+		}
+
+		const int32 GroupFirstMaterialIndex = PaintMaterials.Num();
+		TArray<FString> MeshesWithoutStatusColorForLog;
+		for (UPrimitiveComponent* GroupMeshComponent : GroupMeshComponents)
+		{
+			bool bMeshHasStatusColorSlot = false;
+			for (int32 MaterialSlotIndex = 0; MaterialSlotIndex < GroupMeshComponent->GetNumMaterials(); ++MaterialSlotIndex)
+			{
+				const UMaterialInterface* SlotMaterial = GroupMeshComponent->GetMaterial(MaterialSlotIndex);
+				FLinearColor UnusedParameterValue;
+				if (!SlotMaterial || !SlotMaterial->GetVectorParameterValue(FHashedMaterialParameterInfo(StatusColorParameter), UnusedParameterValue))
+				{
+					continue;
+				}
+				// Reuses the slot's dynamic instance if it already has one, so calling this again doesn't stack instances.
+				if (UMaterialInstanceDynamic* PaintMaterialInstance = GroupMeshComponent->CreateDynamicMaterialInstance(MaterialSlotIndex))
+				{
+					PaintMaterials.Add(PaintMaterialInstance);
+					PaintMaterialStatusBlendScales.Add(PaintGroup.StatusBlendScale);
+					bMeshHasStatusColorSlot = true;
+				}
+			}
+			if (!bMeshHasStatusColorSlot)
+			{
+				MeshesWithoutStatusColorForLog.Add(FString::Printf(TEXT("%s (%s)"), *GetNameSafe(GroupMeshComponent->GetOwner()),
+					*GetNameSafe(GroupMeshComponent->GetMaterial(0))));
+			}
+		}
+
+		if (bLogProblems)
+		{
+			UE_LOG(LogVehicleTwin, Log, TEXT("%s: group %s: %d material slots on %d meshes, blend scale %.2f."), *GetName(),
+				*PaintGroup.ComponentTag.ToString(), PaintMaterials.Num() - GroupFirstMaterialIndex, GroupMeshComponents.Num(), PaintGroup.StatusBlendScale);
+			if (!MeshesWithoutStatusColorForLog.IsEmpty())
+			{
+				UE_LOG(LogVehicleTwin, Warning, TEXT("%s: %d meshes tagged %s have no material with a %s parameter, so they won't change colour: %s"),
+					*GetName(), MeshesWithoutStatusColorForLog.Num(), *PaintGroup.ComponentTag.ToString(), *StatusColorParameter.ToString(),
+					*FString::Join(MeshesWithoutStatusColorForLog, TEXT(", ")));
 			}
 		}
 	}

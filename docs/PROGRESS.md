@@ -1,29 +1,25 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-04
-Current day: **Day 4 (option A)**: wheels done; next is the body paint MI with `StatusColor`.
-Days 1–3 and 5 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
+Current day: **Day 6: trip generator** (Day 4 option A done 2026-10-05).
+Days 1–5 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
 
-## Checkpoint (2026-10-04, personal laptop, RTX 3070 Ti Laptop)
+## Checkpoint (2026-10-05, personal laptop, RTX 3070 Ti Laptop)
 
-**Where I stopped:** wheels roll correctly in the editor preview, all four measure radius 43.5 cm. Code changes not committed yet.
+**Where I stopped:** Day 4 done. Wheels roll, body (`Paint`) and black trim (`Trim`) take the status colour, materials cleaned up
+(one master `M_CarPaint`), `BP_VehicleTwin` moved to `/Game/Jeep/Blueprints`. Next: Day 6 trip generator.
 
-Done today:
-- Option A scope cut (Day 4 below). `BP_VehicleTwin` harvested from `ImportA` in `L_VehicleTwin`, components Movable,
-  hubs `WheelHub_FL/FR/RL/RR` (+ an untagged `WheelHub_Spare`), tags `Wheel.*` / `Tyre` / `Paint`.
-- `AVehicleTwinActor` (`Source/CarDigitalTwins/Vehicle/`): tag lookup, spin/steer, `StatusColor`, editor preview with debug drawing.
-- Wheel fixes: setup no longer moves the meshes (it baked mid-spin poses into them on every rerun); spin/steer pivot = tyre bounds centre in
-  hub space; axle = left → right wheel centre (CAD bounds are loose); radius from tyre vertices; tags resolved through
-  `ChildActorComponent`s (Harvest made `Rim_*`/`Tyre_*` child actors). `CarRoot` yaw 90 so the car faces +X. Left `Rim`/`Tyre` names and
-  `Tyre` tag were swapped, fixed in the BP.
+Summary of Day 4 (details in SPEC.md §1 and LEARNING_LOG):
+- Option A: car built from the untouched Datasmith import; `BP_VehicleTwin` harvested from `ImportA`, parts are child actors.
+- `AVehicleTwinActor`: tag lookup through child actors, wheel spin/steer about the measured wheel centre, paint groups with status colour,
+  editor previews (wheels, status colour).
+- Not checked in a Play log after the last build: per-group log lines and the `CarRoot` facing warning. Check on the next Play.
 
 **Resume:**
-1. Commit the `AVehicleTwinActor` changes + docs.
-2. Body paint MI with `StatusColor`: find which components are the body, tag them `Paint`, fill the list in SPEC.md §1.
-3. Move `BP_VehicleTwin` from `/Game/Blueprints` to `/Game/Jeep/Blueprints` in the Content Browser + Fix Up Redirectors (don't commit it).
-4. Day 4 done → Day 6 trip generator. Private asset repo still pending (see Pending setup).
+1. Day 6: `trip_generator.py` (phases, fixed seed, incidents), plot/sanity check, sample trip committed. No editor needed.
+2. Private asset repo for `Content/Jeep/` (see Pending setup): `BP_VehicleTwin` now lives there too and exists only on this laptop.
 
-**Not in git (local only):** `BP_VehicleTwin` (in `/Game/Blueprints`, to be moved), `L_VehicleTwin`, `ImportTestMap`, all of `Content/Jeep/`.
+**Not in git (local only):** all of `Content/Jeep/` (incl. `BP_VehicleTwin`), `L_VehicleTwin`, `ImportTestMap`.
 
 ## Checkpoint (2026-09-27, personal laptop, RTX 3070 Ti Laptop)
 
@@ -102,8 +98,10 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
       without moving the meshes; `CarRoot` yaw 90 so the car faces +X)
 - [x] Left-side `Rim`/`Tyre` names and `Tyre` tag swapped back (all four wheels radius 43.5 cm)
 - [x] Wheel pivots: solved in C++ (pivot = tyre bounds centre in hub space, hubs stay where authored); shared wheel meshes untouched
-- [ ] Body paint MI with `StatusColor`
-- [x] Mapping table in SPEC.md (§1; `Paint` component list still to fill)
+- [x] Body paint MI with `StatusColor` (`M_CarPaint` / `MI_CarPaint`, 25 `Paint` meshes, `StatusBlend` + editor preview)
+- [x] `Trim` paint group (black parts) built; `MI_CarPaintBlack` reparented to `M_CarPaint`, duplicate master deleted
+- [x] Mapping table in SPEC.md (§1, incl. paint groups and materials)
+- [x] `BP_VehicleTwin` moved to `/Game/Jeep/Blueprints` (local only)
 - [ ] (Optional, later) Door / hood / tailgate animation using the split meshes
 
 ### Day 5: Telemetry schema

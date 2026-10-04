@@ -12,11 +12,26 @@ parts by **component tag**, never by name or asset path. Mesh names are CAD feat
 | `WheelHub_RL` / `_RR` | `Wheel.RL` / `Wheel.RR` | `speedKmh` | Spin only | `/Vehicle/Wheels/RL`, `/RR` |
 | `Rim_XX`, `Tyre_XX` (`Combine3` / `Combine4`, child actors from Harvest) | `Tyre` on the tyre | | Follow their hub | `/Vehicle/Wheels/XX/Rim`, `/Tyre` |
 | `Rim_Spare`, `Tyre_Spare` | | | Static (tailgate spare, never spins) | `/Vehicle/Body/SpareWheel` |
-| Body components _(list TBD)_ | `Paint` | derived status (§3) | `StatusColor` material parameter | `/Vehicle/Body/Paint` |
+| Red body panels (25 meshes, `MI_CarPaint`) | `Paint` | derived status (§3) | Status colour, blend scale 1 | `/Vehicle/Body/Paint` |
+| Black parts: bumpers, flares, grille, handles etc. (`MI_CarPaintBlack`) | `Trim` | derived status (§3) | Status colour, blend scale 1 | `/Vehicle/Body/Trim` |
 | Doors, hood, tailgate (inside the body mesh) | | `openings` | Dashboard only; animation optional later | `/Vehicle/Body/Door_FL` … |
 
-**Hubs:** added in the Blueprint at 0,0,0. `AVehicleTwinActor` moves each onto its tyre's bounds centre and aligns it with the actor
-axes, keeping the meshes' world transforms. Mesh pivots (at the vehicle origin) and the 5× shared wheel meshes are left as imported.
+**Hubs:** added in the Blueprint at 0,0,0 and never moved. On setup `AVehicleTwinActor` resets each hub and its children to the
+Blueprint transforms, then measures in hub space: wheel centre = tyre bounds centre, axle = left → right wheel centre, radius = farthest
+tyre vertex from the axle. Spin and steer rotate the hub about the wheel centre. Mesh pivots (at the vehicle origin) and the 5× shared
+wheel meshes are left as imported.
+
+**Child actors:** Harvest Components wrapped every imported mesh actor in a `ChildActorComponent`. Tags sit on that component; the code
+follows it to the child actor's mesh. Body and trim components keep Harvest's default names (`StaticMeshActor_N`), so the tags, not the
+names, define the groups. Mirrors, headlights and the inner grille have no paint group yet (cosmetic materials: Day 15).
+
+**Status colour (paint groups):** `PaintGroups` on `AVehicleTwinActor` lists the tags that take the status colour, each with a blend
+scale (default `Paint` 1, `Trim` 1). `SetStatusColor(Color, Blend)` sets `StatusColor` and `StatusBlend × scale` on every material slot
+of those meshes whose material has a `StatusColor` parameter; other slots are left alone.
+
+Materials (`/Game/Materials`): one master `M_CarPaint` with `PaintColor`, `StatusColor`, `StatusBlend` (0–1), `Metallic`, `Roughness`;
+Base Color = Lerp(`PaintColor`, `StatusColor`, `StatusBlend`). Instances: `MI_CarPaint` (red body), `MI_CarPaintBlack` (black trim:
+`PaintColor` ≈ 0.02, `Metallic` 0, `Roughness` 0.5). New colours are instances of `M_CarPaint`, never copies of it.
 
 ## 2. Telemetry schema (v1, drafted 2026-09-28)
 

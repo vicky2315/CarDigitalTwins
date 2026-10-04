@@ -39,6 +39,20 @@ struct FVehicleTwinWheel
 	bool bFront = false;
 };
 
+// A set of components that take the status colour, found by component tag (e.g. Paint = body, Trim = black plastic parts).
+USTRUCT()
+struct FVehicleTwinPaintGroup
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Vehicle Twin")
+	FName ComponentTag;
+
+	// Multiplies the status blend for this group: 1 = full status colour, 0.5 = half, 0 = never changes.
+	UPROPERTY(EditAnywhere, Category = "Vehicle Twin", meta = (ClampMin = "0", ClampMax = "1"))
+	float StatusBlendScale = 1.f;
+};
+
 UCLASS()
 class CARDIGITALTWINS_API AVehicleTwinActor : public AActor
 {
@@ -56,9 +70,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Vehicle Twin")
 	void UpdateWheels(float SpeedKmh, float SteerDeg, float DeltaSeconds);
 
-	// Sets the StatusColor vector parameter on every material of the components tagged Paint.
+	// Tints every paint group (PaintGroups) towards NewStatusColor. NewStatusBlend 0 = original colours, 1 = fully the status colour,
+	// scaled per group by its StatusBlendScale.
 	UFUNCTION(BlueprintCallable, Category = "Vehicle Twin")
-	void SetStatusColor(FLinearColor NewStatusColor);
+	void SetStatusColor(FLinearColor NewStatusColor, float NewStatusBlend = 1.f);
 
 	UFUNCTION(BlueprintPure, Category = "Vehicle Twin")
 	int32 GetNumWheels() const { return Wheels.Num(); }
@@ -74,8 +89,26 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Vehicle Twin|Preview", meta = (EditCondition = "bPreviewInEditor", ClampMin = "-40", ClampMax = "40"))
 	float PreviewSteerDeg = 0.f;
 
+	// Shows a status colour on the paint groups in the level viewport without telemetry, to check the tags and materials.
+	UPROPERTY(EditAnywhere, Category = "Vehicle Twin|Preview")
+	bool bPreviewStatusColor = false;
+
+	UPROPERTY(EditAnywhere, Category = "Vehicle Twin|Preview", meta = (EditCondition = "bPreviewStatusColor"))
+	FLinearColor PreviewStatusColor = FLinearColor(1.f, 0.5f, 0.f);
+
+	UPROPERTY(EditAnywhere, Category = "Vehicle Twin|Preview", meta = (EditCondition = "bPreviewStatusColor", ClampMin = "0", ClampMax = "1"))
+	float PreviewStatusBlend = 1.f;
+
+	// Component tags that take the status colour, each with its own strength (SPEC.md §1).
+	UPROPERTY(EditDefaultsOnly, Category = "Vehicle Twin")
+	TArray<FVehicleTwinPaintGroup> PaintGroups;
+
+	// Material parameters of M_CarPaint (SPEC.md §1).
 	UPROPERTY(EditDefaultsOnly, Category = "Vehicle Twin")
 	FName StatusColorParameter = TEXT("StatusColor");
+
+	UPROPERTY(EditDefaultsOnly, Category = "Vehicle Twin")
+	FName StatusBlendParameter = TEXT("StatusBlend");
 
 private:
 	// Finds the tagged hubs, resets them to their authored pose and measures each wheel's centre, axle and radius. Safe to call again.
@@ -85,7 +118,9 @@ private:
 	static float MeasureTyreRadius(const UPrimitiveComponent* TyreComponent, const FTransform& HubWorldTransform, const FVector& WheelCentreInHubSpace,
 		const FVector& AxleInHubSpace, bool& bOutFromVertices);
 
-	void CreatePaintMaterials();
+	// Creates a dynamic material instance for every material slot on the paint group meshes whose material has the StatusColor
+	// parameter. Slots without it (glass on the same mesh) are left alone.
+	void CreatePaintMaterials(bool bLogProblems);
 
 	void ApplyWheelRotation(const FVehicleTwinWheel& Wheel, float SteerDeg) const;
 
@@ -94,4 +129,8 @@ private:
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UMaterialInstanceDynamic>> PaintMaterials;
+
+	// Parallel to PaintMaterials: the StatusBlendScale of the group each material belongs to.
+	UPROPERTY(Transient)
+	TArray<float> PaintMaterialStatusBlendScales;
 };

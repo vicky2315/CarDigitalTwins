@@ -147,3 +147,26 @@ static mesh.
 
 **Decision:** Modeling Mode asset location set to `/Game/Jeep/Cleaned`; Save All after every modeling session; set up the private asset repo
 (ASSETS.md) so the Jeep work exists somewhere other than one laptop's `Saved/` folder.
+
+## Day 4 (option A): wheels and status colour (2026-10-04 → 05)
+
+**Tried:** built `BP_VehicleTwin` from the untouched Datasmith import (Harvest Components), with `AVehicleTwinActor` finding parts by tag,
+spinning the wheels and tinting the body.
+
+**Broke:** in the editor preview the wheels tumbled and wobbled instead of rolling.
+**Learned:**
+- Three bugs stacked: (1) setup reran on every edit and saved the mid-spin pose of the meshes as their rest pose, so tilts added up;
+  (2) the "thinnest bounds axis = axle" guess failed because the CAD meshes are rotated inside their own space, so bounds are loose;
+  (3) Harvest made every part a `ChildActorComponent`, so the `Tyre` tag was on the wrapper and the mesh in a separate child actor.
+- Fix: never move the meshes; reset to the Blueprint transforms, measure in hub space, rotate the hub about the wheel centre. Axle from the
+  left → right wheel centre, radius from the tyre vertices (42.2 cm), tags followed through child actors.
+- Debug drawing (centre, axle, radius circle) plus logging what the fallback picked found all three in one run. The car also faced −Y:
+  `CarRoot` needs yaw 90 as well as X −90.
+- The left wheels' `Rim`/`Tyre` names were swapped (radius 33 vs 43.5 cm gave it away).
+
+**Broke:** a black material made by duplicating `M_CarPaint` worked, but meant two master materials.
+**Learned:** new colours should be **instances** of one master material: one graph to maintain, shared shaders. Reparented
+`MI_CarPaintBlack` to `M_CarPaint` and deleted the copy.
+
+**Decision:** status colour works per paint group (`Paint` body, `Trim` black parts), each with its own blend scale, so trim can be toned
+down later without code changes. Mirrors, headlights and inner grille materials are cosmetic: Day 15.
