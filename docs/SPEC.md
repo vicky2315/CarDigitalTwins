@@ -7,10 +7,10 @@ parts by **component tag**, never by name or asset path. Mesh names are CAD feat
 
 | UE component | Tag | Telemetry field | Behaviour | Future USD prim path |
 |--------------|-----|-----------------|-----------|----------------------|
-| `CarRoot` | | | Orientation fix for the CAD axes: rotation X −90°, location Z 0. Front = +X, right = +Y | `/Vehicle` |
+| `CarRoot` | | | Orientation fix for the CAD axes: rotation X −90°, Z 90°, location Z 0. Front = +X, right = +Y | `/Vehicle` |
 | `WheelHub_FL` / `_FR` | `Wheel.FL` / `Wheel.FR` | `speedKmh`, `steerDeg` | Spin from speed ÷ measured tyre radius; yaw = steer | `/Vehicle/Wheels/FL`, `/FR` |
 | `WheelHub_RL` / `_RR` | `Wheel.RL` / `Wheel.RR` | `speedKmh` | Spin only | `/Vehicle/Wheels/RL`, `/RR` |
-| `Rim_XX`, `Tyre_XX` (`Combine3` / `Combine4`) | `Tyre` on the tyre | | Follow their hub | `/Vehicle/Wheels/XX/Rim`, `/Tyre` |
+| `Rim_XX`, `Tyre_XX` (`Combine3` / `Combine4`, child actors from Harvest) | `Tyre` on the tyre | | Follow their hub | `/Vehicle/Wheels/XX/Rim`, `/Tyre` |
 | `Rim_Spare`, `Tyre_Spare` | | | Static (tailgate spare, never spins) | `/Vehicle/Body/SpareWheel` |
 | Body components _(list TBD)_ | `Paint` | derived status (§3) | `StatusColor` material parameter | `/Vehicle/Body/Paint` |
 | Doors, hood, tailgate (inside the body mesh) | | `openings` | Dashboard only; animation optional later | `/Vehicle/Body/Door_FL` … |

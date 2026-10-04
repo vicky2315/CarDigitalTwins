@@ -18,14 +18,21 @@ struct FVehicleTwinWheel
 	UPROPERTY()
 	TObjectPtr<USceneComponent> Hub = nullptr;
 
-	// Hub rotation relative to its parent once aligned with the actor axes. Spin and steer are applied on top.
-	FQuat BaseRelativeRotation = FQuat::Identity;
+	// Hub transform relative to its parent as authored in BP_VehicleTwin. Spin and steer are applied on top; the hub is never moved,
+	// so the meshes under it keep their authored transforms.
+	FTransform BaseRelativeTransform = FTransform::Identity;
+
+	// Tyre centre in hub space: the pivot that spin and steer rotate around.
+	FVector WheelCentreInHubSpace = FVector::ZeroVector;
 
 	// Measured from the tyre mesh, so there is one source of truth for wheel speed (SPEC.md §2.1).
 	float RadiusCm = 0.f;
 
-	// Axle direction in hub space (the tyre's thinnest bounds axis), so spin doesn't depend on which way the car faces.
+	// Axle direction in hub space, from the left wheel's centre towards its right partner's, so spin doesn't depend on which way the car faces.
 	FVector SpinAxis = FVector::RightVector;
+
+	// The actor's up direction in hub space, for steering.
+	FVector SteerAxisInHubSpace = FVector::UpVector;
 
 	float SpinDeg = 0.f;
 
@@ -51,7 +58,7 @@ public:
 
 	// Sets the StatusColor vector parameter on every material of the components tagged Paint.
 	UFUNCTION(BlueprintCallable, Category = "Vehicle Twin")
-	void SetStatusColor(FLinearColor Color);
+	void SetStatusColor(FLinearColor NewStatusColor);
 
 	UFUNCTION(BlueprintPure, Category = "Vehicle Twin")
 	int32 GetNumWheels() const { return Wheels.Num(); }
@@ -71,8 +78,12 @@ protected:
 	FName StatusColorParameter = TEXT("StatusColor");
 
 private:
-	// Finds the tagged hubs, moves each onto its tyre's centre and aligns it with the actor axes. Safe to call again.
+	// Finds the tagged hubs, resets them to their authored pose and measures each wheel's centre, axle and radius. Safe to call again.
 	void SetUpWheels(bool bLogProblems);
+
+	// Largest distance of the tyre's vertices from the axle line (hub space). Falls back to the bounding sphere without CPU vertex access.
+	static float MeasureTyreRadius(const UPrimitiveComponent* TyreComponent, const FTransform& HubWorldTransform, const FVector& WheelCentreInHubSpace,
+		const FVector& AxleInHubSpace, bool& bOutFromVertices);
 
 	void CreatePaintMaterials();
 

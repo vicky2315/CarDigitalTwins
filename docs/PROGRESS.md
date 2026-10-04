@@ -1,31 +1,27 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-04
-Current day: **Day 4 (option A): `AVehicleTwinActor` wheel preview**, wheels spin around the wrong axis (see checkpoint below).
+Current day: **Day 4 (option A)**: wheels done; next is the body paint MI with `StatusColor`.
 Days 1–3 and 5 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
 
 ## Checkpoint (2026-10-04, personal laptop, RTX 3070 Ti Laptop)
 
-**Where I stopped:** `BP_VehicleTwin` is reparented to `AVehicleTwinActor`; the editor preview finds all 4 hubs and spins them, but the
-wheels rotate "inside out" (wrong axis), not rolling.
+**Where I stopped:** wheels roll correctly in the editor preview, all four measure radius 43.5 cm. Code changes not committed yet.
 
 Done today:
-- Option A scope cut (Day 4 below). `BP_VehicleTwin` harvested from `ImportA` in `L_VehicleTwin`, components Movable, `CarRoot` X −90,
-  hubs `WheelHub_FL/FR/RL/RR` (+ an untagged `WheelHub_Spare`), tags `Wheel.*` / `Tyre` / `Paint` saved (verified in the asset).
-- `AVehicleTwinActor` (`Source/CarDigitalTwins/Vehicle/`): tag lookup, hub auto-centring on tyre bounds, spin/steer, `StatusColor`,
-  editor preview. Built OK. Fixes so far: tyre searched in all hub descendants (Harvest keeps a `Jeep_Wheel` group under each hub);
-  spin axis = tyre's thinnest bounds axis instead of fixed Y. The axis change "didn't do much".
-- Last edit (**not compiled yet**, editor was open): debug drawing in `Tick` while previewing: yellow = hub centre, red = spin axis,
-  blue = up, green circle = measured radius.
+- Option A scope cut (Day 4 below). `BP_VehicleTwin` harvested from `ImportA` in `L_VehicleTwin`, components Movable,
+  hubs `WheelHub_FL/FR/RL/RR` (+ an untagged `WheelHub_Spare`), tags `Wheel.*` / `Tyre` / `Paint`.
+- `AVehicleTwinActor` (`Source/CarDigitalTwins/Vehicle/`): tag lookup, spin/steer, `StatusColor`, editor preview with debug drawing.
+- Wheel fixes: setup no longer moves the meshes (it baked mid-spin poses into them on every rerun); spin/steer pivot = tyre bounds centre in
+  hub space; axle = left → right wheel centre (CAD bounds are loose); radius from tyre vertices; tags resolved through
+  `ChildActorComponent`s (Harvest made `Rim_*`/`Tyre_*` child actors). `CarRoot` yaw 90 so the car faces +X. Left `Rim`/`Tyre` names and
+  `Tyre` tag were swapped, fixed in the BP.
 
 **Resume:**
-1. Build (close editor → UBT, or Live Coding Ctrl+Alt+F11), tick Preview In Editor, look at the debug drawing on one wheel.
-2. Collect: screenshot of a wheel with the debug drawing; which motion it is (coin-spin / tumbling / orbiting off-centre / rim and tyre
-   differ); the `LogVehicleTwin` "axle along …, radius … cm" lines after Play.
-3. Suspects: hub rotation set to the actor rotation while `CarRoot` is X −90 (check the car really faces +X in world space);
-   `CalcBounds` on a rotated transform giving a loose box, so the thinnest axis is wrong; the `Jeep_Wheel` group carrying its own rotation.
-4. Then: body paint MI with `StatusColor`, move `BP_VehicleTwin` from `/Game/Blueprints` to `/Game/Jeep/Blueprints` (still untracked
-   there, don't commit), Day 4 done → Day 6 trip generator.
+1. Commit the `AVehicleTwinActor` changes + docs.
+2. Body paint MI with `StatusColor`: find which components are the body, tag them `Paint`, fill the list in SPEC.md §1.
+3. Move `BP_VehicleTwin` from `/Game/Blueprints` to `/Game/Jeep/Blueprints` in the Content Browser + Fix Up Redirectors (don't commit it).
+4. Day 4 done → Day 6 trip generator. Private asset repo still pending (see Pending setup).
 
 **Not in git (local only):** `BP_VehicleTwin` (in `/Game/Blueprints`, to be moved), `L_VehicleTwin`, `ImportTestMap`, all of `Content/Jeep/`.
 
@@ -102,8 +98,10 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
       `CarRoot` (rotation X −90, Z 0), `WheelHub_FL/FR/RL/RR` with `Rim_*` / `Tyre_*` (`Combine3` / `Combine4`), spare unhubbed
 - [x] Component tags (`Wheel.*`, `Tyre`, `Paint`) set and saved
 - [x] `AVehicleTwinActor` C++ base (tag lookup, hub auto-centring, spin/steer, `StatusColor`, editor preview), BP reparented
-- [ ] Wheel spin axis correct in the editor preview (currently rotates "inside out")
-- [x] Wheel pivots: solved with hub components centred on the tyre bounds in C++; shared wheel meshes left untouched
+- [x] Wheel spin axis correct in the editor preview (2026-10-04: axle from left/right wheel centres, spin about the wheel centre
+      without moving the meshes; `CarRoot` yaw 90 so the car faces +X)
+- [x] Left-side `Rim`/`Tyre` names and `Tyre` tag swapped back (all four wheels radius 43.5 cm)
+- [x] Wheel pivots: solved in C++ (pivot = tyre bounds centre in hub space, hubs stay where authored); shared wheel meshes untouched
 - [ ] Body paint MI with `StatusColor`
 - [x] Mapping table in SPEC.md (§1; `Paint` component list still to fill)
 - [ ] (Optional, later) Door / hood / tailgate animation using the split meshes
