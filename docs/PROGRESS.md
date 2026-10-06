@@ -6,8 +6,9 @@ Days 1–6 complete. Day 11 MVVM rewrite paused before step 2 (machine-independe
 
 ## Checkpoint (2026-10-05, personal laptop, RTX 3070 Ti Laptop)
 
-**Where I stopped:** Day 4 done. Wheels roll, body (`Paint`) and black trim (`Trim`) take the status colour, materials cleaned up
-(one master `M_CarPaint`), `BP_VehicleTwin` moved to `/Game/Jeep/Blueprints`. Next: Day 6 trip generator.
+**Where I stopped:** Day 6 done (`e482163`, pushed): `Tools/TripGenerator/trip_generator.py` + `Data/Trips/trip_sample.json`
+(190 s, 10 Hz, overheating + RR slow puncture, hood opens). Day 4 done before it (`e7db864`). Next: Day 7 file receiver.
+Discussed the final output and a configurator ("Showroom mode") idea, not decided yet (see Optional / later).
 
 Summary of Day 4 (details in SPEC.md §1 and LEARNING_LOG):
 - Option A: car built from the untouched Datasmith import; `BP_VehicleTwin` harvested from `ImportA`, parts are child actors.
@@ -191,3 +192,8 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 - [ ] MQTT upgrade
 - [ ] Phase B (fleet → SUMO → Cesium)
 - [ ] Phase C (OpenUSD → Kit extension → side-by-side demo)
+- [ ] **Showroom mode** (idea 2026-10-05, *not decided*): car-configurator style mode next to the live twin, after Day 13 (~2–3 days).
+      Toggle Live Twin ↔ Showroom; web panel over the Pixel Stream (browser → UE messages) with body/trim colour swatches (`PaintColor`
+      on `M_CarPaint`); camera presets + turntable (overlaps Day 15); optional door/hood opening with the split meshes in
+      `/Game/Jeep/Cleaned`; optional rim swap. Limits: no public link at $0 (local + video only; a public version would need a
+      glTF + three.js viewer, separate project) and the GrabCAD license (sharing the model publicly needs the author's permission).
