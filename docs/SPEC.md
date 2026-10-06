@@ -127,6 +127,11 @@ but are **demo values, not manufacturer data**.
 noisy data, a value hovering at 105 °C would otherwise flip amber/normal several times a second. Critical → Warning uses the
 same gap. Not applied to stale data: connection staleness is §4, separate from vehicle health.
 
+**Critical clears at** (same gap, derived 2026-10-07): coolant < 112; tyre ≥ 145; fuel ≥ 7; battery ≥ 12.2 / ≤ 15.3; rpm < 6000.
+Each row keeps its own ≥ / > exactly as in the table. The tyre row is judged on the lowest wheel (low side) and the highest wheel
+(high side). Code: `FVehicleStatusEvaluator` (`Source/CarDigitalTwins/Telemetry/VehicleStatusEvaluator.h`), one status per row
+plus the overall (worst) status in `FVehicleStatusReport`.
+
 ## 4. Connection states
 _TODO (Day 10): Idle → Connecting → Live → Stale → Disconnected; stale threshold; backoff._
 

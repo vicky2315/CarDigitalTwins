@@ -10,29 +10,30 @@ then HMI; the portfolio shows both on one data pipeline.
 
 ## Checkpoint (2026-10-07, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commit: `e9abe2f` on `main`, pushed. Working tree: Day 7 not committed yet (7 new files in `Source/CarDigitalTwins/Telemetry/`,
-`CarDigitalTwins.Build.cs`, this file, `Config/DefaultGame.ini`); `Content/Maps/` untracked on purpose.
+Commit: the checkpoint commit after `ed324e1` on `main`, pushed. Working tree clean except `Content/Maps/` (untracked on purpose).
+Day 8 step 1 (`Telemetry/VehicleStatusEvaluator.h/.cpp`, SPEC.md §3 Critical clear values) is committed but **not built yet**.
 
-**Where I stopped:** Day 7 done and checked in PIE (10 samples/s, first-frame values, 10× loop with `seq` wrap, incidents,
-pause/stop), not committed. Testing track runs in a separate session: trip generator suite + BUG-001 fix committed (`e9abe2f`).
-Old checkpoints moved to [CHECKPOINTS.md](CHECKPOINTS.md).
+**Where I stopped:** Day 7 committed (`cfdd9f0`). Roadmap changed to one backend, two front ends: digital twin first (Twin
+completion T1–T3 after Day 10), then in-car HMI (Phase H) (`ed324e1`). UI design track added for a separate session (`612d3e4`).
+Day 8 step 1 written: `FVehicleStatusEvaluator` (per-signal status + overall, hysteresis per SPEC.md §3), not built yet.
 
 **Resume:**
-1. Project Settings > Vehicle Telemetry: set `PlaybackSpeedMultiplier` back to 1 (`Config/DefaultGame.ini` still says 10 from the
-   loop test). Then commit Day 7 ("Complete Day 7: …") and push; the testing session's U1–U9 need it committed.
-2. Day 8: bind telemetry to `AVehicleTwinActor`: subscribe to `UTelemetrySubsystem::OnTelemetryUpdated`, interpolate previous →
-   latest sample (loop = jump), wheel spin from `SpeedKmh`, status colour from SPEC.md §3 with hysteresis. Done when the
-   overheating incident turns the car amber → red. Start with `/prime telemetry binding`.
-3. Private asset repo for `Content/Jeep/` (Pending setup): all Jeep assets incl. `BP_VehicleTwin` exist only on this laptop.
+1. Day 8 step 2: in `UTelemetrySubsystem`, run `FVehicleStatusEvaluator` on every new sample, keep the latest
+   `FVehicleStatusReport`, add `GetCurrentVehicleStatusReport()`, log one line when the overall status changes.
+2. Close the editor and build (new USTRUCT, Live Coding won't do). PIE at 10×: status log goes Warning ~91 s, Critical ~119 s.
+3. Day 8 step 3+: car subscribes in `BeginPlay`/`EndPlay`, lerps previous → latest (loop = snap) into `UpdateWheels`, polls status for
+   `SetStatusColor` with warning/critical colour properties (pick a Critical colour that shows on the red body paint).
+4. Private asset repo for `Content/Jeep/` (Pending setup): all Jeep assets incl. `BP_VehicleTwin` exist only on this laptop.
 
-**Unverified:** Day 4 Play log: per-group log lines and the `CarRoot` facing warning (`LogVehicleTwin`) still not looked at. Check on
-the next Play.
+**Unverified:** `VehicleStatusEvaluator` not compiled yet. Day 4 Play log: per-group log lines and the `CarRoot` facing warning
+(`LogVehicleTwin`) still not looked at.
 
-**Open decisions:** Showroom mode (Optional / later). Redistribution of the imported meshes / GrabCAD license (ASSETS.md).
+**Open decisions:** UI design track questions (ops view placement, show T1/T2 in the first design). Showroom mode (decide after H1).
+Redistribution of the imported meshes / GrabCAD license (ASSETS.md).
 
-**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` with the 1128 split meshes for the optional
-door animation, `Blueprints/BP_VehicleTwin`), `Content/Maps/L_VehicleTwin.umap`, `ImportTestMap.umap`, raw CAD in `RawCAD/`,
-`M_GlossyTest` in `Content/CADImports/Materials/`. Leftovers safe to delete: empty `Content/Maps/_GENERATED/vigne/`, empty root `Jeep/Cleaned/`.
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` with the 1128 split meshes for H2 door animation,
+`Blueprints/BP_VehicleTwin`), `Content/Maps/L_VehicleTwin.umap`, `ImportTestMap.umap`, raw CAD in `RawCAD/`, `M_GlossyTest` in
+`Content/CADImports/Materials/`. Leftovers safe to delete: empty `Content/Maps/_GENERATED/vigne/`, empty root `Jeep/Cleaned/`.
 MVVM reference branch `mvvm-reference` exists only on the office laptop.
 
 ## Phase A: Single-car digital twin

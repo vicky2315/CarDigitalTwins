@@ -2,6 +2,33 @@
 
 Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
+## Checkpoint (2026-10-07, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+
+Commit: `e9abe2f` on `main`, pushed. Working tree: Day 7 not committed yet (7 new files in `Source/CarDigitalTwins/Telemetry/`,
+`CarDigitalTwins.Build.cs`, this file, `Config/DefaultGame.ini`); `Content/Maps/` untracked on purpose.
+
+**Where I stopped:** Day 7 done and checked in PIE (10 samples/s, first-frame values, 10× loop with `seq` wrap, incidents,
+pause/stop), not committed. Testing track runs in a separate session: trip generator suite + BUG-001 fix committed (`e9abe2f`).
+Old checkpoints moved to [CHECKPOINTS.md](CHECKPOINTS.md).
+
+**Resume:**
+1. Project Settings > Vehicle Telemetry: set `PlaybackSpeedMultiplier` back to 1 (`Config/DefaultGame.ini` still says 10 from the
+   loop test). Then commit Day 7 ("Complete Day 7: …") and push; the testing session's U1–U9 need it committed.
+2. Day 8: bind telemetry to `AVehicleTwinActor`: subscribe to `UTelemetrySubsystem::OnTelemetryUpdated`, interpolate previous →
+   latest sample (loop = jump), wheel spin from `SpeedKmh`, status colour from SPEC.md §3 with hysteresis. Done when the
+   overheating incident turns the car amber → red. Start with `/prime telemetry binding`.
+3. Private asset repo for `Content/Jeep/` (Pending setup): all Jeep assets incl. `BP_VehicleTwin` exist only on this laptop.
+
+**Unverified:** Day 4 Play log: per-group log lines and the `CarRoot` facing warning (`LogVehicleTwin`) still not looked at. Check on
+the next Play.
+
+**Open decisions:** Showroom mode (Optional / later). Redistribution of the imported meshes / GrabCAD license (ASSETS.md).
+
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` with the 1128 split meshes for the optional
+door animation, `Blueprints/BP_VehicleTwin`), `Content/Maps/L_VehicleTwin.umap`, `ImportTestMap.umap`, raw CAD in `RawCAD/`,
+`M_GlossyTest` in `Content/CADImports/Materials/`. Leftovers safe to delete: empty `Content/Maps/_GENERATED/vigne/`, empty root `Jeep/Cleaned/`.
+MVVM reference branch `mvvm-reference` exists only on the office laptop.
+
 ## Checkpoint (2026-10-05, personal laptop, RTX 3070 Ti Laptop)
 
 **Where I stopped:** Day 6 done (`e482163`, pushed): `Tools/TripGenerator/trip_generator.py` + `Data/Trips/trip_sample.json`
