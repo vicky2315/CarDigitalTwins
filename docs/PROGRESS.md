@@ -4,6 +4,10 @@ Last updated: 2026-10-07
 Current day: **Day 8: Bind telemetry to the car** (Day 7 done 2026-10-07).
 Days 1–7 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
 
+**Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
+ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
+then HMI; the portfolio shows both on one data pipeline.
+
 ## Checkpoint (2026-10-07, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
 Commit: `e9abe2f` on `main`, pushed. Working tree: Day 7 not committed yet (7 new files in `Source/CarDigitalTwins/Telemetry/`,
@@ -69,7 +73,7 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
 - [x] `Trim` paint group (black parts) built; `MI_CarPaintBlack` reparented to `M_CarPaint`, duplicate master deleted
 - [x] Mapping table in SPEC.md (§1, incl. paint groups and materials)
 - [x] `BP_VehicleTwin` moved to `/Game/Jeep/Blueprints` (local only)
-- [ ] (Optional, later) Door / hood / tailgate animation using the split meshes (pivots and part list: CHECKPOINTS.md, 2026-09-27)
+- [ ] Door / hood / tailgate animation using the split meshes: scheduled as Phase H, H2 (pivots and part list: CHECKPOINTS.md, 2026-09-27)
 
 ### Day 5: Telemetry schema
 - [x] Fields with units, trip.json format, stream message format, status thresholds in SPEC.md
@@ -90,10 +94,10 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
   `GetLatestTelemetrySample`; on a trip loop `SampleTimeS` drops 189.9 → 0, treat that as a jump, not a blend.
 
 ### Day 8: Bind telemetry to the car
-- [ ] Wheel spin, interpolation, status colour, doors
+- [ ] Wheel spin, interpolation, status colour (doors on the 3D car moved to Phase H, H2; `openings` stays on the dashboard until then)
 - [ ] Overheating incident visibly turns the car amber → red
-- Depends on the UI design track (below): if the dashboard shows which signal is in warning, the status evaluator must report
-  per-signal status, not only the overall one. Check the track's §8 before writing `FVehicleStatusEvaluator`.
+- Step 1 written 2026-10-07 (not built yet): `FVehicleStatusEvaluator` reports per-signal status plus overall, so both front ends
+  can show which signal is in warning (SPEC.md §3). Next: status in `UTelemetrySubsystem`, then bind the car.
 
 ### Day 9: Python WebSocket relay
 - [ ] `relay.py` with `--rate`, `--loop`, `--drop-percent`, `--pause-after`
@@ -104,10 +108,20 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
 - [ ] Dropped-message count, receive latency
 - [ ] File ↔ WebSocket switch via one setting
 
+### Twin completion (after Day 10, before Day 11; added 2026-10-07)
+Turns the project from a digital *shadow* (data flows one way) into a digital *twin* (two-way data plus prediction).
+- [ ] T1. Feedback loop: a command from UE goes back to the source and changes what the vehicle does. Example: "Limp mode" when
+      coolant is critical → UE sends it over the WebSocket → relay passes it to a vehicle simulator → next samples show rpm capped.
+      Needs a two-way relay (Day 9) and a send path in the WebSocket receiver (Day 10); follows the "commands go down" rule (SPEC.md §5).
+- [ ] T2. Prediction: estimate time to the next threshold from recent samples (e.g. "coolant critical in ~25 s", "RR tyre at
+      180 kPa in ~6 min"); exposed through the ViewModel so both front ends can show it.
+- [ ] T3. Write both up in SPEC.md (command message format next to §2.3; prediction method and its limits).
+
 ### Day 11: MVVM dashboard (custom MVVM, option B)
 - [x] Design decided (two ViewModels, 10 Hz dashboard, formatting in widgets, BP read + one event; SPEC.md §5)
 - [ ] Custom ViewModel framework (field-enum notifications, dirty flags, per-frame flush)
-- [ ] `UVehicleTelemetryViewModel` + dashboard widgets (screens designed in the UI design track below, SPEC.md §8)
+- [ ] `UVehicleTelemetryViewModel` + remote ops dashboard widgets (screens designed in the UI design track below, SPEC.md §8).
+      The in-car HMI view is a second set of widgets on the same ViewModels (Phase H): keep ViewModels free of layout assumptions.
 - [x] Data-flow diagram in SPEC.md (§6)
 - [ ] (Comparison) Same dashboard on Epic's MVVM plugin
 
@@ -144,6 +158,22 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 
 ### Day 16: Documentation and portfolio
 - [ ] README complete; portfolio section (demo video, no live link); runnable in < 15 min
+- [ ] Frame it as a digital twin (physical entity, virtual entity, two-way data thread, prediction); list the HMI view as the next phase
+
+## Phase H: In-car HMI view (after Phase A; added 2026-10-07)
+Same receivers, subsystem, status evaluator and ViewModels as the twin; a second front end for the driver instead of a remote operator.
+Shows the architecture separates data from presentation. HMI priorities differ from the ops view: readable at a glance, fixed car-screen
+resolution, low latency, day/night themes, minimal distraction.
+- [ ] H1. HMI design (SPEC.md §9): instrument cluster (e.g. 1920×720) and centre display; tell-tales from the per-signal status;
+      3D car view showing doors/tyres; day/night theme; HTML wireframe. Same process as the UI design track.
+- [ ] H2. Door / hood / tailgate animation on the 3D car (brings back the Day 4 optional item): finish the rear doors, use the split
+      meshes in `/Game/Jeep/Cleaned` (part list and pivots: CHECKPOINTS.md, 2026-09-27), driven by `openings`. The signature HMI feature.
+- [ ] H3. HMI view in UE: cluster + centre display widgets on the existing ViewModels, own camera for the 3D car view, switchable with
+      the ops view.
+- [ ] H4. HMI commands: e.g. "open tailgate" / lights from the centre display → command path from T1 → vehicle simulator → state
+      comes back in the samples (the screen never animates on its own, SPEC.md §5).
+- [ ] H5. Fixed 60 fps budget at cluster resolution; profile like Day 12, framed as embedded-hardware limits.
+- [ ] H6. HMI demo video + README section.
 
 ## Testing (parallel track, started 2026-10-07)
 Written in a separate session alongside the feature days. Plan and how to run: [TESTS.md](TESTS.md); bugs found: [BUGS.md](BUGS.md).
@@ -157,8 +187,13 @@ Can run in a separate session alongside Days 8–10; design only, no UMG or C++.
 two ViewModels, 10 Hz dashboard, formatting in widgets, notify-then-pull); what's missing is the screens themselves. Doing it before
 Day 8 matters because the screens decide backend details (see step 3).
 
-- [ ] 1. Ask the user first, these shape everything: (a) purpose: portfolio demo video (reads at a glance) or functional monitoring
-      tool (dense, every value, alert list)? (b) placement: full-screen overlay on the 3D car, or a side panel next to it?
+**Scope (direction decided 2026-10-07):** this track designs the **remote ops (digital twin) view** first, SPEC.md §8. The in-car
+HMI view is Phase H (H1, SPEC.md §9) and can be designed later by the same kind of session. Both share the ViewModels, so §8 must not
+put layout-specific data in them. Per-signal status already exists (`FVehicleStatusReport`, SPEC.md §3).
+
+- [ ] 1. Ask the user first: (a) answered 2026-10-07: purpose is a portfolio piece that also works as a real monitoring screen, digital
+      twin first; confirm how dense it should be. (b) still open: placement, full-screen overlay on the 3D car or a side panel next to it?
+      Also ask whether to show the T2 prediction ("critical in ~25 s") and the T1 command (e.g. limp mode) in the first design.
 - [ ] 2. Write **SPEC.md §8 "Dashboard screens"**: screen/panel list; every widget mapped to a ViewModel field
       (`UVehicleTelemetryViewModel` from §2.1 fields + derived status §3; `UConnectionViewModel`: state, latency, drops); the four data
       states per panel (no data yet, live, stale, error, see §4); controls (pause, playback speed, file ↔ WebSocket source, §5
@@ -167,7 +202,8 @@ Day 8 matters because the screens decide backend details (see step 3).
       command functions on `UTelemetrySubsystem` (none yet; playback speed is only read at Play start); fields the Day 10 receiver
       must track for `UConnectionViewModel`.
 
-Constraints to respect: doors/hood/tailgate don't animate, `openings` is shown on the dashboard only (Day 4 scope cut); the body
+Constraints to respect: doors/hood/tailgate don't animate in Phase A, `openings` is shown on the dashboard only (Day 4 scope cut;
+the animation comes back in Phase H, H2); the body
 paint is red (`MI_CarPaint`), so a red Critical colour barely shows on the car, the dashboard should carry status clearly on its
 own; leave room for the Showroom mode idea (Optional / later), which would add a web panel over the Pixel Stream.
 
@@ -185,12 +221,19 @@ own; leave room for the Showroom mode idea (Optional / later), which would add a
 ## Future options
 - [ ] **One-off cloud deployment** (~$2–5): AWS Budget alert at $5 first → launch g4dn.xlarge on-demand for a 3–4 h session →
       TURN + auto-shutdown tested from mobile data → real numbers in COSTS.md → terminate the VM and delete the EBS volume.
+- [ ] **Real data source** (added 2026-10-07): a new receiver or relay input so the demo isn't only simulated. Free: a racing game's
+      UDP telemetry output (e.g. Forza "Data Out", BeamNG OutGauge: speed, rpm, gear, pedals, steering; likely no tyre pressure or
+      doors) bridged into the relay. ~$10–20: ELM327 OBD-II dongle + `python-OBD` (standard PIDs: speed, rpm, coolant, throttle,
+      fuel, module voltage). Either plugs in behind `ITelemetryReceiver` without changing anything downstream.
+- [ ] **COVESA VSS alignment** (added 2026-10-07): map the §2.1 fields to their Vehicle Signal Specification names in SPEC.md and the
+      README (e.g. `speedKmh` → `Vehicle.Speed`). Industry vocabulary for both the twin and the HMI.
 
 ## Optional / later
 - [ ] MQTT upgrade
 - [ ] Phase B (fleet → SUMO → Cesium)
 - [ ] Phase C (OpenUSD → Kit extension → side-by-side demo)
-- [ ] **Showroom mode** (idea 2026-10-05, *not decided*): car-configurator style mode next to the live twin, after Day 13 (~2–3 days).
+- [ ] **Showroom mode** (idea 2026-10-05, *not decided*; overlaps Phase H's centre display and H2 door animation, decide after H1):
+      car-configurator style mode next to the live twin, after Day 13 (~2–3 days).
       Toggle Live Twin ↔ Showroom; web panel over the Pixel Stream (browser → UE messages) with body/trim colour swatches (`PaintColor`
       on `M_CarPaint`); camera presets + turntable (overlaps Day 15); optional door/hood opening with the split meshes in
       `/Game/Jeep/Cleaned`; optional rim swap. Limits: no public link at $0 (local + video only; a public version would need a
