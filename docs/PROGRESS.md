@@ -92,6 +92,8 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
 ### Day 8: Bind telemetry to the car
 - [ ] Wheel spin, interpolation, status colour, doors
 - [ ] Overheating incident visibly turns the car amber → red
+- Depends on the UI design track (below): if the dashboard shows which signal is in warning, the status evaluator must report
+  per-signal status, not only the overall one. Check the track's §8 before writing `FVehicleStatusEvaluator`.
 
 ### Day 9: Python WebSocket relay
 - [ ] `relay.py` with `--rate`, `--loop`, `--drop-percent`, `--pause-after`
@@ -105,7 +107,7 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
 ### Day 11: MVVM dashboard (custom MVVM, option B)
 - [x] Design decided (two ViewModels, 10 Hz dashboard, formatting in widgets, BP read + one event; SPEC.md §5)
 - [ ] Custom ViewModel framework (field-enum notifications, dirty flags, per-frame flush)
-- [ ] `UVehicleTelemetryViewModel` + dashboard widgets
+- [ ] `UVehicleTelemetryViewModel` + dashboard widgets (screens designed in the UI design track below, SPEC.md §8)
 - [x] Data-flow diagram in SPEC.md (§6)
 - [ ] (Comparison) Same dashboard on Epic's MVVM plugin
 
@@ -149,6 +151,25 @@ Written in a separate session alongside the feature days. Plan and how to run: [
 - [ ] 2. Telemetry automation tests U1–U9 (needs Day 7 committed)
 - [ ] 3. `AVehicleTwinActor` automation tests V1–V7 (synthetic actor, no Jeep assets)
 - [ ] 4. Roadmap tests as days land (status thresholds Day 8, relay Day 9, MVVM Day 11)
+
+## UI design (parallel track, added 2026-10-07)
+Can run in a separate session alongside Days 8–10; design only, no UMG or C++. Architecture is already decided (SPEC.md §5–6:
+two ViewModels, 10 Hz dashboard, formatting in widgets, notify-then-pull); what's missing is the screens themselves. Doing it before
+Day 8 matters because the screens decide backend details (see step 3).
+
+- [ ] 1. Ask the user first, these shape everything: (a) purpose: portfolio demo video (reads at a glance) or functional monitoring
+      tool (dense, every value, alert list)? (b) placement: full-screen overlay on the 3D car, or a side panel next to it?
+- [ ] 2. Write **SPEC.md §8 "Dashboard screens"**: screen/panel list; every widget mapped to a ViewModel field
+      (`UVehicleTelemetryViewModel` from §2.1 fields + derived status §3; `UConnectionViewModel`: state, latency, drops); the four data
+      states per panel (no data yet, live, stale, error, see §4); controls (pause, playback speed, file ↔ WebSocket source, §5
+      commands); target resolution and aspect for Pixel Streaming (Day 13). Plus an HTML wireframe of the layout.
+- [ ] 3. Feed back into the plan and note it under the affected days: per-signal status from `FVehicleStatusEvaluator` (Day 8);
+      command functions on `UTelemetrySubsystem` (none yet; playback speed is only read at Play start); fields the Day 10 receiver
+      must track for `UConnectionViewModel`.
+
+Constraints to respect: doors/hood/tailgate don't animate, `openings` is shown on the dashboard only (Day 4 scope cut); the body
+paint is red (`MI_CarPaint`), so a red Critical colour barely shows on the car, the dashboard should carry status clearly on its
+own; leave room for the Showroom mode idea (Optional / later), which would add a web panel over the Pixel Stream.
 
 ## Budget constraints ($0 project)
 - No cloud hosting: Pixel Streaming runs locally only (NVENC on either machine).
