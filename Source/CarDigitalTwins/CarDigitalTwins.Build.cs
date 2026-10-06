@@ -11,9 +11,11 @@ public class CarDigitalTwins : ModuleRules
 		// Lets code include by folder from the module root, e.g. "MVVM/ViewModelBase.h".
 		PublicIncludePaths.Add(ModuleDirectory);
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
+		// DeveloperSettings is public: UTelemetrySettings (a UDeveloperSettings subclass) sits in a public header.
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "DeveloperSettings" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		// Json + JsonUtilities: UFileTelemetryReceiver parses the recorded trip with FJsonObjectConverter (SPEC.md §2.2).
+		PrivateDependencyModuleNames.AddRange(new string[] { "Json", "JsonUtilities" });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
