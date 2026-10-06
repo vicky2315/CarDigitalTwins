@@ -17,6 +17,10 @@ _TODO (Day 7)_
 ### Relay mode
 _TODO (Day 10)_
 
+### Tests
+`python -m pytest Tools/TripGenerator/tests` (needs `pip install pytest`). Full list and Unreal automation tests: [TESTS.md](docs/TESTS.md);
+known bugs: [BUGS.md](docs/BUGS.md).
+
 ## Performance highlights
 _TODO: from [PERFORMANCE.md](docs/PERFORMANCE.md) (Day 12)._
 

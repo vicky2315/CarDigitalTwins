@@ -20,6 +20,11 @@ SCHEMA_VERSION = 1
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT_PATH = REPO_ROOT / "Data" / "Trips" / "trip_sample.json"
 
+# sampleTimeS is written to the millisecond. The validator allows the resulting rounding error (up to half a millisecond) when it
+# checks the rate grid, so rates that don't divide 1000 evenly (3 Hz → 0.333 s) still validate (BUGS.md BUG-001).
+SAMPLE_TIME_DECIMALS = 3
+SAMPLE_TIME_GRID_TOLERANCE_S = 0.5 * 10 ** -SAMPLE_TIME_DECIMALS + 1e-9    # + 1e-9 absorbs float error on top of the rounding
+
 # Vehicle: 2010 Jeep Wrangler Rubicon, 6-speed manual. Demo values, not manufacturer data (SPEC.md §3).
 TYRE_RADIUS_M = 0.422                      # measured on the tyre mesh in UE (AVehicleTwinActor), so speed and wheel spin agree
 GEAR_RATIOS = [4.46, 2.61, 1.72, 1.25, 1.00, 0.84]
@@ -218,7 +223,7 @@ def generate_trip(seed, rate_hz):
 
             frames.append({
                 "seq": seq,
-                "sampleTimeS": round(trip_time_s, 3),
+                "sampleTimeS": round(trip_time_s, SAMPLE_TIME_DECIMALS),
                 "speedKmh": round(speed_kmh, 2),
                 "engineRpm": round(engine_rpm),
                 "gear": gear,
@@ -256,7 +261,7 @@ def validate_trip(trip):
             raise ValueError(f"frame {frame_index}: keys {list(frame.keys())} != SPEC {FRAME_KEYS}")
         if frame["seq"] != frame_index:
             raise ValueError(f"frame {frame_index}: seq {frame['seq']}")
-        if abs(frame["sampleTimeS"] - frame_index * expected_step_s) > 1e-6:
+        if abs(frame["sampleTimeS"] - frame_index * expected_step_s) > SAMPLE_TIME_GRID_TOLERANCE_S:
             raise ValueError(f"frame {frame_index}: sampleTimeS {frame['sampleTimeS']} is off the {trip['rateHz']} Hz grid")
         if frame["speedKmh"] < 0.0 or not -1 <= frame["gear"] <= 6:
             raise ValueError(f"frame {frame_index}: speed or gear out of range")

@@ -173,6 +173,13 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 ### Day 16: Documentation and portfolio
 - [ ] README complete; portfolio section (demo video, no live link); runnable in < 15 min
 
+## Testing (parallel track, started 2026-10-07)
+Written in a separate session alongside the feature days. Plan and how to run: [TESTS.md](TESTS.md); bugs found: [BUGS.md](BUGS.md).
+- [x] 1. Trip generator pytest suite, P1–P8 (`Tools/TripGenerator/tests/`); found BUG-001 (`--rate` 3/7 fail validation, fixed 2026-10-07)
+- [ ] 2. Telemetry automation tests U1–U9 (needs Day 7 committed)
+- [ ] 3. `AVehicleTwinActor` automation tests V1–V7 (synthetic actor, no Jeep assets)
+- [ ] 4. Roadmap tests as days land (status thresholds Day 8, relay Day 9, MVVM Day 11)
+
 ## Budget constraints ($0 project)
 - No cloud hosting: Pixel Streaming runs locally only (NVENC on either machine).
 - Machines: office laptop (RTX 4060 Ti) and personal laptop (RTX 3070 Ti Laptop). Tag every measurement with the machine.
