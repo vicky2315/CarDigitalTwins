@@ -10,32 +10,34 @@ then HMI; the portfolio shows both on one data pipeline.
 
 ## Checkpoint (2026-10-08, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commit: `1f8d9b0` on `main`, 2 commits not pushed (plus this checkpoint). Working tree clean except `Content/Maps/` (untracked on purpose).
+Commit: `929f8d7` on `main`, pushed. Working tree: `Content/Maps/` (untracked on purpose) and the uncommitted car rebuild scripts in
+`Tools/UnrealEditor/` (`export_vehicle_twin_recipe.py`, `rebuild_vehicle_twin_from_cad.py`, `vehicle_twin_recipe.json`).
 
-**Where I stopped:** Day 8 done. Step 2: `UTelemetrySubsystem` evaluates every sample, `GetCurrentVehicleStatusReport()` (`1406469`).
-Step 3: `AVehicleTwinActor` follows telemetry (previous → latest blend, loop snaps) and shows status as a pulsing amber/red outline
-(custom stencil + `PP_VehicleStatusOutline`, made by `Tools/UnrealEditor/create_status_outline_material.py`) (`1f8d9b0`). Both
-verified in PIE at 10×: Warning 91 s, Critical 119 s.
+**Where I stopped:** Day 8 done and pushed. Side task started: rebuild the car from the STEP file plus a recipe exported from the
+hand-built `BP_VehicleTwin`, so `Content/Jeep/` can be recreated. Export works (113 components, 72 meshes; tags `Paint` 8, `Trim` 22,
+`Tyre` 4, one each `Wheel.*`). Rebuild ran: `/Game/Jeep/Rebuilt/ImportA` + `BP_VehicleTwin_Rebuilt`, looks mostly the same, but
+**Preview Status Outline doesn't show on the rebuilt car** although its Status Outline Material is set.
 
 **Resume:**
-1. Push `main` (2 commits + checkpoint).
-2. Record the Day 8 demo clip for LinkedIn: PIE at 10×, car **not selected** (the editor selection outline is yellow too), wheels
-   rolling → amber outline (~91 s) → fast red pulse (~119 s), Output Log `Vehicle status:` line in shot.
-3. Day 9: `Tools/` relay `relay.py` (`--rate`, `--loop`, `--drop-percent`, `--pause-after`) streaming SPEC.md §2.3 messages;
-   verify with a CLI client.
-4. Private asset repo for `Content/Jeep/` (Pending setup): `BP_VehicleTwin` (now holding the outline material assignment) exists
-   only on this laptop.
+1. Debug the rebuilt car's outline: both cars in one level, tick Preview Status Outline on each, then PIE and compare the
+   `LogVehicleTwin` lines per car (outline material warning, `group Paint/Trim: N material slots on M meshes`, wheel setup).
+   Suspects: preview flag only on the original's instance, components not collected for the stencil, render custom depth off.
+2. When the rebuilt car matches: commit the three `Tools/UnrealEditor/` files (scripts + recipe; no meshes, Content/Jeep is ignored).
+3. Day 9: `relay.py` (`--rate`, `--loop`, `--drop-percent`, `--pause-after`), verify with a CLI client.
+4. Record the Day 8 LinkedIn clip (car not selected: the editor selection outline is yellow too).
 
-**Unverified:** Day 4 Play log: per-group log lines and the `CarRoot` facing warning (`LogVehicleTwin`) still not looked at.
-Editor preview of the outline (`bPreviewStatusOutline`) left ticked when starting PIE: possible doubled outline, not tested.
+**Unverified:** SPEC.md §1 says 25 `Paint` meshes, the BP has 8 `Paint` components: check the original car's `group Paint` PIE log
+line and fix SPEC. Rebuild script's new Status Outline Material check not run yet. Day 4 Play log (`CarRoot` facing warning) not looked
+at. Outline with the editor preview left ticked at PIE start: possible doubled outline, not tested.
 
 **Open decisions:** UI design track questions (ops view placement, show T1/T2 in the first design). Showroom mode (decide after H1).
-Redistribution of the imported meshes / GrabCAD license (ASSETS.md).
+Redistribution of the imported meshes / GrabCAD license (ASSETS.md). Private asset repo for `Content/Jeep/` still pending (the rebuild
+scripts don't cover the 1128 hand-split door meshes).
 
 **Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` with the 1128 split meshes for H2 door animation,
-`Blueprints/BP_VehicleTwin`), `Content/Maps/L_VehicleTwin.umap`, `ImportTestMap.umap`, raw CAD in `RawCAD/`. `M_GlossyTest` is no
-longer in `Content/` (gone since the last checkpoint). Leftovers safe to delete: empty `Content/Maps/_GENERATED/vigne/`, empty root
-`Jeep/Cleaned/`. MVVM reference branch `mvvm-reference` exists only on the office laptop.
+`Blueprints/BP_VehicleTwin`, new `Rebuilt/` with `BP_VehicleTwin_Rebuilt`), `Content/Maps/L_VehicleTwin.umap`, `ImportTestMap.umap`,
+the side-by-side test level if saved, raw CAD in `RawCAD/`. Leftovers safe to delete: empty `Content/Maps/_GENERATED/vigne/`, empty
+root `Jeep/Cleaned/`. MVVM reference branch `mvvm-reference` exists only on the office laptop.
 
 ## Phase A: Single-car digital twin
 
