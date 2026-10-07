@@ -1,13 +1,18 @@
 #include "Vehicle/VehicleTwinActor.h"
 
 #include "Components/ChildActorComponent.h"
+#include "Components/PostProcessComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/GameInstance.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
+#include "Materials/Material.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "StaticMeshResources.h"
+#include "Telemetry/TelemetrySubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogVehicleTwin, Log, All);
 
@@ -84,6 +89,13 @@ void AVehicleTwinActor::OnConstruction(const FTransform& Transform)
 		// Preview was just switched off: back to the original paint.
 		SetStatusColor(FLinearColor::White, 0.f);
 	}
+
+	// Construction can recreate the Blueprint's components, so the outline mesh list is rebuilt every time.
+	CollectStatusOutlineMeshComponents();
+	if (bPreviewStatusOutline)
+	{
+		SetStatusOutline(PreviewVehicleStatus);
+	}
 }
 
 void AVehicleTwinActor::BeginPlay()
@@ -98,13 +110,64 @@ void AVehicleTwinActor::BeginPlay()
 	{
 		SetStatusColor(PreviewStatusColor, PreviewStatusBlend);
 	}
+
+	CollectStatusOutlineMeshComponents();
+	if (bDriveFromTelemetry || bPreviewStatusOutline)
+	{
+		// Logs a missing or wrong outline material once here instead of every frame.
+		EnsureStatusOutlinePostProcess(true);
+	}
+
+	if (bDriveFromTelemetry)
+	{
+		const UGameInstance* OwningGameInstance = GetGameInstance();
+		UTelemetrySubsystem* TelemetrySubsystem = OwningGameInstance ? OwningGameInstance->GetSubsystem<UTelemetrySubsystem>() : nullptr;
+		if (TelemetrySubsystem)
+		{
+			SubscribedTelemetrySubsystem = TelemetrySubsystem;
+			TelemetryUpdatedDelegateHandle = TelemetrySubsystem->OnTelemetryUpdated.AddUObject(this, &AVehicleTwinActor::HandleTelemetrySampleReceived);
+		}
+		else
+		{
+			UE_LOG(LogVehicleTwin, Warning, TEXT("%s: no UTelemetrySubsystem, the car won't follow telemetry."), *GetName());
+		}
+	}
+}
+
+void AVehicleTwinActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UTelemetrySubsystem* TelemetrySubsystem = SubscribedTelemetrySubsystem.Get())
+	{
+		TelemetrySubsystem->OnTelemetryUpdated.Remove(TelemetryUpdatedDelegateHandle);
+	}
+	SubscribedTelemetrySubsystem.Reset();
+	TelemetryUpdatedDelegateHandle.Reset();
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void AVehicleTwinActor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (bPreviewInEditor)
+	// Telemetry wins once samples flow; until then (and in the editor) the preview settings drive the car.
+	const UTelemetrySubsystem* TelemetrySubsystem = SubscribedTelemetrySubsystem.Get();
+	const bool bTelemetryDrivesCar = TelemetrySubsystem && TelemetrySubsystem->HasReceivedAnyTelemetrySample();
+	if (bTelemetryDrivesCar)
+	{
+		DriveFromTelemetry(*TelemetrySubsystem, DeltaSeconds);
+	}
+	else if (bPreviewStatusOutline)
+	{
+		SetStatusOutline(PreviewVehicleStatus);
+	}
+
+	if (DisplayedOutlineStatus != EVehicleStatus::Normal)
+	{
+		UpdateStatusOutlinePulse(DeltaSeconds);
+	}
+
+	if (bPreviewInEditor && !bTelemetryDrivesCar)
 	{
 		UpdateWheels(PreviewSpeedKmh, PreviewSteerDeg, DeltaSeconds);
 
@@ -128,7 +191,8 @@ void AVehicleTwinActor::Tick(float DeltaSeconds)
 
 bool AVehicleTwinActor::ShouldTickIfViewportsOnly() const
 {
-	return bPreviewInEditor;
+	// The outline preview ticks too, for its pulse.
+	return bPreviewInEditor || bPreviewStatusOutline;
 }
 
 void AVehicleTwinActor::UpdateWheels(float SpeedKmh, float SteerDeg, float DeltaSeconds)
@@ -162,6 +226,154 @@ void AVehicleTwinActor::SetStatusColor(FLinearColor NewStatusColor, float NewSta
 			PaintMaterialInstance->SetScalarParameterValue(StatusBlendParameter, ClampedStatusBlend * PaintMaterialStatusBlendScales[PaintMaterialIndex]);
 		}
 	}
+}
+
+void AVehicleTwinActor::SetStatusOutline(EVehicleStatus NewVehicleStatus)
+{
+	if (NewVehicleStatus == DisplayedOutlineStatus)
+	{
+		return;
+	}
+
+	const bool bShowOutline = NewVehicleStatus != EVehicleStatus::Normal;
+	if (bShowOutline && !EnsureStatusOutlinePostProcess(false))
+	{
+		// No outline material: nothing could draw it, so don't pay for the custom depth pass either.
+		return;
+	}
+	if (StatusOutlineMeshComponents.IsEmpty())
+	{
+		CollectStatusOutlineMeshComponents();
+	}
+
+	// Only while the outline shows: custom depth draws the whole car a second time (SPEC.md §7).
+	for (UPrimitiveComponent* OutlineMeshComponent : StatusOutlineMeshComponents)
+	{
+		if (OutlineMeshComponent)
+		{
+			OutlineMeshComponent->SetCustomDepthStencilValue(StatusOutlineStencilValue);
+			OutlineMeshComponent->SetRenderCustomDepth(bShowOutline);
+		}
+	}
+
+	DisplayedOutlineStatus = NewVehicleStatus;
+
+	// Each new status starts at full glow, so the change is visible straight away.
+	StatusOutlinePulseSeconds = 0.f;
+	UpdateStatusOutlinePulse(0.f);
+}
+
+bool AVehicleTwinActor::EnsureStatusOutlinePostProcess(bool bLogProblems)
+{
+	if (StatusOutlinePostProcess && StatusOutlineMaterialInstance)
+	{
+		return true;
+	}
+	if (!StatusOutlineMaterial)
+	{
+		if (bLogProblems)
+		{
+			UE_LOG(LogVehicleTwin, Warning, TEXT("%s: StatusOutlineMaterial is not set, so the status outline won't show (SPEC.md §1)."), *GetName());
+		}
+		return false;
+	}
+	if (bLogProblems)
+	{
+		const UMaterial* OutlineBaseMaterial = StatusOutlineMaterial->GetMaterial();
+		if (OutlineBaseMaterial && OutlineBaseMaterial->MaterialDomain != MD_PostProcess)
+		{
+			UE_LOG(LogVehicleTwin, Warning, TEXT("%s: %s is not a Post Process material, so the status outline won't show."),
+				*GetName(), *StatusOutlineMaterial->GetName());
+		}
+	}
+
+	if (!StatusOutlinePostProcess)
+	{
+		// Unbound, so its position doesn't matter and it isn't attached: construction can recreate the Blueprint's root.
+		StatusOutlinePostProcess = NewObject<UPostProcessComponent>(this, NAME_None, RF_Transient);
+		StatusOutlinePostProcess->bUnbound = true;
+		StatusOutlinePostProcess->RegisterComponent();
+	}
+
+	StatusOutlineMaterialInstance = UMaterialInstanceDynamic::Create(StatusOutlineMaterial, this);
+	StatusOutlinePostProcess->Settings.WeightedBlendables.Array.Reset();
+	StatusOutlinePostProcess->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.f, StatusOutlineMaterialInstance));
+	return true;
+}
+
+void AVehicleTwinActor::CollectStatusOutlineMeshComponents()
+{
+	// Components from an earlier collection may outlive it (construction reruns); take them out of the outline first.
+	for (UPrimitiveComponent* PreviousOutlineMeshComponent : StatusOutlineMeshComponents)
+	{
+		if (IsValid(PreviousOutlineMeshComponent))
+		{
+			PreviousOutlineMeshComponent->SetRenderCustomDepth(false);
+		}
+	}
+	StatusOutlineMeshComponents.Reset();
+	DisplayedOutlineStatus = EVehicleStatus::Normal;
+
+	TInlineComponentArray<UPrimitiveComponent*> CarMeshComponents(this, /*bIncludeFromChildActors*/ true);
+	for (UPrimitiveComponent* CarMeshComponent : CarMeshComponents)
+	{
+		StatusOutlineMeshComponents.Add(CarMeshComponent);
+	}
+}
+
+void AVehicleTwinActor::UpdateStatusOutlinePulse(float DeltaSeconds)
+{
+	if (!StatusOutlineMaterialInstance)
+	{
+		return;
+	}
+
+	StatusOutlinePulseSeconds += DeltaSeconds;
+
+	const bool bCritical = DisplayedOutlineStatus == EVehicleStatus::Critical;
+	const float OutlinePulseHz = bCritical ? CriticalOutlinePulseHz : WarningOutlinePulseHz;
+
+	// Cosine pulse starting at full glow: dims by up to OutlinePulseDepth and back, OutlinePulseHz times a second.
+	const float PulseDimming = OutlinePulseDepth * 0.5f * (1.f - FMath::Cos(UE_TWO_PI * OutlinePulseHz * StatusOutlinePulseSeconds));
+	const float GlowIntensity = DisplayedOutlineStatus == EVehicleStatus::Normal ? 0.f : OutlineGlowIntensity * (1.f - PulseDimming);
+
+	StatusOutlineMaterialInstance->SetVectorParameterValue(StatusOutlineColorParameter, bCritical ? CriticalOutlineColor : WarningOutlineColor);
+	StatusOutlineMaterialInstance->SetScalarParameterValue(StatusOutlineGlowIntensityParameter, GlowIntensity);
+}
+
+void AVehicleTwinActor::HandleTelemetrySampleReceived(const FVehicleTelemetry& NewTelemetrySample)
+{
+	const double NowS = GetWorld()->GetTimeSeconds();
+	if (LatestSampleArrivalTimeS >= 0.0)
+	{
+		// Several samples can arrive in one frame (high playback speed); keep the last real span instead of zero.
+		const double SinceLatestSampleS = NowS - LatestSampleArrivalTimeS;
+		if (SinceLatestSampleS > UE_KINDA_SMALL_NUMBER)
+		{
+			SampleArrivalIntervalS = SinceLatestSampleS;
+		}
+	}
+	LatestSampleArrivalTimeS = NowS;
+}
+
+void AVehicleTwinActor::DriveFromTelemetry(const UTelemetrySubsystem& TelemetrySubsystem, float DeltaSeconds)
+{
+	const FVehicleTelemetry& PreviousTelemetrySample = TelemetrySubsystem.GetPreviousTelemetrySample();
+	const FVehicleTelemetry& LatestTelemetrySample = TelemetrySubsystem.GetLatestTelemetrySample();
+
+	// Shows the motion one sample behind, blending previous -> latest over the time the latest one took to arrive, so 10 Hz data
+	// moves smoothly at any frame rate. A trip loop jumps back in time: snap to the new sample instead of blending across it.
+	const bool bTripLooped = LatestTelemetrySample.SampleTimeS < PreviousTelemetrySample.SampleTimeS;
+	const double SinceLatestSampleS = GetWorld()->GetTimeSeconds() - LatestSampleArrivalTimeS;
+	const float BlendAlpha = bTripLooped ? 1.f : static_cast<float>(FMath::Clamp(SinceLatestSampleS / SampleArrivalIntervalS, 0.0, 1.0));
+
+	UpdateWheels(
+		FMath::Lerp(PreviousTelemetrySample.SpeedKmh, LatestTelemetrySample.SpeedKmh, BlendAlpha),
+		FMath::Lerp(PreviousTelemetrySample.SteerDeg, LatestTelemetrySample.SteerDeg, BlendAlpha),
+		DeltaSeconds);
+
+	// Status is not blended: it comes from real samples only (FVehicleStatusEvaluator).
+	SetStatusOutline(TelemetrySubsystem.GetCurrentVehicleStatusReport().OverallStatus);
 }
 
 void AVehicleTwinActor::SetUpWheels(bool bLogProblems)

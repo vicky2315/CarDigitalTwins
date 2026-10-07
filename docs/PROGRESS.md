@@ -1,8 +1,8 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
-Last updated: 2026-10-07
-Current day: **Day 8: Bind telemetry to the car** (Day 7 done 2026-10-07).
-Days 1–7 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
+Last updated: 2026-10-08
+Current day: **Day 9: Python WebSocket relay** (Day 8 done 2026-10-08).
+Days 1–8 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
@@ -95,12 +95,16 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
   `GetLatestTelemetrySample`; on a trip loop `SampleTimeS` drops 189.9 → 0, treat that as a jump, not a blend.
 
 ### Day 8: Bind telemetry to the car
-- [ ] Wheel spin, interpolation, status colour (doors on the 3D car moved to Phase H, H2; `openings` stays on the dashboard until then)
-- [ ] Overheating incident visibly turns the car amber → red
+- [x] Wheel spin, interpolation, status colour (doors on the 3D car moved to Phase H, H2; `openings` stays on the dashboard until then)
+- [x] Overheating incident visibly turns the car amber → red (as a pulsing outline, not paint: SPEC.md §1 "Status outline")
 - Step 1 written 2026-10-07 (not built yet): `FVehicleStatusEvaluator` reports per-signal status plus overall, so both front ends
   can show which signal is in warning (SPEC.md §3).
 - Step 2 done 2026-10-07: `UTelemetrySubsystem` evaluates every sample, `GetCurrentVehicleStatusReport()`, logs overall status
-  changes. Built and verified in PIE at 10×: Warning at 91 s, Critical at 119 s (coolant). Next: bind the car (step 3).
+  changes. Built and verified in PIE at 10×: Warning at 91 s, Critical at 119 s (coolant).
+- Step 3 done 2026-10-08: `AVehicleTwinActor` follows telemetry (previous → latest blend, loop snaps) and shows the status as a
+  glowing outline (custom stencil + `PP_VehicleStatusOutline`, amber slow pulse / red fast pulse), `r.CustomDepth=3`. Material made
+  by `Tools/UnrealEditor/create_status_outline_material.py` (Python Editor Script Plugin, editor only). Verified in PIE at 10×.
+  The material is assigned in `BP_VehicleTwin`, which is local-only (personal laptop). Custom depth cost goes to Day 12 profiling.
 
 ### Day 9: Python WebSocket relay
 - [ ] `relay.py` with `--rate`, `--loop`, `--drop-percent`, `--pause-after`

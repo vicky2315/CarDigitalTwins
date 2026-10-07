@@ -62,6 +62,8 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 | V5 | Setup idempotent | Re-running setup mid-spin resets to the authored pose, same radius |
 | V6 | Tyre radius | From vertices of a known cylinder; bounds fallback |
 | V7 | Status colour | Blend clamp, per-group scale, slots without `StatusColor` untouched, no stacked instances |
+| V8 | Status outline | Warning/Critical turn custom depth on with stencil 1 on all meshes (child actors too); Normal turns it off; same status twice touches no mesh |
+| V9 | Telemetry blend | Alpha 0 → 1 over the arrival interval; trip loop snaps to latest; several samples in one frame keep the last real interval |
 
 ## 4. Later (with the roadmap)
 - Day 7 `UTelemetrySubsystem`: receiver chosen from settings, one `OnTelemetryUpdated` per sample.

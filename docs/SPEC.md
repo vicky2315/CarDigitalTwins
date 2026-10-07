@@ -29,6 +29,19 @@ names, define the groups. Mirrors, headlights and the inner grille have no paint
 scale (default `Paint` 1, `Trim` 1). `SetStatusColor(Color, Blend)` sets `StatusColor` and `StatusBlend × scale` on every material slot
 of those meshes whose material has a `StatusColor` parameter; other slots are left alone.
 
+**Status outline (shown in play, decided 2026-10-07):** the red body paint hides a red tint, so the derived status (§3) is shown as a
+glowing, pulsing outline around the whole car instead: Warning amber at 0.5 Hz, Critical red at 2 Hz, Normal none.
+`SetStatusOutline(Status)` sets custom stencil value 1 (`StatusOutlineStencilValue`) on every car mesh (child actors included), but
+only while the status isn't Normal, because custom depth draws the car a second time (§7). The actor makes its own unbound
+post-process component with a dynamic instance of `PP_VehicleStatusOutline` (`/Game/Materials`, Post Process, Scene Color Before
+Bloom) and sets `StatusOutlineColor` and `StatusOutlineGlowIntensity` (HDR, pulsed) every frame. Needs `r.CustomDepth=3` (Enabled with
+Stencil). Material: four `CustomStencil` taps `StatusOutlineWidthPixels` apart → outline = neighbour stencil × (1 − centre stencil);
+Emissive = `PostProcessInput0` + outline × colour × intensity. `SetStatusColor` stays for later use (e.g. the HMI view).
+
+**Telemetry binding:** in play `AVehicleTwinActor` subscribes to `UTelemetrySubsystem::OnTelemetryUpdated` only to timestamp arrivals,
+then blends previous → latest sample (speed, steer) over the last arrival interval into `UpdateWheels`, one sample behind. A trip
+loop (`sampleTimeS` going backwards) snaps. Status is polled from `GetCurrentVehicleStatusReport()`, never blended.
+
 Materials (`/Game/Materials`): one master `M_CarPaint` with `PaintColor`, `StatusColor`, `StatusBlend` (0–1), `Metallic`, `Roughness`;
 Base Color = Lerp(`PaintColor`, `StatusColor`, `StatusBlend`). Instances: `MI_CarPaint` (red body), `MI_CarPaintBlack` (black trim:
 `PaintColor` ≈ 0.02, `Metallic` 0, `Roughness` 0.5). New colours are instances of `M_CarPaint`, never copies of it.
