@@ -8,33 +8,34 @@ Days 1–8 complete. Day 11 MVVM rewrite paused before step 2 (machine-independe
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
 then HMI; the portfolio shows both on one data pipeline.
 
-## Checkpoint (2026-10-07, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+## Checkpoint (2026-10-08, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commit: the checkpoint commit after `ed324e1` on `main`, pushed. Working tree clean except `Content/Maps/` (untracked on purpose).
-Day 8 step 1 (`Telemetry/VehicleStatusEvaluator.h/.cpp`, SPEC.md §3 Critical clear values) is committed but **not built yet**.
+Commit: `1f8d9b0` on `main`, 2 commits not pushed (plus this checkpoint). Working tree clean except `Content/Maps/` (untracked on purpose).
 
-**Where I stopped:** Day 7 committed (`cfdd9f0`). Roadmap changed to one backend, two front ends: digital twin first (Twin
-completion T1–T3 after Day 10), then in-car HMI (Phase H) (`ed324e1`). UI design track added for a separate session (`612d3e4`).
-Day 8 step 1 written: `FVehicleStatusEvaluator` (per-signal status + overall, hysteresis per SPEC.md §3), not built yet.
+**Where I stopped:** Day 8 done. Step 2: `UTelemetrySubsystem` evaluates every sample, `GetCurrentVehicleStatusReport()` (`1406469`).
+Step 3: `AVehicleTwinActor` follows telemetry (previous → latest blend, loop snaps) and shows status as a pulsing amber/red outline
+(custom stencil + `PP_VehicleStatusOutline`, made by `Tools/UnrealEditor/create_status_outline_material.py`) (`1f8d9b0`). Both
+verified in PIE at 10×: Warning 91 s, Critical 119 s.
 
 **Resume:**
-1. Day 8 step 2: in `UTelemetrySubsystem`, run `FVehicleStatusEvaluator` on every new sample, keep the latest
-   `FVehicleStatusReport`, add `GetCurrentVehicleStatusReport()`, log one line when the overall status changes.
-2. Close the editor and build (new USTRUCT, Live Coding won't do). PIE at 10×: status log goes Warning ~91 s, Critical ~119 s.
-3. Day 8 step 3+: car subscribes in `BeginPlay`/`EndPlay`, lerps previous → latest (loop = snap) into `UpdateWheels`, polls status for
-   `SetStatusColor` with warning/critical colour properties (pick a Critical colour that shows on the red body paint).
-4. Private asset repo for `Content/Jeep/` (Pending setup): all Jeep assets incl. `BP_VehicleTwin` exist only on this laptop.
+1. Push `main` (2 commits + checkpoint).
+2. Record the Day 8 demo clip for LinkedIn: PIE at 10×, car **not selected** (the editor selection outline is yellow too), wheels
+   rolling → amber outline (~91 s) → fast red pulse (~119 s), Output Log `Vehicle status:` line in shot.
+3. Day 9: `Tools/` relay `relay.py` (`--rate`, `--loop`, `--drop-percent`, `--pause-after`) streaming SPEC.md §2.3 messages;
+   verify with a CLI client.
+4. Private asset repo for `Content/Jeep/` (Pending setup): `BP_VehicleTwin` (now holding the outline material assignment) exists
+   only on this laptop.
 
-**Unverified:** `VehicleStatusEvaluator` not compiled yet. Day 4 Play log: per-group log lines and the `CarRoot` facing warning
-(`LogVehicleTwin`) still not looked at.
+**Unverified:** Day 4 Play log: per-group log lines and the `CarRoot` facing warning (`LogVehicleTwin`) still not looked at.
+Editor preview of the outline (`bPreviewStatusOutline`) left ticked when starting PIE: possible doubled outline, not tested.
 
 **Open decisions:** UI design track questions (ops view placement, show T1/T2 in the first design). Showroom mode (decide after H1).
 Redistribution of the imported meshes / GrabCAD license (ASSETS.md).
 
 **Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` with the 1128 split meshes for H2 door animation,
-`Blueprints/BP_VehicleTwin`), `Content/Maps/L_VehicleTwin.umap`, `ImportTestMap.umap`, raw CAD in `RawCAD/`, `M_GlossyTest` in
-`Content/CADImports/Materials/`. Leftovers safe to delete: empty `Content/Maps/_GENERATED/vigne/`, empty root `Jeep/Cleaned/`.
-MVVM reference branch `mvvm-reference` exists only on the office laptop.
+`Blueprints/BP_VehicleTwin`), `Content/Maps/L_VehicleTwin.umap`, `ImportTestMap.umap`, raw CAD in `RawCAD/`. `M_GlossyTest` is no
+longer in `Content/` (gone since the last checkpoint). Leftovers safe to delete: empty `Content/Maps/_GENERATED/vigne/`, empty root
+`Jeep/Cleaned/`. MVVM reference branch `mvvm-reference` exists only on the office laptop.
 
 ## Phase A: Single-car digital twin
 
