@@ -98,7 +98,9 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
 - [ ] Wheel spin, interpolation, status colour (doors on the 3D car moved to Phase H, H2; `openings` stays on the dashboard until then)
 - [ ] Overheating incident visibly turns the car amber → red
 - Step 1 written 2026-10-07 (not built yet): `FVehicleStatusEvaluator` reports per-signal status plus overall, so both front ends
-  can show which signal is in warning (SPEC.md §3). Next: status in `UTelemetrySubsystem`, then bind the car.
+  can show which signal is in warning (SPEC.md §3).
+- Step 2 done 2026-10-07: `UTelemetrySubsystem` evaluates every sample, `GetCurrentVehicleStatusReport()`, logs overall status
+  changes. Built and verified in PIE at 10×: Warning at 91 s, Critical at 119 s (coolant). Next: bind the car (step 3).
 
 ### Day 9: Python WebSocket relay
 - [ ] `relay.py` with `--rate`, `--loop`, `--drop-percent`, `--pause-after`

@@ -7,6 +7,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Tickable.h"
 #include "TelemetryReceiver.h"
+#include "VehicleStatusEvaluator.h"
 #include "VehicleTelemetry.h"
 #include "TelemetrySubsystem.generated.h"
 
@@ -42,9 +43,15 @@ public:
 	// The sample before the latest one. Day 8 interpolates between the two; on a trip loop SampleTimeS goes backwards between them.
 	const FVehicleTelemetry& GetPreviousTelemetrySample() const { return PreviousTelemetrySample; }
 
+	// Status of the latest sample (SPEC.md §3). Already updated when OnTelemetryUpdated fires for that sample.
+	const FVehicleStatusReport& GetCurrentVehicleStatusReport() const { return CurrentVehicleStatusReport; }
+
 	FOnVehicleTelemetryUpdated OnTelemetryUpdated;
 
 private:
+	// Logs one line when the overall status changes, naming every signal that isn't Normal.
+	void LogOverallStatusChange(EVehicleStatus PreviousOverallStatus, const FVehicleTelemetry& TelemetrySample) const;
+
 	// Logs one line per second of game time: how many samples arrived and the latest values, instead of 10 lines a second.
 	void LogTelemetrySummaryOncePerSecond(float DeltaSeconds, const TArray<FVehicleTelemetry>& NewTelemetrySamples);
 
@@ -54,6 +61,10 @@ private:
 	FVehicleTelemetry LatestTelemetrySample;
 	FVehicleTelemetry PreviousTelemetrySample;
 	bool bHasReceivedAnyTelemetrySample = false;
+
+	// Fed every received sample in order, never interpolated ones (see FVehicleStatusEvaluator).
+	FVehicleStatusEvaluator VehicleStatusEvaluator;
+	FVehicleStatusReport CurrentVehicleStatusReport;
 
 	// Reused every tick so polling doesn't allocate.
 	TArray<FVehicleTelemetry> NewTelemetrySamplesThisTick;

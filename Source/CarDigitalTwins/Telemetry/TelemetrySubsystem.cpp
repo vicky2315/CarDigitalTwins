@@ -61,6 +61,14 @@ void UTelemetrySubsystem::Tick(float DeltaSeconds)
 		PreviousTelemetrySample = bHasReceivedAnyTelemetrySample ? LatestTelemetrySample : NewTelemetrySample;
 		LatestTelemetrySample = NewTelemetrySample;
 		bHasReceivedAnyTelemetrySample = true;
+
+		const EVehicleStatus PreviousOverallStatus = CurrentVehicleStatusReport.OverallStatus;
+		CurrentVehicleStatusReport = VehicleStatusEvaluator.EvaluateTelemetrySample(LatestTelemetrySample);
+		if (CurrentVehicleStatusReport.OverallStatus != PreviousOverallStatus)
+		{
+			LogOverallStatusChange(PreviousOverallStatus, LatestTelemetrySample);
+		}
+
 		OnTelemetryUpdated.Broadcast(LatestTelemetrySample);
 	}
 
@@ -88,6 +96,44 @@ UWorld* UTelemetrySubsystem::GetTickableGameObjectWorld() const
 	// Ties ticking to this game instance's world, so with two PIE windows each subsystem ticks once per frame of its own world.
 	const UGameInstance* OwningGameInstance = GetGameInstance();
 	return OwningGameInstance ? OwningGameInstance->GetWorld() : nullptr;
+}
+
+void UTelemetrySubsystem::LogOverallStatusChange(EVehicleStatus PreviousOverallStatus, const FVehicleTelemetry& TelemetrySample) const
+{
+	const UEnum* VehicleStatusEnum = StaticEnum<EVehicleStatus>();
+	auto StatusName = [VehicleStatusEnum](EVehicleStatus Status)
+	{
+		return VehicleStatusEnum->GetNameStringByValue(static_cast<int64>(Status));
+	};
+
+	const FVehicleStatusReport& Report = CurrentVehicleStatusReport;
+	TArray<FString> SignalsNotNormal;
+	auto AddSignalIfNotNormal = [&SignalsNotNormal, &StatusName](const TCHAR* SignalName, EVehicleStatus SignalStatus)
+	{
+		if (SignalStatus != EVehicleStatus::Normal)
+		{
+			SignalsNotNormal.Add(FString::Printf(TEXT("%s %s"), SignalName, *StatusName(SignalStatus)));
+		}
+	};
+	AddSignalIfNotNormal(TEXT("coolant"), Report.CoolantTemperatureStatus);
+	AddSignalIfNotNormal(TEXT("tyres"), Report.TyrePressureStatus);
+	AddSignalIfNotNormal(TEXT("fuel"), Report.FuelLevelStatus);
+	AddSignalIfNotNormal(TEXT("battery"), Report.BatteryVoltageStatus);
+	AddSignalIfNotNormal(TEXT("rpm"), Report.EngineRpmStatus);
+
+	const FString SignalSummary = SignalsNotNormal.IsEmpty() ? TEXT("all signals Normal") : FString::Join(SignalsNotNormal, TEXT(", "));
+
+	// Warning verbosity whenever the car isn't Normal, so the change stands out (yellow) between the once-a-second summary lines.
+	if (Report.OverallStatus == EVehicleStatus::Normal)
+	{
+		UE_LOG(LogVehicleTelemetry, Log, TEXT("Vehicle status: %s -> %s at t=%.1f s, seq %lld (%s)."),
+			*StatusName(PreviousOverallStatus), *StatusName(Report.OverallStatus), TelemetrySample.SampleTimeS, TelemetrySample.Seq, *SignalSummary);
+	}
+	else
+	{
+		UE_LOG(LogVehicleTelemetry, Warning, TEXT("Vehicle status: %s -> %s at t=%.1f s, seq %lld (%s)."),
+			*StatusName(PreviousOverallStatus), *StatusName(Report.OverallStatus), TelemetrySample.SampleTimeS, TelemetrySample.Seq, *SignalSummary);
+	}
 }
 
 void UTelemetrySubsystem::LogTelemetrySummaryOncePerSecond(float DeltaSeconds, const TArray<FVehicleTelemetry>& NewTelemetrySamples)
