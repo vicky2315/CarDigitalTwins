@@ -34,11 +34,12 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 | P1 | Determinism | Seed 42 reproduces the committed `Data/Trips/trip_sample.json` byte for byte; another seed gives a different trip |
 | P2 | Committed sample valid | `validate_trip` passes; 1900 frames, 10 Hz, schemaVersion 1, `jeep-01`, seed 42 |
 | P3 | Other rates | 5 Hz and 20 Hz validate with the right frame count; 3 Hz and 7 Hz validate (BUG-001, fixed 2026-10-07) |
-| P4 | Validator rejects bad input | Missing header key, wrong key order, `seq` gap, off-grid time, negative speed, gear 7, throttle 101, fuel −1, missing tyre key, unknown `openings` bit |
+| P4 | Validator rejects bad input | Missing header key, wrong key order, `seq` gap, off-grid time, negative speed, gear 7, throttle 101, fuel −1, missing tyre key, unknown `openings` bit, unknown `driveMode` |
 | P5 | Physics helpers | `wheel_rpm_from_speed`, `engine_rpm_for_gear` against hand-computed values; `ease_toward` independent of step size |
 | P6 | Incident timing (SPEC §2.2) | Coolant warning ~91 s, critical ~119 s; RR tyre warning ~148 s, never critical; door FL 173 s, hood 178 s; only RR leaks |
 | P7 | Physical sanity | Speed ≥ 0; rpm 0 only while parked; gear 0 when stopped; odometer never decreases; throttle and brake never both on; steer within ±40°; fuel never rises; phase order |
 | P8 | Output format | One frame per line, LF endings, reads back with `json.load` equal to the generated trip |
+| P9 | Engine derate (T1, SPEC §2.5) | `driveMode` Normal without a command; `set_engine_derate` returns the next seq and is idempotent; derate at Critical (119.1 s): speed ≤ 50.5 km/h, coolant < 112 °C within 20 s then stays ≥ 105 °C while running; rpm cap 2500 reached and held while accelerating; switching off restores 90 km/h |
 
 ## 2. Telemetry (Unreal C++): planned
 

@@ -112,9 +112,13 @@ def set_unknown_openings_bit(trip):
     trip["frames"][1]["openings"] = 64
 
 
+def set_unknown_drive_mode(trip):
+    trip["frames"][1]["driveMode"] = "Derate"
+
+
 @pytest.mark.parametrize("break_trip", [
     delete_header_key, swap_first_two_frame_keys, skip_seq_number, move_sample_time_off_grid, set_negative_speed, set_gear_7,
-    set_throttle_101, set_negative_fuel, delete_tyre_key, set_unknown_openings_bit,
+    set_throttle_101, set_negative_fuel, delete_tyre_key, set_unknown_openings_bit, set_unknown_drive_mode,
 ])
 def test_validator_rejects_broken_trip(generated_seed42_trip, break_trip):
     short_trip = copy.deepcopy({**generated_seed42_trip, "frames": generated_seed42_trip["frames"][:5]})
@@ -251,3 +255,66 @@ def test_written_file_reads_back_equal(generated_seed42_trip, tmp_path):
     trip_path = tmp_path / "trip.json"
     trip_generator.write_trip(generated_seed42_trip, trip_path)
     assert json.loads(trip_path.read_text(encoding="utf-8")) == generated_seed42_trip
+
+
+# P9: engine protection derate (Twin completion T1, SPEC.md §2.5) -------------------------------------------------------------
+
+COOLANT_CRITICAL_SEQ = 1191                # first frame at or above 115 °C in the seed 42 trip (119.1 s)
+
+
+def run_simulator_to_end(vehicle_simulator):
+    frames = []
+    while not vehicle_simulator.is_finished():
+        frames.append(vehicle_simulator.step())
+    return frames
+
+
+def test_drive_mode_is_normal_without_a_command(generated_seed42_frames):
+    assert {frame["driveMode"] for frame in generated_seed42_frames} == {trip_generator.DRIVE_MODE_NORMAL}
+
+
+def test_set_engine_derate_returns_next_seq_and_repeating_it_changes_nothing():
+    vehicle_simulator = trip_generator.VehicleSimulator(seed=42, rate_hz=10)
+    for _ in range(50):
+        vehicle_simulator.step()
+    assert vehicle_simulator.set_engine_derate(True) == 50                  # the ack's appliedAtSeq: next frame produced
+    assert vehicle_simulator.set_engine_derate(True) == 50                  # idempotent
+    assert vehicle_simulator.step()["driveMode"] == trip_generator.DRIVE_MODE_ENGINE_DERATE
+
+
+def test_derate_at_critical_caps_speed_and_brings_coolant_back_to_warning():
+    vehicle_simulator = trip_generator.VehicleSimulator(seed=42, rate_hz=10)
+    for _ in range(COOLANT_CRITICAL_SEQ):
+        vehicle_simulator.step()
+    vehicle_simulator.set_engine_derate(True)
+    frames_after_derate = run_simulator_to_end(vehicle_simulator)
+    derate_time_s = COOLANT_CRITICAL_SEQ / 10
+
+    assert {frame["driveMode"] for frame in frames_after_derate} == {trip_generator.DRIVE_MODE_ENGINE_DERATE}
+    assert all(frame["speedKmh"] <= 50.5 for frame in frames_after_derate if frame["sampleTimeS"] >= derate_time_s + 15.0)
+    first_below_critical_clear_s = next(frame["sampleTimeS"] for frame in frames_after_derate if frame["coolantTempC"] < 112.0)
+    assert first_below_critical_clear_s <= derate_time_s + 20.0             # measured 13.8 s
+    engine_running_frames = [frame for frame in frames_after_derate
+                             if derate_time_s + 20.0 <= frame["sampleTimeS"] < PARKED_PHASE_START_S]
+    assert all(frame["coolantTempC"] >= 105.0 for frame in engine_running_frames)   # still Warning: derate protects, doesn't repair
+
+
+def test_derate_caps_engine_rpm_while_accelerating():
+    vehicle_simulator = trip_generator.VehicleSimulator(seed=42, rate_hz=10)
+    vehicle_simulator.set_engine_derate(True)
+    derated_frames = run_simulator_to_end(vehicle_simulator)
+    assert max(frame["engineRpm"] for frame in derated_frames) <= trip_generator.DERATE_MAX_ENGINE_RPM
+    assert max(frame["engineRpm"] for frame in derated_frames) > 2400        # the cap is actually reached, not just never tested
+
+
+def test_switching_derate_off_restores_phase_speed():
+    vehicle_simulator = trip_generator.VehicleSimulator(seed=42, rate_hz=10)
+    for _ in range(400):                                                    # 40 s: cruising
+        vehicle_simulator.step()
+    vehicle_simulator.set_engine_derate(True)
+    for _ in range(200):
+        vehicle_simulator.step()
+    vehicle_simulator.set_engine_derate(False)
+    frames_after_release = [vehicle_simulator.step() for _ in range(300)]
+    assert frames_after_release[0]["driveMode"] == trip_generator.DRIVE_MODE_NORMAL
+    assert frames_after_release[-1]["speedKmh"] > 80.0

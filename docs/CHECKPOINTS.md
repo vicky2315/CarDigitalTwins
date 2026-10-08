@@ -4,6 +4,34 @@ Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
 ## Checkpoint (2026-10-08, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
+Commit: `929f8d7` on `main`, pushed. Working tree: `Content/Maps/` (untracked on purpose) and the uncommitted car rebuild scripts in
+`Tools/UnrealEditor/` (`export_vehicle_twin_recipe.py`, `rebuild_vehicle_twin_from_cad.py`, `vehicle_twin_recipe.json`).
+
+**Where I stopped:** Day 8 done and pushed. Side task started: rebuild the car from the STEP file plus a recipe exported from the
+hand-built `BP_VehicleTwin`, so `Content/Jeep/` can be recreated. Export works (113 components, 72 meshes; tags `Paint` 8, `Trim` 22,
+`Tyre` 4, one each `Wheel.*`). Rebuild ran: `/Game/Jeep/Rebuilt/ImportA` + `BP_VehicleTwin_Rebuilt`, looks mostly the same, but
+**Preview Status Outline doesn't show on the rebuilt car** although its Status Outline Material is set.
+
+**Resume:**
+1. ~~Rebuilt car outline~~ parked 2026-10-08 as BUG-002 (low priority experiment); scripts + recipe committed.
+2. Day 9: `relay.py` (`--rate`, `--loop`, `--drop-percent`, `--pause-after`), verify with a CLI client.
+3. Record the Day 8 LinkedIn clip (car not selected: the editor selection outline is yellow too).
+
+**Unverified:** SPEC.md §1 says 25 `Paint` meshes, the BP has 8 `Paint` components: check the original car's `group Paint` PIE log
+line and fix SPEC. Day 4 Play log (`CarRoot` facing warning) not looked
+at. Outline with the editor preview left ticked at PIE start: possible doubled outline, not tested.
+
+**Open decisions:** UI design track questions (ops view placement, show T1/T2 in the first design). Showroom mode (decide after H1).
+Redistribution of the imported meshes / GrabCAD license (ASSETS.md). Private asset repo for `Content/Jeep/` still pending (the rebuild
+scripts don't cover the 1128 hand-split door meshes).
+
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` with the 1128 split meshes for H2 door animation,
+`Blueprints/BP_VehicleTwin`, new `Rebuilt/` with `BP_VehicleTwin_Rebuilt`), `Content/Maps/L_VehicleTwin.umap`, `ImportTestMap.umap`,
+the side-by-side test level if saved, raw CAD in `RawCAD/`. Leftovers safe to delete: empty `Content/Maps/_GENERATED/vigne/`, empty
+root `Jeep/Cleaned/`. MVVM reference branch `mvvm-reference` exists only on the office laptop.
+
+## Checkpoint (2026-10-08, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+
 Commit: `1f8d9b0` on `main`, 2 commits not pushed (plus this checkpoint). Working tree clean except `Content/Maps/` (untracked on purpose).
 
 **Where I stopped:** Day 8 done. Step 2: `UTelemetrySubsystem` evaluates every sample, `GetCurrentVehicleStatusReport()` (`1406469`).

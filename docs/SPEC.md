@@ -69,6 +69,7 @@ Units live in the name, so a value can't be misread without the docs.
 | `batteryV` | `BatteryV` | float | V | Status |
 | `tyreKpa` | `TyreKpa` | object `{fl, fr, rl, rr}` | kPa (gauge) | Status |
 | `openings` | `Openings` | int bitmask | `EVehicleOpening`: 1 DoorFL, 2 DoorFR, 4 DoorRL, 8 DoorRR, 16 Hood, 32 Tailgate | Door/hood/tailgate animation |
+| `driveMode` | `DriveMode` | string enum | `EVehicleDriveMode`: `"Normal"`, `"EngineDerate"` (added 2026-10-09, T1; optional, missing = `"Normal"`) | Shows the vehicle accepted a command (§2.5) |
 
 **Not sent, derived in UE:** wheel angular speed (from `speedKmh` and the tyre radius measured on the mesh, so there is one
 source of truth), status (§3), receive time and latency (Day 10).
@@ -78,6 +79,9 @@ source of truth), status (§3), receive time and latency (Day 10).
   that way (case-insensitively), so Day 7 needs no hand-written parser. `speed_kmh` would not match.
 - **`openings` as a bitmask** instead of six bools: one int, trivial in Python (`DoorFL | Hood`), and avoids the `b` prefix that UE
   bool properties need (`bDoorFL` would have to be the JSON key). Rear-door bits stay unused if the Jeep turns out to be 2-door (Day 4).
+- **`driveMode` as a string enum** instead of a bool `engineDerate`: same `b`-prefix problem as above, and `FJsonObjectConverter`
+  maps a JSON string onto a `UENUM` by value name, so `"EngineDerate"` fills `EVehicleDriveMode::EngineDerate` with no parser.
+  New modes (e.g. `"SpeedLimited"`) are new enum values, not new fields.
 - **No position (lat/lon/heading)** in v1: the single car stays in place. Phase B adds them as optional fields (no version bump).
 - **`sampleTimeS` is trip time, not wall clock**, so recorded trips replay identically; wall-clock send time sits in the stream envelope.
 
@@ -92,7 +96,7 @@ One JSON object: a header plus fixed-rate frames. Each frame is exactly a §2.1 
   "frames": [
     {"seq": 0, "sampleTimeS": 0.0, "speedKmh": 0.0, "engineRpm": 780, "gear": 0, "throttlePct": 0, "brakePct": 100,
      "steerDeg": 0, "odometerKm": 12450.2, "coolantTempC": 88.5, "fuelPct": 72, "batteryV": 14.1,
-     "tyreKpa": {"fl": 240, "fr": 241, "rl": 238, "rr": 240}, "openings": 0}
+     "tyreKpa": {"fl": 240, "fr": 241, "rl": 238, "rr": 240}, "openings": 0, "driveMode": "Normal"}
   ]
 }
 ```
@@ -117,8 +121,8 @@ One JSON object per message, one sample per message:
 - Gaps in `frame.seq` = dropped messages; `seq` going backwards = trip looped (`--loop`), not an error.
 - `hello` (relay → client, first message on every connection, added 2026-10-08):
   `{"type": "hello", "schemaVersion": 1, "vehicleId": "jeep-01", "messagesPerSecond": 10, "tripRateHz": 10}`. The receiver can use
-  `messagesPerSecond` for its stall timeout. Clients may send messages back (JSON with a `type`); the relay logs them until T1
-  defines commands.
+  `messagesPerSecond` for its stall timeout. Clients may send messages back (JSON with a `type`): commands and their
+  acknowledgements are §2.5; other types are logged and ignored.
 - Relay (`Tools/Relay/relay.py`, Day 9): one live stream broadcast to every client, starting when the first client connects (late
   joiners start mid-trip, like a real car). `--rate` = messages per second (above `rateHz` plays faster; `sampleTimeS` stays trip
   time). `--drop-percent` skips messages but keeps their time slot. `--pause-after` goes quiet once for `--pause-duration` with the
@@ -130,6 +134,32 @@ One JSON object per message, one sample per message:
 - **Bump:** renaming or removing a field, changing a unit or meaning, changing the envelope.
 - UE on mismatch: log one warning, reject the trip / drop the messages, show the connection as errored rather than
   displaying wrong values.
+
+### 2.5 Commands (Twin completion T1, decided 2026-10-09)
+Data goes up as telemetry; commands go down the same WebSocket. One command for now: **engine protection derate**, a fleet
+operator's (or the twin's) request to limit the engine after an overheating alert.
+
+```json
+UE → relay  {"type": "command", "schemaVersion": 1, "commandId": 7, "name": "engineDerate", "enabled": true, "sentUnixMs": 1790577294123}
+relay → UE  {"type": "commandAck", "commandId": 7, "status": "applied", "reason": "", "appliedAtSeq": 1193}
+relay → UE  {"type": "commandAck", "commandId": 8, "status": "rejected", "reason": "source is a recorded trip", "appliedAtSeq": -1}
+```
+- **`commandId`:** integer, rising per client connection. The ack repeats it, so the sender knows which command was answered.
+- **One ack per command,** to the client that sent it only (not broadcast). `status` is `applied` or `rejected`; `reason` says
+  why a command was rejected: `source is a recorded trip` (relay `--source file`), `unknown command`, `bad command message`.
+  `appliedAtSeq` = the first frame produced under the new setting, −1 when rejected.
+- **Idempotent:** enabling derate while it is already on is `applied` and changes nothing, so a retry after a lost ack is harmless.
+- **Ack ≠ effect.** The ack only means "accepted". What the vehicle actually does comes back in telemetry: `driveMode` turns
+  `"EngineDerate"`, rpm and speed drop. UE shows the vehicle's state from telemetry, never from the command it sent (§5).
+- **Timeout:** UE treats a command with no ack within 2 s as failed and logs it; it does not retry on its own.
+- **Effect in the simulator:** engine rpm capped at 2500, road speed at 50 km/h. Less load means less heat, so with the failed
+  cooling the coolant falls back from Critical to about 109 °C (Warning, below the 112 °C Critical clear in ~14 s) but doesn't recover: derate protects, it doesn't repair.
+  Stays on until a command disables it or the trip restarts; it never switches itself off when coolant recovers (no flicker).
+- **Who sends it:** UE sends derate once when the overall coolant status first becomes Critical, if the setting
+  *Auto Engine Derate On Critical Coolant* is on; the console command `Twin.EngineDerate 1/0` sends it by hand.
+- **Real-world framing:** real engines derate on board, in their own control unit, within milliseconds; no manufacturer lets a
+  server change how a moving car drives over a mobile network. This demonstrates the command path of a two-way twin (command →
+  ack → state reported back), as a fleet operator's protection request.
 
 ## 3. Derived status thresholds (drafted 2026-09-28)
 

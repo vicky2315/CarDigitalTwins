@@ -1,40 +1,40 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
-Last updated: 2026-10-08
-Current day: **Twin completion T1–T3** (Day 10 done 2026-10-08), then Day 11.
+Last updated: 2026-10-09
+Current day: **Twin completion T1** (steps 1–2 of 5 done 2026-10-09), then T2–T3, then Day 11.
 Days 1–10 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
 then HMI; the portfolio shows both on one data pipeline.
 
-## Checkpoint (2026-10-08, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+## Checkpoint (2026-10-09, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commit: `929f8d7` on `main`, pushed. Working tree: `Content/Maps/` (untracked on purpose) and the uncommitted car rebuild scripts in
-`Tools/UnrealEditor/` (`export_vehicle_twin_recipe.py`, `rebuild_vehicle_twin_from_cad.py`, `vehicle_twin_recipe.json`).
+Commit: `bc69473` on `main`, pushed. Working tree: T1 steps 1–2 uncommitted (`docs/SPEC.md`, `docs/TESTS.md`,
+`Tools/TripGenerator/trip_generator.py`, its tests, regenerated `Data/Trips/trip_sample.json`); `Content/Maps/` untracked on purpose.
 
-**Where I stopped:** Day 8 done and pushed. Side task started: rebuild the car from the STEP file plus a recipe exported from the
-hand-built `BP_VehicleTwin`, so `Content/Jeep/` can be recreated. Export works (113 components, 72 meshes; tags `Paint` 8, `Trim` 22,
-`Tyre` 4, one each `Wheel.*`). Rebuild ran: `/Game/Jeep/Rebuilt/ImportA` + `BP_VehicleTwin_Rebuilt`, looks mostly the same, but
-**Preview Status Outline doesn't show on the rebuilt car** although its Status Outline Material is set.
+**Where I stopped:** Day 9 (`9854b4a`) and Day 10 (`bc69473`) done and pushed. T1 (engine derate request, option A) steps 1–2 done:
+SPEC §2.1 `driveMode`, §2.5 `command` / `commandAck`; `VehicleSimulator` class with `set_engine_derate()` (rpm 2500, 50 km/h, coolant
+under 112 °C in ~14 s); sample differs only by `"driveMode": "Normal"`; pytest 51 pass (P4 case + P9). Step 3 (relay) not started.
 
 **Resume:**
-1. ~~Rebuilt car outline~~ parked 2026-10-08 as BUG-002 (low priority experiment); scripts + recipe committed.
-2. Day 9: `relay.py` (`--rate`, `--loop`, `--drop-percent`, `--pause-after`), verify with a CLI client.
-3. Record the Day 8 LinkedIn clip (car not selected: the editor selection outline is yellow too).
+1. T1 step 3, `Tools/Relay/relay.py`: `--source live|file` (live runs `VehicleSimulator` in real time, new simulator on `--loop`);
+   `handle_client_message` applies `engineDerate`, `commandAck` to the sender only, file mode rejects "source is a recorded trip";
+   `relay_client.py --send-derate-after SECONDS`; tests R7–R10; update SPEC §2.3 relay bullet + TESTS §4. Expect all pytest green.
+2. T1 steps 4–5 (C++): `EVehicleDriveMode` + `DriveMode` in `FVehicleTelemetry`; `FVehicleCommand`,
+   `ITelemetryReceiver::SendVehicleCommand()` (file receiver refuses), parse `commandAck`; subsystem pending ack (2 s timeout),
+   auto derate on first Critical coolant (`bAutoEngineDerateOnCriticalCoolant`), console `Twin.EngineDerate 1/0`. User builds + PIE:
+   red ~119 s → command → ack applied → `EngineDerate` → `Critical -> Warning`.
+3. Then tick T1, update the "Vehicle Twin Field Guide" artifact (scratchpad file, same path keeps the URL), commit + push; T2, T3, Day 11.
 
-**Unverified:** SPEC.md §1 says 25 `Paint` meshes, the BP has 8 `Paint` components: check the original car's `group Paint` PIE log
-line and fix SPEC. Day 4 Play log (`CarRoot` facing warning) not looked
-at. Outline with the editor preview left ticked at PIE start: possible doubled outline, not tested.
+**Unverified:** SPEC §1 says 25 `Paint` meshes, BP has 8 (check the `group Paint` PIE log line). Day 4 `CarRoot` facing warning not
+looked at. Doubled outline with the editor preview ticked at PIE start, not tested. Day 10 "can't connect: no details" wording.
 
-**Open decisions:** UI design track questions (ops view placement, show T1/T2 in the first design). Showroom mode (decide after H1).
-Redistribution of the imported meshes / GrabCAD license (ASSETS.md). Private asset repo for `Content/Jeep/` still pending (the rebuild
-scripts don't cover the 1128 hand-split door meshes).
+**Open decisions:** UI design track questions; showroom mode (after H1); mesh redistribution / GrabCAD license (ASSETS.md); private
+asset repo for `Content/Jeep/` (deferred). Still to do: Day 8 LinkedIn clip (car not selected). BUG-002 parked (`docs/BUGS.md`).
 
-**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` with the 1128 split meshes for H2 door animation,
-`Blueprints/BP_VehicleTwin`, new `Rebuilt/` with `BP_VehicleTwin_Rebuilt`), `Content/Maps/L_VehicleTwin.umap`, `ImportTestMap.umap`,
-the side-by-side test level if saved, raw CAD in `RawCAD/`. Leftovers safe to delete: empty `Content/Maps/_GENERATED/vigne/`, empty
-root `Jeep/Cleaned/`. MVVM reference branch `mvvm-reference` exists only on the office laptop.
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` 1128 split meshes, `Blueprints/BP_VehicleTwin`,
+`Rebuilt/`), `Content/Maps/` levels, raw CAD in `RawCAD/`. MVVM reference branch `mvvm-reference` only on the office laptop.
 
 ## Phase A: Single-car digital twin
 
@@ -129,6 +129,8 @@ Turns the project from a digital *shadow* (data flows one way) into a digital *t
 - [ ] T1. Feedback loop: a command from UE goes back to the source and changes what the vehicle does. Example: "Limp mode" when
       coolant is critical → UE sends it over the WebSocket → relay passes it to a vehicle simulator → next samples show rpm capped.
       Needs a two-way relay (Day 9) and a send path in the WebSocket receiver (Day 10); follows the "commands go down" rule (SPEC.md §5).
+      2026-10-09: option A "engine protection derate request" (SPEC.md §2.5). Done: contract, simulator + tests (P9).
+      To do: relay `--source live` + ack, UE send path, subsystem auto rule + console command, PIE check.
 - [ ] T2. Prediction: estimate time to the next threshold from recent samples (e.g. "coolant critical in ~25 s", "RR tyre at
       180 kPa in ~6 min"); exposed through the ViewModel so both front ends can show it.
 - [ ] T3. Write both up in SPEC.md (command message format next to §2.3; prediction method and its limits).

@@ -38,6 +38,16 @@ STOPPING_BRAKING_MPS2 = (1.0, 2.8)         # min/max deceleration when slowing d
 CLUTCH_IN_BELOW_KMH = 15.0                 # stopping: clutch in (neutral, idle rpm) below this speed
 NOMINAL_TYRE_KPA = 240.0
 
+# Engine protection derate (SPEC.md §2.5): what the vehicle does while a derate command is active.
+DERATE_MAX_ENGINE_RPM = 2500.0
+DERATE_MAX_SPEED_KMH = 50.0
+DERATE_FAILED_COOLING_TARGET_C = 108.0     # less load, less heat: with failed cooling it settles in Warning instead of reaching 125 °C
+DERATE_FAILED_COOLING_TIME_CONSTANT_S = 25.0
+
+# Values of the frame's driveMode (SPEC.md §2.1, EVehicleDriveMode in C++).
+DRIVE_MODE_NORMAL = "Normal"
+DRIVE_MODE_ENGINE_DERATE = "EngineDerate"
+
 # EVehicleOpening bits (SPEC.md §2.1).
 OPENING_DOOR_FL = 1
 OPENING_HOOD = 16
@@ -49,7 +59,7 @@ TYRE_WARNING_LOW_KPA = 180.0
 
 # Keys every frame must have, in SPEC.md §2.1 order.
 FRAME_KEYS = ["seq", "sampleTimeS", "speedKmh", "engineRpm", "gear", "throttlePct", "brakePct", "steerDeg", "odometerKm",
-              "coolantTempC", "fuelPct", "batteryV", "tyreKpa", "openings"]
+              "coolantTempC", "fuelPct", "batteryV", "tyreKpa", "openings", "driveMode"]
 
 
 @dataclass
@@ -100,145 +110,218 @@ def steer_deg_for_cruise(time_in_phase_s):
     return 0.0
 
 
-def generate_trip(seed, rate_hz):
-    noise = random.Random(seed)
-    delta_s = 1.0 / rate_hz
+class VehicleSimulator:
+    """The trip's vehicle, one sample at a time. generate_trip() runs it to the end in one go; the relay's live source steps it in
+    real time, so a command (SPEC.md §2.5) can change what the next samples look like. Same seed and rate = same samples."""
 
-    speed_kmh = 0.0
-    gear = 0
-    odometer_km = 12450.2
-    coolant_temp_c = 88.5
-    fuel_pct = 72.0
-    battery_v = 14.1
-    tyre_kpa = {"fl": 240.0, "fr": 241.0, "rl": 238.0, "rr": 240.0}
-    openings = 0
-    steer_deg = 0.0
+    def __init__(self, seed, rate_hz):
+        self.noise = random.Random(seed)
+        self.rate_hz = rate_hz
+        self.delta_s = 1.0 / rate_hz
 
-    frames = []
-    phase_start_times_s = []
-    trip_time_s = 0.0
-    seq = 0
+        self.speed_kmh = 0.0
+        self.gear = 0
+        self.odometer_km = 12450.2
+        self.coolant_temp_c = 88.5
+        self.fuel_pct = 72.0
+        self.battery_v = 14.1
+        self.tyre_kpa = {"fl": 240.0, "fr": 241.0, "rl": 238.0, "rr": 240.0}
+        self.openings = 0
+        self.steer_deg = 0.0
+        self.engine_derate_active = False
 
-    for phase in TRIP_PHASES:
-        phase_start_times_s.append((phase.name, trip_time_s))
-        for frame_in_phase in range(int(round(phase.duration_s * rate_hz))):
-            time_in_phase_s = frame_in_phase * delta_s
+        self.seq = 0
+        self.trip_time_s = 0.0
+        self.phase_index = 0
+        self.frame_in_phase = 0
+        self.phase_start_times_s = [(TRIP_PHASES[0].name, 0.0)]
+        self._skip_finished_phases()
 
-            # Speed: speeding up eases toward the target, limited by what the car can do. Slowing down uses a near-constant
-            # deceleration, like a driver braking for a stop; an exponential ease would creep towards zero for many seconds.
-            if speed_kmh > phase.target_speed_kmh + 0.5:
-                speed_gap_mps = (speed_kmh - phase.target_speed_kmh) / 3.6
-                acceleration_mps2 = -max(STOPPING_BRAKING_MPS2[0], min(STOPPING_BRAKING_MPS2[1], speed_gap_mps / 2.0))
-            else:
-                desired_speed_kmh = ease_toward(speed_kmh, phase.target_speed_kmh, 4.0, delta_s)
-                acceleration_mps2 = (desired_speed_kmh - speed_kmh) / 3.6 / delta_s
-            acceleration_mps2 = max(-MAX_BRAKING_MPS2, min(MAX_ACCELERATION_MPS2, acceleration_mps2))
-            speed_kmh = max(0.0, speed_kmh + acceleration_mps2 * 3.6 * delta_s)
-            if phase.target_speed_kmh == 0.0 and speed_kmh < 0.3:
-                speed_kmh = 0.0
-                acceleration_mps2 = 0.0
+    def frames_in_phase(self, phase):
+        return int(round(phase.duration_s * self.rate_hz))
 
-            # Gear: neutral when stopped or about to stop, shift on rpm limits while moving.
-            stopping = phase.target_speed_kmh == 0.0
-            if not phase.engine_running or speed_kmh < 1.0 or (stopping and speed_kmh < CLUTCH_IN_BELOW_KMH):
-                gear = 0
-            elif speed_kmh < 3.0:
-                gear = max(gear, 1)
-            else:
-                gear = max(gear, 1)
-                if gear < len(GEAR_RATIOS) and engine_rpm_for_gear(speed_kmh, gear) > UPSHIFT_RPM:
+    def is_finished(self):
+        return self.phase_index >= len(TRIP_PHASES)
+
+    def set_engine_derate(self, enabled):
+        """Engine protection derate on or off (SPEC.md §2.5). Setting the current value again changes nothing, so a repeated
+        command is harmless. Returns the seq of the first frame produced under the new setting (the ack's appliedAtSeq)."""
+        self.engine_derate_active = bool(enabled)
+        return self.seq
+
+    def _skip_finished_phases(self):
+        """Moves on once the current phase has produced all its frames, recording each phase's start time (also for phases too
+        short for one frame at this rate, as the old nested loops did)."""
+        while not self.is_finished() and self.frame_in_phase >= self.frames_in_phase(TRIP_PHASES[self.phase_index]):
+            self.phase_index += 1
+            self.frame_in_phase = 0
+            if not self.is_finished():
+                self.phase_start_times_s.append((TRIP_PHASES[self.phase_index].name, self.trip_time_s))
+
+    def step(self):
+        """Simulates one sample and returns it as a SPEC.md §2.1 frame. Call only while not is_finished()."""
+        phase = TRIP_PHASES[self.phase_index]
+        noise = self.noise
+        delta_s = self.delta_s
+        seq = self.seq
+        trip_time_s = self.trip_time_s
+        time_in_phase_s = self.frame_in_phase * delta_s
+
+        # The physics below works on local variables, written back at the end, so it reads the same as before the simulator existed.
+        speed_kmh = self.speed_kmh
+        gear = self.gear
+        odometer_km = self.odometer_km
+        coolant_temp_c = self.coolant_temp_c
+        fuel_pct = self.fuel_pct
+        battery_v = self.battery_v
+        tyre_kpa = self.tyre_kpa
+        openings = self.openings
+        steer_deg = self.steer_deg
+
+        # Derate caps the road speed; without it the phase's own target applies unchanged.
+        target_speed_kmh = min(phase.target_speed_kmh, DERATE_MAX_SPEED_KMH) if self.engine_derate_active else phase.target_speed_kmh
+
+        # Speed: speeding up eases toward the target, limited by what the car can do. Slowing down uses a near-constant
+        # deceleration, like a driver braking for a stop; an exponential ease would creep towards zero for many seconds.
+        if speed_kmh > target_speed_kmh + 0.5:
+            speed_gap_mps = (speed_kmh - target_speed_kmh) / 3.6
+            acceleration_mps2 = -max(STOPPING_BRAKING_MPS2[0], min(STOPPING_BRAKING_MPS2[1], speed_gap_mps / 2.0))
+        else:
+            desired_speed_kmh = ease_toward(speed_kmh, target_speed_kmh, 4.0, delta_s)
+            acceleration_mps2 = (desired_speed_kmh - speed_kmh) / 3.6 / delta_s
+        acceleration_mps2 = max(-MAX_BRAKING_MPS2, min(MAX_ACCELERATION_MPS2, acceleration_mps2))
+        speed_kmh = max(0.0, speed_kmh + acceleration_mps2 * 3.6 * delta_s)
+        if target_speed_kmh == 0.0 and speed_kmh < 0.3:
+            speed_kmh = 0.0
+            acceleration_mps2 = 0.0
+
+        # Gear: neutral when stopped or about to stop, shift on rpm limits while moving.
+        stopping = target_speed_kmh == 0.0
+        if not phase.engine_running or speed_kmh < 1.0 or (stopping and speed_kmh < CLUTCH_IN_BELOW_KMH):
+            gear = 0
+        elif speed_kmh < 3.0:
+            gear = max(gear, 1)
+        else:
+            gear = max(gear, 1)
+            if gear < len(GEAR_RATIOS) and engine_rpm_for_gear(speed_kmh, gear) > UPSHIFT_RPM:
+                gear += 1
+            elif gear > 1 and engine_rpm_for_gear(speed_kmh, gear) < DOWNSHIFT_RPM:
+                gear -= 1
+            # Cruising: use the tallest gear that keeps the engine above the downshift point.
+            if phase.name == "cruise":
+                while gear < len(GEAR_RATIOS) and engine_rpm_for_gear(speed_kmh, gear + 1) > DOWNSHIFT_RPM + 300.0:
                     gear += 1
-                elif gear > 1 and engine_rpm_for_gear(speed_kmh, gear) < DOWNSHIFT_RPM:
-                    gear -= 1
-                # Cruising: use the tallest gear that keeps the engine above the downshift point.
-                if phase.name == "cruise":
-                    while gear < len(GEAR_RATIOS) and engine_rpm_for_gear(speed_kmh, gear + 1) > DOWNSHIFT_RPM + 300.0:
-                        gear += 1
 
-            # Throttle and brake from the acceleration; cruising needs throttle to hold speed against drag.
-            if acceleration_mps2 >= 0.0 and phase.engine_running and speed_kmh > 0.0:
-                road_load_pct = 8.0 + 0.22 * speed_kmh
-                throttle_pct = road_load_pct + acceleration_mps2 / MAX_ACCELERATION_MPS2 * 60.0
-                brake_pct = 0.0
-            else:
-                throttle_pct = 0.0
-                brake_pct = -acceleration_mps2 / MAX_BRAKING_MPS2 * 100.0
-            if speed_kmh == 0.0 and phase.engine_running:
-                brake_pct = 100.0                                   # held on the brake while stopped, like the SPEC example
-            throttle_pct = max(0.0, min(100.0, throttle_pct + noise.uniform(-1.0, 1.0) * (throttle_pct > 0.0)))
-            brake_pct = max(0.0, min(100.0, brake_pct))
+        # Throttle and brake from the acceleration; cruising needs throttle to hold speed against drag.
+        if acceleration_mps2 >= 0.0 and phase.engine_running and speed_kmh > 0.0:
+            road_load_pct = 8.0 + 0.22 * speed_kmh
+            throttle_pct = road_load_pct + acceleration_mps2 / MAX_ACCELERATION_MPS2 * 60.0
+            brake_pct = 0.0
+        else:
+            throttle_pct = 0.0
+            brake_pct = -acceleration_mps2 / MAX_BRAKING_MPS2 * 100.0
+        if speed_kmh == 0.0 and phase.engine_running:
+            brake_pct = 100.0                                   # held on the brake while stopped, like the SPEC example
+        throttle_pct = max(0.0, min(100.0, throttle_pct + noise.uniform(-1.0, 1.0) * (throttle_pct > 0.0)))
+        brake_pct = max(0.0, min(100.0, brake_pct))
 
-            # Engine rpm: idle in neutral, from the gearbox in gear (never below idle), off when parked.
-            if not phase.engine_running:
-                engine_rpm = 0.0
-            elif gear == 0:
-                engine_rpm = IDLE_RPM + noise.uniform(-15.0, 15.0)
-            else:
-                engine_rpm = max(IDLE_RPM, engine_rpm_for_gear(speed_kmh, gear)) + noise.uniform(-20.0, 20.0)
+        # Engine rpm: idle in neutral, from the gearbox in gear (never below idle), off when parked.
+        if not phase.engine_running:
+            engine_rpm = 0.0
+        elif gear == 0:
+            engine_rpm = IDLE_RPM + noise.uniform(-15.0, 15.0)
+        else:
+            engine_rpm = max(IDLE_RPM, engine_rpm_for_gear(speed_kmh, gear)) + noise.uniform(-20.0, 20.0)
+        if self.engine_derate_active:
+            engine_rpm = min(engine_rpm, DERATE_MAX_ENGINE_RPM)
 
-            # Steering: small corrections all the time, curves during the cruise.
-            target_steer_deg = steer_deg_for_cruise(time_in_phase_s) if phase.name == "cruise" else 0.0
-            steer_deg = ease_toward(steer_deg, target_steer_deg, 0.5, delta_s)
-            reported_steer_deg = steer_deg + (noise.gauss(0.0, 0.15) if speed_kmh > 0.0 else 0.0)
+        # Steering: small corrections all the time, curves during the cruise.
+        target_steer_deg = steer_deg_for_cruise(time_in_phase_s) if phase.name == "cruise" else 0.0
+        steer_deg = ease_toward(steer_deg, target_steer_deg, 0.5, delta_s)
+        reported_steer_deg = steer_deg + (noise.gauss(0.0, 0.15) if speed_kmh > 0.0 else 0.0)
 
-            # Coolant: settles around 90-95 °C with load. After the cooling failure it heads for 125 °C while the engine runs.
-            # Engine off: heat soak keeps it high, then it cools slowly.
-            cooling_failed = trip_time_s >= OVERHEAT_START_S
-            if not phase.engine_running:
-                coolant_temp_c = ease_toward(coolant_temp_c, 25.0, 900.0, delta_s)
-            elif cooling_failed:
-                coolant_temp_c = ease_toward(coolant_temp_c, 125.0, 40.0, delta_s)
-            else:
-                coolant_temp_c = ease_toward(coolant_temp_c, 90.0 + 0.06 * throttle_pct, 60.0, delta_s)
+        # Coolant: settles around 90-95 °C with load. After the cooling failure it heads for 125 °C while the engine runs; derated,
+        # the lower load makes less heat, so it falls back to about 108 °C (Warning) but the failure stays.
+        # Engine off: heat soak keeps it high, then it cools slowly.
+        cooling_failed = trip_time_s >= OVERHEAT_START_S
+        if not phase.engine_running:
+            coolant_temp_c = ease_toward(coolant_temp_c, 25.0, 900.0, delta_s)
+        elif cooling_failed and self.engine_derate_active:
+            coolant_temp_c = ease_toward(coolant_temp_c, DERATE_FAILED_COOLING_TARGET_C, DERATE_FAILED_COOLING_TIME_CONSTANT_S, delta_s)
+        elif cooling_failed:
+            coolant_temp_c = ease_toward(coolant_temp_c, 125.0, 40.0, delta_s)
+        else:
+            coolant_temp_c = ease_toward(coolant_temp_c, 90.0 + 0.06 * throttle_pct, 60.0, delta_s)
 
-            # Fuel: idle burn plus a share proportional to throttle. A 3-minute trip uses well under 1 %.
-            if phase.engine_running:
-                fuel_pct -= (0.0004 + 0.00006 * throttle_pct) * delta_s
+        # Fuel: idle burn plus a share proportional to throttle. A 3-minute trip uses well under 1 %.
+        if phase.engine_running:
+            fuel_pct -= (0.0004 + 0.00006 * throttle_pct) * delta_s
 
-            # Battery: alternator holds ~14.1 V while running, a little lower under electrical load at idle.
-            # Engine off: resting voltage, sagging slightly with a door open (interior light).
-            if phase.engine_running:
-                battery_target_v = 14.1 if gear > 0 else 13.9
-            else:
-                battery_target_v = 12.6 - (0.05 if openings & OPENING_DOOR_FL else 0.0)
-            battery_v = ease_toward(battery_v, battery_target_v, 3.0, delta_s)
+        # Battery: alternator holds ~14.1 V while running, a little lower under electrical load at idle.
+        # Engine off: resting voltage, sagging slightly with a door open (interior light).
+        if phase.engine_running:
+            battery_target_v = 14.1 if gear > 0 else 13.9
+        else:
+            battery_target_v = 12.6 - (0.05 if openings & OPENING_DOOR_FL else 0.0)
+        battery_v = ease_toward(battery_v, battery_target_v, 3.0, delta_s)
 
-            # Tyres warm up with speed (+~8 kPa at 90 km/h). The rear-right one leaks after the puncture.
-            warm_up_kpa = 8.0 * min(1.0, speed_kmh / 90.0)
-            for wheel_key in tyre_kpa:
-                cold_kpa = {"fl": 240.0, "fr": 241.0, "rl": 238.0, "rr": 240.0}[wheel_key]
-                tyre_kpa[wheel_key] = ease_toward(tyre_kpa[wheel_key], cold_kpa + warm_up_kpa, 120.0, delta_s)
-            if trip_time_s >= SLOW_PUNCTURE_START_S:
-                leak_offset_kpa = (trip_time_s - SLOW_PUNCTURE_START_S) * SLOW_PUNCTURE_KPA_PER_S
-                tyre_kpa["rr"] = min(tyre_kpa["rr"], 240.0 + warm_up_kpa - leak_offset_kpa)
+        # Tyres warm up with speed (+~8 kPa at 90 km/h). The rear-right one leaks after the puncture.
+        warm_up_kpa = 8.0 * min(1.0, speed_kmh / 90.0)
+        for wheel_key in tyre_kpa:
+            cold_kpa = {"fl": 240.0, "fr": 241.0, "rl": 238.0, "rr": 240.0}[wheel_key]
+            tyre_kpa[wheel_key] = ease_toward(tyre_kpa[wheel_key], cold_kpa + warm_up_kpa, 120.0, delta_s)
+        if trip_time_s >= SLOW_PUNCTURE_START_S:
+            leak_offset_kpa = (trip_time_s - SLOW_PUNCTURE_START_S) * SLOW_PUNCTURE_KPA_PER_S
+            tyre_kpa["rr"] = min(tyre_kpa["rr"], 240.0 + warm_up_kpa - leak_offset_kpa)
 
-            # Openings: once parked, the driver gets out, then opens the hood to look at the engine.
-            if phase.name == "parked":
-                if time_in_phase_s >= DOOR_OPEN_AFTER_PARKED_S:
-                    openings |= OPENING_DOOR_FL
-                if time_in_phase_s >= HOOD_OPEN_AFTER_PARKED_S:
-                    openings |= OPENING_HOOD
+        # Openings: once parked, the driver gets out, then opens the hood to look at the engine.
+        if phase.name == "parked":
+            if time_in_phase_s >= DOOR_OPEN_AFTER_PARKED_S:
+                openings |= OPENING_DOOR_FL
+            if time_in_phase_s >= HOOD_OPEN_AFTER_PARKED_S:
+                openings |= OPENING_HOOD
 
-            odometer_km += speed_kmh / 3600.0 * delta_s
+        odometer_km += speed_kmh / 3600.0 * delta_s
 
-            frames.append({
-                "seq": seq,
-                "sampleTimeS": round(trip_time_s, SAMPLE_TIME_DECIMALS),
-                "speedKmh": round(speed_kmh, 2),
-                "engineRpm": round(engine_rpm),
-                "gear": gear,
-                "throttlePct": round(throttle_pct, 1),
-                "brakePct": round(brake_pct, 1),
-                "steerDeg": round(reported_steer_deg, 2),
-                "odometerKm": round(odometer_km, 3),
-                "coolantTempC": round(coolant_temp_c + noise.uniform(-0.15, 0.15), 1),
-                "fuelPct": round(fuel_pct, 2),
-                "batteryV": round(battery_v + noise.uniform(-0.03, 0.03), 2),
-                "tyreKpa": {wheel_key: round(value + noise.uniform(-0.4, 0.4), 1) for wheel_key, value in tyre_kpa.items()},
-                "openings": openings,
-            })
-            seq += 1
-            trip_time_s = seq * delta_s                    # from seq, so rounding errors don't add up
+        frame = {
+            "seq": seq,
+            "sampleTimeS": round(trip_time_s, SAMPLE_TIME_DECIMALS),
+            "speedKmh": round(speed_kmh, 2),
+            "engineRpm": round(engine_rpm),
+            "gear": gear,
+            "throttlePct": round(throttle_pct, 1),
+            "brakePct": round(brake_pct, 1),
+            "steerDeg": round(reported_steer_deg, 2),
+            "odometerKm": round(odometer_km, 3),
+            "coolantTempC": round(coolant_temp_c + noise.uniform(-0.15, 0.15), 1),
+            "fuelPct": round(fuel_pct, 2),
+            "batteryV": round(battery_v + noise.uniform(-0.03, 0.03), 2),
+            "tyreKpa": {wheel_key: round(value + noise.uniform(-0.4, 0.4), 1) for wheel_key, value in tyre_kpa.items()},
+            "openings": openings,
+            "driveMode": DRIVE_MODE_ENGINE_DERATE if self.engine_derate_active else DRIVE_MODE_NORMAL,
+        }
+
+        self.speed_kmh = speed_kmh
+        self.gear = gear
+        self.odometer_km = odometer_km
+        self.coolant_temp_c = coolant_temp_c
+        self.fuel_pct = fuel_pct
+        self.battery_v = battery_v
+        self.openings = openings
+        self.steer_deg = steer_deg
+
+        self.seq += 1
+        self.trip_time_s = self.seq * delta_s                  # from seq, so rounding errors don't add up
+        self.frame_in_phase += 1
+        self._skip_finished_phases()
+        return frame
+
+
+def generate_trip(seed, rate_hz):
+    vehicle_simulator = VehicleSimulator(seed, rate_hz)
+    frames = []
+    while not vehicle_simulator.is_finished():
+        frames.append(vehicle_simulator.step())
 
     trip = {
         "schemaVersion": SCHEMA_VERSION,
@@ -247,7 +330,7 @@ def generate_trip(seed, rate_hz):
         "seed": seed,
         "frames": frames,
     }
-    return trip, phase_start_times_s
+    return trip, vehicle_simulator.phase_start_times_s
 
 
 def validate_trip(trip):
@@ -272,6 +355,8 @@ def validate_trip(trip):
             raise ValueError(f"frame {frame_index}: tyreKpa keys {list(frame['tyreKpa'].keys())}")
         if frame["openings"] & ~63:
             raise ValueError(f"frame {frame_index}: unknown openings bits {frame['openings']}")
+        if frame["driveMode"] not in (DRIVE_MODE_NORMAL, DRIVE_MODE_ENGINE_DERATE):
+            raise ValueError(f"frame {frame_index}: unknown driveMode {frame['driveMode']!r}")
 
 
 def first_time_s(frames, condition):
