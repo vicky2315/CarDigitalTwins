@@ -19,15 +19,12 @@ hand-built `BP_VehicleTwin`, so `Content/Jeep/` can be recreated. Export works (
 **Preview Status Outline doesn't show on the rebuilt car** although its Status Outline Material is set.
 
 **Resume:**
-1. Debug the rebuilt car's outline: both cars in one level, tick Preview Status Outline on each, then PIE and compare the
-   `LogVehicleTwin` lines per car (outline material warning, `group Paint/Trim: N material slots on M meshes`, wheel setup).
-   Suspects: preview flag only on the original's instance, components not collected for the stencil, render custom depth off.
-2. When the rebuilt car matches: commit the three `Tools/UnrealEditor/` files (scripts + recipe; no meshes, Content/Jeep is ignored).
-3. Day 9: `relay.py` (`--rate`, `--loop`, `--drop-percent`, `--pause-after`), verify with a CLI client.
-4. Record the Day 8 LinkedIn clip (car not selected: the editor selection outline is yellow too).
+1. ~~Rebuilt car outline~~ parked 2026-10-08 as BUG-002 (low priority experiment); scripts + recipe committed.
+2. Day 9: `relay.py` (`--rate`, `--loop`, `--drop-percent`, `--pause-after`), verify with a CLI client.
+3. Record the Day 8 LinkedIn clip (car not selected: the editor selection outline is yellow too).
 
 **Unverified:** SPEC.md §1 says 25 `Paint` meshes, the BP has 8 `Paint` components: check the original car's `group Paint` PIE log
-line and fix SPEC. Rebuild script's new Status Outline Material check not run yet. Day 4 Play log (`CarRoot` facing warning) not looked
+line and fix SPEC. Day 4 Play log (`CarRoot` facing warning) not looked
 at. Outline with the editor preview left ticked at PIE start: possible doubled outline, not tested.
 
 **Open decisions:** UI design track questions (ops view placement, show T1/T2 in the first design). Showroom mode (decide after H1).

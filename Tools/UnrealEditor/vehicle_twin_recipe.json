@@ -1,0 +1,4175 @@
+{
+  "source_blueprint": "/Game/Jeep/Blueprints/BP_VehicleTwin",
+  "source_import_folder": "/Game/Jeep/ImportA",
+  "class_defaults": {
+    "status_outline_material": "/Game/Materials/PP_VehicleStatusOutline",
+    "paint_groups": [
+      {
+        "component_tag": "Paint",
+        "status_blend_scale": 1.0
+      },
+      {
+        "component_tag": "Trim",
+        "status_blend_scale": 1.0
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Actor_0",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_16",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_29",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet23",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_33",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet31",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_32",
+      "parent": "CarRoot",
+      "tags": [
+        "Paint"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Mirror2_3",
+      "materials": [
+        "/Game/Materials/MI_CarPaint"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_36",
+      "parent": "CarRoot",
+      "tags": [
+        "Paint"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Split1_2",
+      "materials": [
+        "/Game/Materials/MI_CarPaint"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_1",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -80.746643,
+          27.681425000000004,
+          29.69999999999999
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_37",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet70",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_45",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Imported1",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_40",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet100",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_43",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet114",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_30",
+      "parent": "CarRoot",
+      "tags": [
+        "Paint"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Mirror2",
+      "materials": [
+        "/Game/Materials/MI_CarPaint"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_31",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Mirror2_2",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_10",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -80.746643,
+          58.68142499999999,
+          29.69999999999999
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_9",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          43.0,
+          86.230755,
+          56.75469700000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          -3.9959022178017074e-16,
+          -5.764801784233048,
+          -90.00000000000004
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Mirror1",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_42",
+      "parent": "CarRoot",
+      "tags": [
+        "Paint"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Shell3",
+      "materials": [
+        "/Game/Materials/MI_CarPaint"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_41",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Mirror16",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_28",
+      "parent": "CarRoot",
+      "tags": [
+        "Paint"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Shell2",
+      "materials": [
+        "/Game/Materials/MI_CarPaint"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_51",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          83.441934,
+          20.94428099999999,
+          181.62972200000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.8407716123095457e-16,
+          -2.2069531490250793e-32,
+          -19.045015540163696
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_6",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_11",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          79.58097199999997,
+          19.604093000000006,
+          -202.906646
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          -3.136269056405296e-46,
+          1.3709287420101457e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_16",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          79.58097199999997,
+          19.604093000000006,
+          -202.906646
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          -3.136269056405296e-46,
+          1.3709287420101457e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_38",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Mirror14",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_5",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          -42.16993400000001,
+          132.438567,
+          -179.419311
+        ],
+        "rotation_roll_pitch_yaw": [
+          -1.4546030021789072e-13,
+          77.36998337071022,
+          -90.00000000000041
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_2",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          -80.746643,
+          27.681425000000004,
+          29.69999999999999
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_35",
+      "parent": "CarRoot",
+      "tags": [
+        "Paint"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Split1",
+      "materials": [
+        "/Game/Materials/MI_CarPaint"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_4",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -42.16993400000001,
+          132.438567,
+          -179.419311
+        ],
+        "rotation_roll_pitch_yaw": [
+          -1.4546030021789072e-13,
+          77.36998337071022,
+          -90.00000000000041
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_34",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Mirror2_4",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_44",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Mirror2_5",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_39",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet95",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_17",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          80.746643,
+          27.681425000000004,
+          29.69999999999999
+        ],
+        "rotation_roll_pitch_yaw": [
+          -0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_8",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          43.0,
+          86.230755,
+          56.75469700000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          -3.9959022178017074e-16,
+          -5.764801784233048,
+          -90.00000000000004
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9_2",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_64",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          42.16993400000001,
+          132.438567,
+          -179.419311
+        ],
+        "rotation_roll_pitch_yaw": [
+          -1.4546030021789072e-13,
+          77.36998337071022,
+          -90.00000000000041
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_15",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          -80.746643,
+          58.68142499999999,
+          29.69999999999999
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_25",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          80.746643,
+          58.68142499999999,
+          29.69999999999999
+        ],
+        "rotation_roll_pitch_yaw": [
+          -0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_60",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          80.746643,
+          58.68142499999999,
+          29.69999999999999
+        ],
+        "rotation_roll_pitch_yaw": [
+          -0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_28",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          42.16993400000001,
+          132.438567,
+          -179.419311
+        ],
+        "rotation_roll_pitch_yaw": [
+          -1.4546030021789072e-13,
+          77.36998337071022,
+          -90.00000000000041
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_4",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Cut-Extrude1",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_20",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          83.441934,
+          20.94428099999999,
+          181.62972200000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.8407716123095457e-16,
+          -2.2069531490250793e-32,
+          -19.045015540163696
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "CarRoot",
+      "parent": "DatasmithSceneActor_0",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          -90.0,
+          0.0,
+          90.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_31",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -6.796559000000002,
+          0.0,
+          -247.404659
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_29",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -83.441934,
+          20.94428099999999,
+          181.62972200000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.8407716123095353e-16,
+          2.2896288588653395e-15,
+          19.04501554016371
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_65",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -83.441934,
+          20.94428099999999,
+          181.62972200000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.8407716123095353e-16,
+          2.2896288588653395e-15,
+          19.04501554016371
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_6",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_3",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_19",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          49.42093,
+          61.433649,
+          149.257636
+        ],
+        "rotation_roll_pitch_yaw": [
+          -0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_27",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -49.42093,
+          61.433649,
+          149.257636
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_66",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          -81.04664300000002,
+          65.5,
+          -170.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet6_2",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_50",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          49.42093,
+          61.433649,
+          149.257636
+        ],
+        "rotation_roll_pitch_yaw": [
+          -0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude2",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_49",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          49.42093,
+          61.433649,
+          149.257636
+        ],
+        "rotation_roll_pitch_yaw": [
+          -0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Revolve2",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_9",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -51.83968200000001,
+          42.58574899999999,
+          158.80823699999996
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_63",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -49.42093,
+          61.433649,
+          149.257636
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude2",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_62",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -49.42093,
+          61.433649,
+          149.257636
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Revolve2",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_6",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          43.0,
+          86.230755,
+          56.75469700000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          -3.9959022178017074e-16,
+          -5.764801784233048,
+          -90.00000000000004
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_30",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -81.04664300000002,
+          65.5,
+          -170.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_33",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          51.83968199999998,
+          42.58574899999999,
+          158.80823699999996
+        ],
+        "rotation_roll_pitch_yaw": [
+          -0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_73",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          51.83968199999998,
+          42.58574899999999,
+          158.80823699999996
+        ],
+        "rotation_roll_pitch_yaw": [
+          -0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_14",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -51.83968200000001,
+          42.58574899999999,
+          158.80823699999996
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_46",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          80.746643,
+          27.681425000000004,
+          29.69999999999999
+        ],
+        "rotation_roll_pitch_yaw": [
+          -0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_69",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          72.788192,
+          157.478298
+        ],
+        "rotation_roll_pitch_yaw": [
+          15.000000000000057,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_2",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_57",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -79.88573400000001,
+          24.621038,
+          45.330130999999994
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.360927272800489e-14,
+          82.19425730850233,
+          3.5127463631219486e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_58",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -79.88573400000001,
+          24.621038,
+          45.330130999999994
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.360927272800489e-14,
+          82.19425730850233,
+          3.5127463631219486e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_5",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_32",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          72.788192,
+          157.478298
+        ],
+        "rotation_roll_pitch_yaw": [
+          15.000000000000057,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_56",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -79.88573400000001,
+          24.621038,
+          45.330130999999994
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.360927272800489e-14,
+          82.19425730850233,
+          3.5127463631219486e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_3",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "WheelHub_FL",
+      "parent": "CarRoot",
+      "tags": [
+        "Wheel.FL"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          90.00000000000001,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Tyre_FL",
+      "parent": "WheelHub_FL",
+      "tags": [
+        "Tyre"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          5.19999999999999,
+          2.0428103653102863e-15
+        ],
+        "rotation_roll_pitch_yaw": [
+          -90.00000000000006,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Rim_FL",
+      "parent": "WheelHub_FL",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          5.19999999999999,
+          2.0428103653102863e-15
+        ],
+        "rotation_roll_pitch_yaw": [
+          -90.00000000000006,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine3",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_5",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          121.14999999999998,
+          65.658476,
+          -123.969374
+        ],
+        "rotation_roll_pitch_yaw": [
+          90.00000000000243,
+          87.89255266501691,
+          90.00000000000243
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_71",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          72.788192,
+          157.478298
+        ],
+        "rotation_roll_pitch_yaw": [
+          15.000000000000057,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_72",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          72.788192,
+          157.478298
+        ],
+        "rotation_roll_pitch_yaw": [
+          15.000000000000057,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_5",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_7",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          -5.199999999999989
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_70",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          72.788192,
+          157.478298
+        ],
+        "rotation_roll_pitch_yaw": [
+          15.000000000000057,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_3",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_55",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -79.88573400000001,
+          24.621038,
+          45.330130999999994
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.360927272800489e-14,
+          82.19425730850233,
+          3.5127463631219486e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_2",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Tyre_Spare",
+      "parent": "WheelHub_Spare",
+      "tags": [],
+      "transform": {
+        "location": [
+          121.14999999999998,
+          123.969374,
+          65.65847600000008
+        ],
+        "rotation_roll_pitch_yaw": [
+          -90.00000000000014,
+          2.1074473349831035,
+          -90.00000000000021
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Rim_RR",
+      "parent": "WheelHub_RR",
+      "tags": [],
+      "transform": {
+        "location": [
+          6.796559000000002,
+          5.104659,
+          2.021640410632131e-15
+        ],
+        "rotation_roll_pitch_yaw": [
+          -89.99999999999997,
+          7.0167092985348775e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine3",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Tyre_RR",
+      "parent": "WheelHub_RR",
+      "tags": [
+        "Tyre"
+      ],
+      "transform": {
+        "location": [
+          6.796559000000002,
+          5.104659,
+          2.021640410632131e-15
+        ],
+        "rotation_roll_pitch_yaw": [
+          -89.99999999999997,
+          7.0167092985348775e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "WheelHub_RR",
+      "parent": "CarRoot",
+      "tags": [
+        "Wheel.RR"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          90.00000000000001,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "WheelHub_Spare",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          90.00000000000001,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Rim_Spare",
+      "parent": "WheelHub_Spare",
+      "tags": [],
+      "transform": {
+        "location": [
+          121.14999999999998,
+          123.969374,
+          65.65847600000008
+        ],
+        "rotation_roll_pitch_yaw": [
+          -90.00000000000014,
+          2.1074473349831035,
+          -90.00000000000021
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine3",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "DatasmithSceneActor_0",
+      "parent": null,
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          230.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "WheelHub_FR",
+      "parent": "CarRoot",
+      "tags": [
+        "Wheel.FR"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          90.00000000000001,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Rim_FR",
+      "parent": "WheelHub_FR",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          -237.1000000000001,
+          -1.0949019468853297e-13
+        ],
+        "rotation_roll_pitch_yaw": [
+          -89.99999999999997,
+          7.0167092985348775e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine3",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Tyre_FR",
+      "parent": "WheelHub_FR",
+      "tags": [
+        "Tyre"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          -237.1000000000001,
+          -1.0949019468853297e-13
+        ],
+        "rotation_roll_pitch_yaw": [
+          -89.99999999999997,
+          7.0167092985348775e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "WheelHub_RL",
+      "parent": "CarRoot",
+      "tags": [
+        "Wheel.RL"
+      ],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          90.00000000000001,
+          -0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_24",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude3",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Rim_RL",
+      "parent": "WheelHub_RL",
+      "tags": [],
+      "transform": {
+        "location": [
+          -6.796559000000002,
+          247.4046590000001,
+          8.335657919467113e-14
+        ],
+        "rotation_roll_pitch_yaw": [
+          -90.00000000000006,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine3",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Tyre_RL",
+      "parent": "WheelHub_RL",
+      "tags": [
+        "Tyre"
+      ],
+      "transform": {
+        "location": [
+          -6.796559000000002,
+          247.4046590000001,
+          8.335657919467113e-14
+        ],
+        "rotation_roll_pitch_yaw": [
+          -90.00000000000006,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Combine4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_21",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -79.580972,
+          19.604093000000006,
+          -202.906646
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          7.84067264101324e-47,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_12",
+      "parent": "CarRoot",
+      "tags": [
+        "Paint"
+      ],
+      "transform": {
+        "location": [
+          63.53623600000003,
+          68.174688,
+          -187.1384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          2.9655393559839464e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet2",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_24",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_59",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Shell1",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_52",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -79.580972,
+          19.604093000000006,
+          -202.906646
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          7.84067264101324e-47,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_2",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -72.16507200000001,
+          62.211816,
+          -181.6384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          7.84067264101324e-47,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_3",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -72.16507200000001,
+          62.211816,
+          -181.6384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          7.84067264101324e-47,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet6",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_26",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          72.16507200000001,
+          62.211816,
+          -181.6384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          6.361109362927027e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_48",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          63.53623600000003,
+          39.674688,
+          -187.1384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          2.9655393559839464e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9_3",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_13",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          63.53623600000003,
+          68.174688,
+          -187.1384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          2.9655393559839464e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9_3",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_12",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          6.796559000000002,
+          0.0,
+          -5.104658999999998
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          7.84067264101324e-47,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_22",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          237.10000000000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          7.84067264101324e-47,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_18",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          63.53623600000003,
+          39.674688,
+          -187.1384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          2.9655393559839464e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_47",
+      "parent": "CarRoot",
+      "tags": [
+        "Paint"
+      ],
+      "transform": {
+        "location": [
+          63.53623600000003,
+          39.674688,
+          -187.1384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          2.9655393559839464e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet2",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_61",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          72.16507200000001,
+          62.211816,
+          -181.6384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          6.361109362927027e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet6",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_15",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -43.0,
+          86.230755,
+          56.75469700000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          -3.9959022178017074e-16,
+          -5.764801784233048,
+          -90.00000000000004
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_22",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          79.88133199999999,
+          24.621038,
+          45.36224199999998
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.235298569769015e-14,
+          -82.19425730850219,
+          -5.6843418860807914e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_5",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_23",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          -79.88573400000001,
+          24.621038,
+          45.330130999999994
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.360927272800489e-14,
+          82.19425730850233,
+          3.5127463631219486e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_25",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude3_2",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_26",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          -43.0,
+          86.230755,
+          56.75469700000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          -3.9959022178017074e-16,
+          -5.764801784233048,
+          -90.00000000000004
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet9_2",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_27",
+      "parent": "CarRoot",
+      "tags": [
+        "Trim"
+      ],
+      "transform": {
+        "location": [
+          -43.0,
+          86.230755,
+          56.75469700000002
+        ],
+        "rotation_roll_pitch_yaw": [
+          -3.9959022178017074e-16,
+          -5.764801784233048,
+          -90.00000000000004
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Mirror1",
+      "materials": [
+        "/Game/Materials/MI_CarPaintBlack"
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_14",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_21",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          79.88133199999999,
+          24.621038,
+          45.36224199999998
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.235298569769015e-14,
+          -82.19425730850219,
+          -5.6843418860807914e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_4",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Actor_13",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          79.88133199999999,
+          24.621038,
+          45.36224199999998
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.235298569769015e-14,
+          -82.19425730850219,
+          -5.6843418860807914e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "Actor_8",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          63.53623600000003,
+          68.174688,
+          -187.1384
+        ],
+        "rotation_roll_pitch_yaw": [
+          180.0,
+          2.9655393559839464e-15,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": null,
+      "materials": []
+    },
+    {
+      "name": "StaticMeshActor_23",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Fillet5",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_19",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          79.88133199999999,
+          24.621038,
+          45.36224199999998
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.235298569769015e-14,
+          -82.19425730850219,
+          -5.6843418860807914e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_2",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "StaticMeshActor_20",
+      "parent": "CarRoot",
+      "tags": [],
+      "transform": {
+        "location": [
+          79.88133199999999,
+          24.621038,
+          45.36224199999998
+        ],
+        "rotation_roll_pitch_yaw": [
+          3.235298569769015e-14,
+          -82.19425730850219,
+          -5.6843418860807914e-14
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "mesh": "import:2010_Jeep_Wrangler_Rubicon_-_Assembly/Geometries/Boss-Extrude1_3",
+      "materials": [
+        null
+      ],
+      "child_mesh_transform": {
+        "location": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation_roll_pitch_yaw": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    }
+  ]
+}

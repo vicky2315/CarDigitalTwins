@@ -10,6 +10,7 @@ tried, the recommended one, and how to verify.
 | ID | Status | Area | Summary |
 |----|--------|------|---------|
 | BUG-001 | Fixed (2026-10-07, not committed yet) | Trip generator | `--rate` values that don't divide 1000 evenly fail validation |
+| BUG-002 | Open (low priority) | Car rebuild tooling | Status outline doesn't show on `BP_VehicleTwin_Rebuilt` |
 
 ---
 
@@ -82,3 +83,45 @@ position is off by far more than 0.5 ms. The P4 test `move_sample_time_off_grid`
 3. `test_seed42_reproduces_committed_sample_byte_for_byte` must still pass. If it fails, the change altered the 10 Hz output: don't
    regenerate the sample to make it pass, find out why.
 4. Update this entry: Status → Fixed (date, commit); update the table at the top; update the P3 row in docs/TESTS.md.
+
+---
+
+## BUG-002: Status outline doesn't show on `BP_VehicleTwin_Rebuilt`
+
+**Status:** Open, low priority (found 2026-10-08). The rebuild was an experiment to see whether the car can be recreated from the
+STEP file plus a recipe; nothing depends on it. The hand-built `BP_VehicleTwin` is still the car used everywhere.
+
+### Symptom
+`Tools/UnrealEditor/rebuild_vehicle_twin_from_cad.py` creates `/Game/Jeep/Rebuilt/ImportA` and `BP_VehicleTwin_Rebuilt` from
+`vehicle_twin_recipe.json` (written by `export_vehicle_twin_recipe.py`: 113 components, 72 meshes, tags `Paint` 8, `Trim` 22,
+`Tyre` 4, one each `Wheel.*`). The rebuilt car looks mostly the same, but ticking **Preview Status Outline** on a placed instance
+shows no outline, although its Class Defaults show `Status Outline Material` = `PP_VehicleStatusOutline`. Not yet tried in PIE.
+
+### Where
+- `Source/CarDigitalTwins/Vehicle/VehicleTwinActor.cpp`: `SetStatusOutline`, `EnsureStatusOutlinePostProcess`,
+  `CollectStatusOutlineMeshComponents` (SPEC.md §1 "Status outline").
+- `Tools/UnrealEditor/rebuild_vehicle_twin_from_cad.py`, `build_blueprint`: sets `status_outline_material` on the generated
+  class's default object after compiling; copies names, hierarchy, transforms, tags, meshes and materials, sets mobility Movable,
+  nothing about Nanite or render settings.
+
+### What the code rules out
+`CollectStatusOutlineMeshComponents` takes every `UPrimitiveComponent` (child actors included) with no filter, so the rebuilt car's
+plain `StaticMeshComponent`s should be collected the same way as the original's Harvest child actors.
+
+### Suspects
+1. The outline is in two halves: meshes write custom stencil 1, the post-process draws around it. Unknown which half fails.
+2. `EnsureStatusOutlinePostProcess` only logs a missing/wrong material from BeginPlay; the editor preview fails silently.
+3. Mesh asset or component settings differ from the original import (Nanite, Render CustomDepth Pass, visibility of a parent).
+4. Preview flag is per placed instance (`EditAnywhere`): it must be ticked on the rebuilt car's own instance.
+
+### Debug steps (no build needed for 1–2)
+1. Both cars in one level, Preview Status Outline ticked **only on the rebuilt car** (each car's unbound post-process outlines every
+   stencil-1 pixel in the scene, so with both ticked the original can draw the rebuilt car's outline and the test lies).
+2. Viewport → View Mode → Buffer Visualization → Custom Stencil. Rebuilt car visible there → post-process half (check PIE log for
+   `StatusOutlineMaterial is not set` / not a Post Process material). Not visible → mesh half (compare one rebuilt mesh asset and
+   component with its `ImportA` twin).
+3. Optional: log `"%s: status outline on %d mesh components"` in BeginPlay to compare both cars by one number.
+
+### Verify the fix
+Rebuilt car shows the amber pulse in the editor preview and in PIE at 10× (Warning ~91 s, Critical ~119 s), same `LogVehicleTwin`
+lines as the original.
