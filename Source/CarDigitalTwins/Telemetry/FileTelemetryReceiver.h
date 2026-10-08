@@ -26,6 +26,7 @@ public:
 	virtual void StopReceiving() override;
 	virtual void PollNewTelemetrySamples(float DeltaSeconds, TArray<FVehicleTelemetry>& OutNewTelemetrySamples) override;
 	virtual FString GetReceiverDisplayName() const override;
+	virtual FTelemetryConnectionStatus GetConnectionStatus() const override;
 
 private:
 	// Reads, checks and converts the trip file into LoadedRecordedTrip. Logs the reason and returns false on any problem.

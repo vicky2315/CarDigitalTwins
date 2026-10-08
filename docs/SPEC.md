@@ -154,7 +154,30 @@ Each row keeps its own ≥ / > exactly as in the table. The tyre row is judged o
 plus the overall (worst) status in `FVehicleStatusReport`.
 
 ## 4. Connection states
-_TODO (Day 10): Idle → Connecting → Live → Stale → Disconnected; stale threshold; backoff._
+Decided 2026-10-08 (Day 10). `ETelemetryConnectionState` in `TelemetryReceiver.h`, reported by every receiver through
+`GetConnectionStatus()` together with dropped messages, latency and reconnect attempts (`FTelemetryConnectionStatus`).
+
+```
+Idle ──Start──▶ Connecting ──connected──▶ Live ◀──telemetry again── Stale
+                    │  ▲                   │  └──no telemetry for the stale threshold──▶ ┘
+       error/closed/│  │ backoff timer      │ closed / error
+       timeout 5 s  ▼  │                   ▼
+                Disconnected ◀─────────────┘           (Stop from any state → Idle)
+```
+- **Live:** connected; samples flow. Connecting counts as Live from the moment the socket opens, so a relay that sends nothing
+  turns Stale after the threshold.
+- **Stale:** still connected, no telemetry for `StaleAfterSeconds` (default 1 s), but never less than 3 message intervals from the
+  relay's `hello` (a slow `--rate` doesn't flicker). The car keeps its last sample; the dashboard (Day 11) must show the state.
+- **Disconnected:** socket closed, failed, or no answer within `ConnectTimeoutSeconds` (5 s). Next attempt after
+  `ReconnectInitialDelaySeconds × 2^(failed attempts − 1)`, capped at `ReconnectMaxDelaySeconds` (0.5 s → 1 → 2 → 4 → 8 → 10 s), ±20 %
+  jitter so many clients don't retry in step. A successful connection resets the backoff.
+- **Dropped messages:** gaps in `seq` while connected. A loop (seq backwards) is not a gap; the time between two connections is
+  not counted (it's downtime, visible as Disconnected).
+- **Latency (a):** UE receive time − `sentUnixMs`, latest / average / max per connection. Same machine, same clock.
+- **Rejected messages:** non-JSON, wrong `schemaVersion` or no valid `frame`: dropped, first one logged as a warning, the rest counted.
+- **Threading:** socket callbacks only queue events; parsing and every state change happen on the game thread in
+  `PollNewTelemetrySamples`, like the file receiver's playback.
+- **Source switch:** Project Settings > Vehicle Telemetry > Telemetry Source (File / WebSocket), read when the game starts.
 
 ## 5. UI architecture: custom MVVM (decided 2026-09-25)
 

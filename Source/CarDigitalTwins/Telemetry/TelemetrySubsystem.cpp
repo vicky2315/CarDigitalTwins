@@ -3,6 +3,7 @@
 #include "Engine/GameInstance.h"
 #include "Telemetry/FileTelemetryReceiver.h"
 #include "Telemetry/TelemetrySettings.h"
+#include "Telemetry/WebSocketTelemetryReceiver.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogVehicleTelemetry, Log, All);
 
@@ -10,17 +11,29 @@ void UTelemetrySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	// Day 7: always the file receiver. Day 10 adds a setting that picks the WebSocket receiver instead.
+	// One setting picks the source; nothing downstream knows which one it is (SPEC.md §5–6).
 	const UTelemetrySettings* TelemetrySettings = GetDefault<UTelemetrySettings>();
-	UFileTelemetryReceiver* FileTelemetryReceiver = NewObject<UFileTelemetryReceiver>(this);
-	FileTelemetryReceiver->TripFileRelativePath = TelemetrySettings->TripFileRelativePath;
-	FileTelemetryReceiver->PlaybackSpeedMultiplier = TelemetrySettings->PlaybackSpeedMultiplier;
-	ActiveTelemetryReceiver = FileTelemetryReceiver;
+	if (TelemetrySettings->TelemetrySource == ETelemetrySource::WebSocket)
+	{
+		UWebSocketTelemetryReceiver* WebSocketTelemetryReceiver = NewObject<UWebSocketTelemetryReceiver>(this);
+		WebSocketTelemetryReceiver->RelayUrl = TelemetrySettings->RelayUrl;
+		WebSocketTelemetryReceiver->StaleAfterSeconds = TelemetrySettings->StaleAfterSeconds;
+		WebSocketTelemetryReceiver->ConnectTimeoutSeconds = TelemetrySettings->ConnectTimeoutSeconds;
+		WebSocketTelemetryReceiver->ReconnectInitialDelaySeconds = TelemetrySettings->ReconnectInitialDelaySeconds;
+		WebSocketTelemetryReceiver->ReconnectMaxDelaySeconds = TelemetrySettings->ReconnectMaxDelaySeconds;
+		ActiveTelemetryReceiver = WebSocketTelemetryReceiver;
+	}
+	else
+	{
+		UFileTelemetryReceiver* FileTelemetryReceiver = NewObject<UFileTelemetryReceiver>(this);
+		FileTelemetryReceiver->TripFileRelativePath = TelemetrySettings->TripFileRelativePath;
+		FileTelemetryReceiver->PlaybackSpeedMultiplier = TelemetrySettings->PlaybackSpeedMultiplier;
+		ActiveTelemetryReceiver = FileTelemetryReceiver;
+	}
 
 	if (ActiveTelemetryReceiver->StartReceiving())
 	{
-		UE_LOG(LogVehicleTelemetry, Log, TEXT("Telemetry: receiving from %s at %.1fx speed."),
-			*ActiveTelemetryReceiver->GetReceiverDisplayName(), TelemetrySettings->PlaybackSpeedMultiplier);
+		UE_LOG(LogVehicleTelemetry, Log, TEXT("Telemetry: receiving from %s."), *ActiveTelemetryReceiver->GetReceiverDisplayName());
 	}
 	else
 	{
@@ -73,6 +86,11 @@ void UTelemetrySubsystem::Tick(float DeltaSeconds)
 	}
 
 	LogTelemetrySummaryOncePerSecond(DeltaSeconds, NewTelemetrySamplesThisTick);
+}
+
+FTelemetryConnectionStatus UTelemetrySubsystem::GetTelemetryConnectionStatus() const
+{
+	return ActiveTelemetryReceiver ? ActiveTelemetryReceiver->GetConnectionStatus() : FTelemetryConnectionStatus();
 }
 
 TStatId UTelemetrySubsystem::GetStatId() const
@@ -153,11 +171,14 @@ void UTelemetrySubsystem::LogTelemetrySummaryOncePerSecond(float DeltaSeconds, c
 		return;
 	}
 
-	// Seq range reads "1895..4" across a loop: expected, not dropped samples.
-	UE_LOG(LogVehicleTelemetry, Log, TEXT("Telemetry: %d samples in %.2f s, seq %lld..%lld, t=%.1f s, %.1f km/h, %.0f rpm, coolant %.1f C, tyre RR %.0f kPa, openings %d."),
+	// Seq range reads "1895..4" across a loop: expected, not dropped samples. Latency is 0 for the file receiver.
+	const FTelemetryConnectionStatus TelemetryConnectionStatus = GetTelemetryConnectionStatus();
+	UE_LOG(LogVehicleTelemetry, Log, TEXT("Telemetry: %d samples in %.2f s, seq %lld..%lld, t=%.1f s, %.1f km/h, %.0f rpm, coolant %.1f C, tyre RR %.0f kPa, openings %d [%s, dropped %lld, latency %.1f ms avg / %.1f max]."),
 		SamplesSinceLastTelemetrySummaryLog, SecondsSinceLastTelemetrySummaryLog, FirstSeqSinceLastTelemetrySummaryLog, LatestTelemetrySample.Seq,
 		LatestTelemetrySample.SampleTimeS, LatestTelemetrySample.SpeedKmh, LatestTelemetrySample.EngineRpm, LatestTelemetrySample.CoolantTempC,
-		LatestTelemetrySample.TyreKpa.RR, LatestTelemetrySample.Openings);
+		LatestTelemetrySample.TyreKpa.RR, LatestTelemetrySample.Openings,
+		*StaticEnum<ETelemetryConnectionState>()->GetNameStringByValue(static_cast<int64>(TelemetryConnectionStatus.ConnectionState)),
+		TelemetryConnectionStatus.DroppedMessageCount, TelemetryConnectionStatus.AverageReceiveLatencyMs, TelemetryConnectionStatus.MaxReceiveLatencyMs);
 
 	SecondsSinceLastTelemetrySummaryLog = 0.0;
 	SamplesSinceLastTelemetrySummaryLog = 0;

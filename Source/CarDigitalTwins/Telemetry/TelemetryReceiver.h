@@ -8,6 +8,51 @@
 #include "VehicleTelemetry.h"
 #include "TelemetryReceiver.generated.h"
 
+// Where a receiver is in its connection life (SPEC.md §4). The file receiver is only ever Idle or Live.
+UENUM(BlueprintType)
+enum class ETelemetryConnectionState : uint8
+{
+	// Not started, or stopped.
+	Idle,
+	// Socket opening; no answer from the relay yet.
+	Connecting,
+	// Connected and samples arriving.
+	Live,
+	// Still connected, but no sample for longer than the stale threshold (relay paused, network stalled).
+	Stale,
+	// Closed or failed; waiting for the next reconnect attempt.
+	Disconnected,
+};
+
+// Health of the telemetry link, for logs now and the dashboard later (Day 11).
+USTRUCT(BlueprintType)
+struct FTelemetryConnectionStatus
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category = "Telemetry|Connection")
+	ETelemetryConnectionState ConnectionState = ETelemetryConnectionState::Idle;
+
+	// Messages lost while connected: gaps in Seq. A trip loop (Seq going back) is not a gap, and the time between two connections
+	// isn't counted either.
+	UPROPERTY(BlueprintReadOnly, Category = "Telemetry|Connection")
+	int64 DroppedMessageCount = 0;
+
+	// Relay send → UE receive in milliseconds (latency part (a), SPEC.md §2.3), over the current connection. 0 for the file receiver.
+	UPROPERTY(BlueprintReadOnly, Category = "Telemetry|Connection")
+	float LatestReceiveLatencyMs = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Telemetry|Connection")
+	float AverageReceiveLatencyMs = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Telemetry|Connection")
+	float MaxReceiveLatencyMs = 0.f;
+
+	// Reconnect attempts since StartReceiving.
+	UPROPERTY(BlueprintReadOnly, Category = "Telemetry|Connection")
+	int32 ReconnectAttemptCount = 0;
+};
+
 UINTERFACE(meta = (CannotImplementInterfaceInBlueprint))
 class UTelemetryReceiver : public UInterface
 {
@@ -35,4 +80,7 @@ public:
 
 	// Short name for logs, e.g. "File trip_sample.json" or "WebSocket <relay url>".
 	virtual FString GetReceiverDisplayName() const = 0;
+
+	// Connection state, dropped messages and latency (SPEC.md §4).
+	virtual FTelemetryConnectionStatus GetConnectionStatus() const = 0;
 };

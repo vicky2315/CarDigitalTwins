@@ -79,7 +79,17 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 | R5 | Schema version | `load_trip` rejects `schemaVersion` 2 |
 | R6 | End to end | Real relay + client on a free port at 200 msg/s: `hello` first, 20 frames in order, no gaps, client hello reaches the relay |
 
-## 5. Later (with the roadmap)
+## 5. WebSocket receiver (Unreal C++): planned, Day 10
+
+| # | Test | Checks |
+|---|------|--------|
+| W1 | Gap counting | `FTelemetryStreamStatistics`: 0,1,4 → 2 dropped; seq back to 0 → not a gap; `Reset` forgets the last seq |
+| W2 | Latency stats | Latest / average / max over several messages; average 0 with no messages |
+| W3 | Backoff | `ComputeReconnectDelaySeconds`: 0.5, 1, 2, 4, 8, 10, 10 s for attempts 1–7; jitter ±1 → ±20 %; huge attempt number doesn't overflow |
+| W4 | Bad URL | `StartReceiving` with `http://…` returns false, state stays Idle |
+| W5 | Live relay (manual, PIE) | See PROGRESS Day 10 checks: Live, drop count, Stale on pause, reconnect with backoff, relay started after PIE |
+
+## 6. Later (with the roadmap)
 - Day 7 `UTelemetrySubsystem`: receiver chosen from settings, one `OnTelemetryUpdated` per sample.
 - Day 8 status thresholds (SPEC §3): table-driven edges, hysteresis, battery ignored with engine off.
 - Day 11 MVVM (`CarDigitalTwins.MVVM.Core`): field masks, tolerance, once-per-frame flush, subscribe fires immediately, RAII unsubscribe.

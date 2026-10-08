@@ -1,8 +1,8 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-08
-Current day: **Day 10: WebSocket receiver in UE** (Day 9 done 2026-10-08).
-Days 1–9 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
+Current day: **Twin completion T1–T3** (Day 10 done 2026-10-08), then Day 11.
+Days 1–10 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
@@ -114,9 +114,15 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
       100 msg/s, 5% drop, 2 s pause: gaps reported, "No data for 1 s" during the pause, latency 0–2 ms.
 
 ### Day 10: WebSocket receiver in UE
-- [ ] `UWebSocketTelemetryReceiver`, state machine, backoff reconnect
-- [ ] Dropped-message count, receive latency
-- [ ] File ↔ WebSocket switch via one setting
+- [x] `UWebSocketTelemetryReceiver`, state machine, backoff reconnect (2026-10-08; SPEC.md §4)
+- [x] Dropped-message count, receive latency (`FTelemetryConnectionStatus`, in the once-a-second summary log)
+- [x] File ↔ WebSocket switch via one setting (Project Settings > Vehicle Telemetry > Telemetry Source; committed default File)
+- [x] PIE checks with the relay (personal laptop, 2026-10-08): Live at 10/s, dropped 0; relay stopped → Disconnected, retries
+      0.4 → 0.9 → 2.3 s, restarted → Live with dropped still 0; `--pause-after` → Stale → Live; `--drop-percent 10` raises dropped.
+      Receive latency ~18–30 ms avg (includes up to one frame of queue wait; Python client sees 0–2 ms). Max stuck at ~1050 ms
+      from a PIE-start hitch: reset the max per window before the dashboard shows it (Day 11).
+- [ ] `can't connect: no details` wording for empty backend errors: built? not checked in a log yet (cosmetic)
+- Later: a send path for commands (T1) goes on this receiver; the relay already logs client messages.
 
 ### Twin completion (after Day 10, before Day 11; added 2026-10-07)
 Turns the project from a digital *shadow* (data flows one way) into a digital *twin* (two-way data plus prediction).

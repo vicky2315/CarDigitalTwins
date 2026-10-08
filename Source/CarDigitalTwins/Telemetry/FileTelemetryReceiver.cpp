@@ -70,6 +70,14 @@ FString UFileTelemetryReceiver::GetReceiverDisplayName() const
 	return FString::Printf(TEXT("File %s"), *FPaths::GetCleanFilename(TripFileRelativePath));
 }
 
+FTelemetryConnectionStatus UFileTelemetryReceiver::GetConnectionStatus() const
+{
+	// A file never drops or delays a frame: Live while playing, nothing else to report.
+	FTelemetryConnectionStatus FileConnectionStatus;
+	FileConnectionStatus.ConnectionState = bIsReceiving ? ETelemetryConnectionState::Live : ETelemetryConnectionState::Idle;
+	return FileConnectionStatus;
+}
+
 bool UFileTelemetryReceiver::LoadRecordedTripFile()
 {
 	const FString TripFileFullPath = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TripFileRelativePath));

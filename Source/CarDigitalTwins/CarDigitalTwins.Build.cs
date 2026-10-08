@@ -17,6 +17,9 @@ public class CarDigitalTwins : ModuleRules
 		// Json + JsonUtilities: UFileTelemetryReceiver parses the recorded trip with FJsonObjectConverter (SPEC.md §2.2).
 		PrivateDependencyModuleNames.AddRange(new string[] { "Json", "JsonUtilities" });
 
+		// WebSockets: UWebSocketTelemetryReceiver connects to Tools/Relay/relay.py (SPEC.md §2.3, Day 10).
+		PrivateDependencyModuleNames.Add("WebSockets");
+
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 		

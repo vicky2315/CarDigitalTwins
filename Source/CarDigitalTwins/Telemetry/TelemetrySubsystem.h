@@ -14,7 +14,7 @@
 // Broadcast once per new sample, oldest first, on the game thread.
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnVehicleTelemetryUpdated, const FVehicleTelemetry& /*NewTelemetrySample*/);
 
-// GameInstance subsystem (not World) so the receiver, and on Day 10 the WebSocket connection, survives level loads, matching
+// GameInstance subsystem (not World) so the receiver, and with it the WebSocket connection, survives level loads, matching
 // UViewModelSubsystem (SPEC.md §5). Ticks through FTickableGameObject, only in game worlds and not while paused.
 UCLASS()
 class UTelemetrySubsystem : public UGameInstanceSubsystem, public FTickableGameObject
@@ -45,6 +45,9 @@ public:
 
 	// Status of the latest sample (SPEC.md §3). Already updated when OnTelemetryUpdated fires for that sample.
 	const FVehicleStatusReport& GetCurrentVehicleStatusReport() const { return CurrentVehicleStatusReport; }
+
+	// Connection state, dropped messages and latency of the active receiver (SPEC.md §4). Idle when there is none.
+	FTelemetryConnectionStatus GetTelemetryConnectionStatus() const;
 
 	FOnVehicleTelemetryUpdated OnTelemetryUpdated;
 
