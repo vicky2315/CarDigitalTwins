@@ -115,6 +115,14 @@ One JSON object per message, one sample per message:
 - `sentUnixMs` is stamped by the relay at send time. UE subtracts it from its receive time for latency part (a). Both run on
   the same machine, so clocks agree; across machines this would need clock sync.
 - Gaps in `frame.seq` = dropped messages; `seq` going backwards = trip looped (`--loop`), not an error.
+- `hello` (relay → client, first message on every connection, added 2026-10-08):
+  `{"type": "hello", "schemaVersion": 1, "vehicleId": "jeep-01", "messagesPerSecond": 10, "tripRateHz": 10}`. The receiver can use
+  `messagesPerSecond` for its stall timeout. Clients may send messages back (JSON with a `type`); the relay logs them until T1
+  defines commands.
+- Relay (`Tools/Relay/relay.py`, Day 9): one live stream broadcast to every client, starting when the first client connects (late
+  joiners start mid-trip, like a real car). `--rate` = messages per second (above `rateHz` plays faster; `sampleTimeS` stays trip
+  time). `--drop-percent` skips messages but keeps their time slot. `--pause-after` goes quiet once for `--pause-duration` with the
+  connection open (tests stall detection; a real disconnect = stop the relay).
 
 ### 2.4 `schemaVersion` policy
 - Integer, one number (no minor). Current: **1** (`VehicleTelemetrySchemaVersion` in C++).

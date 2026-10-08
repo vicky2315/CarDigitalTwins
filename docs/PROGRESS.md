@@ -1,8 +1,8 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-08
-Current day: **Day 9: Python WebSocket relay** (Day 8 done 2026-10-08).
-Days 1–8 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
+Current day: **Day 10: WebSocket receiver in UE** (Day 9 done 2026-10-08).
+Days 1–9 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
@@ -107,8 +107,11 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
   The material is assigned in `BP_VehicleTwin`, which is local-only (personal laptop). Custom depth cost goes to Day 12 profiling.
 
 ### Day 9: Python WebSocket relay
-- [ ] `relay.py` with `--rate`, `--loop`, `--drop-percent`, `--pause-after`
-- [ ] Verified with a CLI client
+- [x] `relay.py` with `--rate`, `--loop`, `--drop-percent`, `--pause-after` (+ `--pause-duration`, `--drop-seed`, `--trip`, `--port`)
+      2026-10-08: `Tools/Relay/relay.py`, `websockets==15.0.1` (`Tools/Relay/requirements.txt`). Broadcast to every client, starts at
+      the first connection, sends `hello` first, logs messages from clients (return path for T1).
+- [x] Verified with a CLI client: `Tools/Relay/relay_client.py` (gaps, loops, latency, stall warning); pytest R1–R6 pass. Run at
+      100 msg/s, 5% drop, 2 s pause: gaps reported, "No data for 1 s" during the pause, latency 0–2 ms.
 
 ### Day 10: WebSocket receiver in UE
 - [ ] `UWebSocketTelemetryReceiver`, state machine, backoff reconnect
@@ -162,10 +165,19 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 
 ### Day 15: Polish and demo video
 - [ ] Camera presets, lighting, scripted demo run, video + GIF
+- [ ] Demo video 60–90 s (decided 2026-10-08, $0 portfolio path): live stream → overheating amber → red → connection drop and
+      recovery → command back to the car (T1) → prediction ("coolant critical in ~25 s", T2). First 30 s must carry it.
 
 ### Day 16: Documentation and portfolio
 - [ ] README complete; portfolio section (demo video, no live link); runnable in < 15 min
 - [ ] Frame it as a digital twin (physical entity, virtual entity, two-way data thread, prediction); list the HMI view as the next phase
+- [ ] Portfolio fixes (2026-10-08): README first screen = GIF + architecture diagram (simulator → relay → `ITelemetryReceiver` →
+      twin + dashboard) + 3–4 measured numbers from Day 12 (latency, frame time, dropouts survived). Reviewers can't get the meshes
+      (license), so the video carries the demo; README gives "download STEP from GrabCAD + run the rebuild script" (needs BUG-002
+      fixed). Never publish a packaged build (it redistributes the meshes). Present the car as a vehicle model, not anything official
+      from Jeep. Show the $0 cost decision (COSTS.md) as a design choice. For game-studio applications lead with C++ / rendering.
+- [ ] Real data clip: at least one short clip with a real source (CARLA, free, open source; or a racing game's telemetry output if
+      already owned), see "Future options: Real data source". Finishing Day 16 matters more than adding scope.
 
 ## Phase H: In-car HMI view (after Phase A; added 2026-10-07)
 Same receivers, subsystem, status evaluator and ViewModels as the twin; a second front end for the driver instead of a remote operator.
@@ -187,7 +199,7 @@ Written in a separate session alongside the feature days. Plan and how to run: [
 - [x] 1. Trip generator pytest suite, P1–P8 (`Tools/TripGenerator/tests/`); found BUG-001 (`--rate` 3/7 fail validation, fixed 2026-10-07)
 - [ ] 2. Telemetry automation tests U1–U9 (needs Day 7 committed)
 - [ ] 3. `AVehicleTwinActor` automation tests V1–V7 (synthetic actor, no Jeep assets)
-- [ ] 4. Roadmap tests as days land (status thresholds Day 8, relay Day 9, MVVM Day 11)
+- [ ] 4. Roadmap tests as days land (status thresholds Day 8, relay Day 9 done: R1–R6, MVVM Day 11)
 
 ## UI design (parallel track, added 2026-10-07)
 Can run in a separate session alongside Days 8–10; design only, no UMG or C++. Architecture is already decided (SPEC.md §5–6:
@@ -217,7 +229,7 @@ own; leave room for the Showroom mode idea (Optional / later), which would add a
 ## Budget constraints ($0 project)
 - No cloud hosting: Pixel Streaming runs locally only (NVENC on either machine).
 - Machines: office laptop (RTX 4060 Ti) and personal laptop (RTX 3070 Ti Laptop). Tag every measurement with the machine.
-- GitHub LFS free tier (~1 GB storage, ~1 GB/month bandwidth): keep committed assets lean; large content goes to a Release zip / external link if needed.
+- GitHub LFS free tier (10 GB storage, 10 GB/month bandwidth, rechecked 2026-10-08): keep committed assets lean; large content goes to a Release zip / external link if needed.
 - Free tools and assets only (GrabCAD / free marketplace, OBS, DaVinci Resolve, Mosquitto, SUMO, Cesium ion free tier, Omniverse).
 
 ## Pending setup

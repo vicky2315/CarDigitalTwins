@@ -8,6 +8,9 @@ Automated tests: what exists, how to run it, and what is planned. Bugs the tests
 ```
 python -m pytest Tools/TripGenerator/tests -v
 ```
+
+**Python (relay):** needs `pip install -r Tools/Relay/requirements.txt` once (`websockets`). `python -m pytest Tools/Relay/tests -v`,
+or `python -m pytest Tools -v` for all Python tests. R6 opens a local WebSocket on a free port (127.0.0.1 only, no firewall prompt).
 Runs in a few seconds and doesn't need Unreal. A test marked `xfail` flags an open bug from BUGS.md: it is expected to fail, and
 it turns into an error (`XPASS(strict)`) once the bug is fixed, as a reminder to remove the marker.
 
@@ -65,9 +68,19 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 | V8 | Status outline | Warning/Critical turn custom depth on with stencil 1 on all meshes (child actors too); Normal turns it off; same status twice touches no mesh |
 | V9 | Telemetry blend | Alpha 0 → 1 over the arrival interval; trip loop snaps to latest; several samples in one frame keep the last real interval |
 
-## 4. Later (with the roadmap)
+## 4. Relay (Python, pytest): done 2026-10-08
+
+| # | Test | Checks |
+|---|------|--------|
+| R1 | Envelope | Telemetry message keys in SPEC §2.3 order, `type`, `schemaVersion` 1, `sentUnixMs`, frame unchanged |
+| R2 | Send order | Without `--loop` the frames once; with it, wraps to seq 0 forever |
+| R3 | Drop share | 0% never, 100% always, 10% ≈ 1000 of 10000 (seeded) |
+| R4 | Client checks | Gap counting, a loop back to seq 0 is not a gap, latency from `sentUnixMs` |
+| R5 | Schema version | `load_trip` rejects `schemaVersion` 2 |
+| R6 | End to end | Real relay + client on a free port at 200 msg/s: `hello` first, 20 frames in order, no gaps, client hello reaches the relay |
+
+## 5. Later (with the roadmap)
 - Day 7 `UTelemetrySubsystem`: receiver chosen from settings, one `OnTelemetryUpdated` per sample.
 - Day 8 status thresholds (SPEC §3): table-driven edges, hysteresis, battery ignored with engine off.
-- Day 9 relay (pytest): `--drop-percent`, `--loop`, envelope format.
 - Day 11 MVVM (`CarDigitalTwins.MVVM.Core`): field masks, tolerance, once-per-frame flush, subscribe fires immediately, RAII unsubscribe.
 - Day 8 end-to-end: sample trip at ×50 turns the car amber, then red.
