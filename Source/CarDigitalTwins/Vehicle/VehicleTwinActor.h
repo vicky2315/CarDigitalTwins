@@ -10,6 +10,7 @@
 
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
+class UMaterialParameterCollection;
 class UPostProcessComponent;
 class UTelemetrySubsystem;
 
@@ -21,6 +22,9 @@ struct FVehicleTwinWheel
 
 	UPROPERTY()
 	TObjectPtr<USceneComponent> Hub = nullptr;
+
+	// The tag the hub was found by (Wheel.FL ...), so callouts can ask for a wheel by tag.
+	FName WheelTag;
 
 	// Hub transform relative to its parent as authored in BP_VehicleTwin. Spin and steer are applied on top; the hub is never moved,
 	// so the meshes under it keep their authored transforms.
@@ -88,7 +92,26 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Vehicle Twin")
 	int32 GetNumWheels() const { return Wheels.Num(); }
 
+	// World location of a point the dashboard pins a callout or ring to. A wheel tag (Wheel.FL ... Wheel.RR) gives that tyre's centre;
+	// any other tag gives the first component carrying it, e.g. the Scene Components tagged CalloutAnchor.Hood or
+	// CalloutAnchor.DoorFrontLeft in BP_VehicleTwin. False when nothing carries the tag.
+	UFUNCTION(BlueprintPure, Category = "Vehicle Twin")
+	bool FindCalloutAnchorWorldLocation(FName CalloutAnchorTag, FVector& OutWorldLocation) const;
+
 protected:
+	// Material Parameter Collection the studio floor reads (MPC_TwinStudio). The car stands still, so the floor grid scrolls backwards
+	// at the car's speed instead, to show it driving. Empty = no scrolling (e.g. in a level without the studio floor).
+	UPROPERTY(EditAnywhere, Category = "Vehicle Twin|Studio Floor")
+	TObjectPtr<UMaterialParameterCollection> StudioFloorParameterCollection;
+
+	// Scalar parameter in that collection: distance driven in cm, wrapped to one floor grid cell so it never loses precision.
+	UPROPERTY(EditAnywhere, Category = "Vehicle Twin|Studio Floor")
+	FName GroundScrollParameter = TEXT("GroundScrollCm");
+
+	// Floor grid cell size in the floor material, cm. The scroll wraps at this distance, so it must match the material.
+	UPROPERTY(EditAnywhere, Category = "Vehicle Twin|Studio Floor", meta = (ClampMin = "1", Units = "cm"))
+	float StudioFloorGridCellCm = 100.f;
+
 	// Spins and steers the wheels in the level viewport without telemetry, to check axes and pivots.
 	UPROPERTY(EditAnywhere, Category = "Vehicle Twin|Preview")
 	bool bPreviewInEditor = false;
@@ -223,6 +246,9 @@ private:
 
 	TWeakObjectPtr<UTelemetrySubsystem> SubscribedTelemetrySubsystem;
 	FDelegateHandle TelemetryUpdatedDelegateHandle;
+
+	// Distance driven within the current floor grid cell, cm (see StudioFloorParameterCollection).
+	double GroundScrollCm = 0.0;
 
 	// World time the latest sample arrived, and the time between the last two arrivals (the interpolation span). Negative = none yet.
 	double LatestSampleArrivalTimeS = -1.0;

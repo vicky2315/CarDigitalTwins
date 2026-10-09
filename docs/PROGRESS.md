@@ -1,40 +1,39 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-10
-Current day: **Day 11** MVVM rewrite, step 2 next. Twin completion done 2026-10-10 (T1 + T3; T2 moved to Optional / later).
-Days 1–10 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
+Current day: **Day 11** dashboard: build page Parts A–F (C++ builds). Twin completion done 2026-10-10 (T1 + T3; T2 optional).
+Days 1–10 complete. Day 11 MVVM steps 2–5 done; 6–8 and the dashboard written and building, tests not run.
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
 then HMI; the portfolio shows both on one data pipeline.
 
-## Checkpoint (2026-10-09, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+## Checkpoint (2026-10-10, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commit: `bc69473` on `main`, pushed. Working tree: T1 steps 1–2 uncommitted (`docs/SPEC.md`, `docs/TESTS.md`,
-`Tools/TripGenerator/trip_generator.py`, its tests, regenerated `Data/Trips/trip_sample.json`); `Content/Maps/` untracked on purpose.
+Commit: `861ee81` on `main`, 3 commits not pushed (Day 11 steps 2–5). Working tree: dashboard C++ written and building, uncommitted (MVVM, Telemetry,
+Vehicle, `Dashboard/`, `UI/`, `Tests/`, Build.cs), `Art/UI/Icons/` + `Tools/UnrealEditor/generate_dashboard_icons.py`, docs; Config
+`DefaultGame.ini` (source = WebSocket) and `DefaultEngine.ini` changed by the editor, keep out of commits unless meant.
 
-**Where I stopped:** Day 9 (`9854b4a`) and Day 10 (`bc69473`) done and pushed. T1 (engine derate request, option A) steps 1–2 done:
-SPEC §2.1 `driveMode`, §2.5 `command` / `commandAck`; `VehicleSimulator` class with `set_engine_derate()` (rpm 2500, 50 km/h, coolant
-under 112 °C in ~14 s); sample differs only by `"driveMode": "Normal"`; pytest 51 pass (P4 case + P9). Step 3 (relay) not started.
+**Where I stopped:** T1 done end to end (`33e884c`, PIE checked), T2 moved to optional (`a8d8f7d`); both pushed. Day 11 steps 2–5
+committed (`6c65e00`..`861ee81`). Dashboard designed and decided (D1–D7, dark studio level), mock and build page published; all C++
+for steps 6–8 and the dashboard written; it builds (one fix: `Units = "px"` removed). Starting Parts A–F next session.
 
 **Resume:**
-1. T1 step 3, `Tools/Relay/relay.py`: `--source live|file` (live runs `VehicleSimulator` in real time, new simulator on `--loop`);
-   `handle_client_message` applies `engineDerate`, `commandAck` to the sender only, file mode rejects "source is a recorded trip";
-   `relay_client.py --send-derate-after SECONDS`; tests R7–R10; update SPEC §2.3 relay bullet + TESTS §4. Expect all pytest green.
-2. T1 steps 4–5 (C++): `EVehicleDriveMode` + `DriveMode` in `FVehicleTelemetry`; `FVehicleCommand`,
-   `ITelemetryReceiver::SendVehicleCommand()` (file receiver refuses), parse `commandAck`; subsystem pending ack (2 s timeout),
-   auto derate on first Critical coolant (`bAutoEngineDerateOnCriticalCoolant`), console `Twin.EngineDerate 1/0`. User builds + PIE:
-   red ~119 s → command → ack applied → `EngineDerate` → `Critical -> Warning`.
-3. Then tick T1, update the "Vehicle Twin Field Guide" artifact (scratchpad file, same path keeps the URL), commit + push; T2, T3, Day 11.
+1. Build page Parts A + B with the editor open (studio level `L_TwinStudio`, MPC + floor material, lights, 4 tagged cameras, 3
+   anchors in `BP_VehicleTwin`, Barlow fonts, icons): https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u
+2. Part C is built: open the editor, Session Frontend `CarDigitalTwins.MVVM` → expect 9 green (M1–M9, not run yet); commit the C++.
+3. Parts D–F: the 21 WBPs, settings, PIE vs `relay.py --source live --loop --rate 20`; commit per part, push. Mock for comparison:
+   https://claude.ai/artifact/TsApXH75XFbcd2muKzLx3m
 
-**Unverified:** SPEC §1 says 25 `Paint` meshes, BP has 8 (check the `group Paint` PIE log line). Day 4 `CarRoot` facing warning not
-looked at. Doubled outline with the editor preview ticked at PIE start, not tested. Day 10 "can't connect: no details" wording.
+**Unverified:** dashboard C++ compiles but nothing has run (tests M1–M9, any widget); still open: UMG float font sizes,
+BackgroundBlur Corner Radius, Custom node LWC warning. Camera/light start values in Part A are calculated, not seen. Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4
+`CarRoot` facing warning; doubled outline with editor preview at PIE start; Day 10 "can't connect: no details" wording.
 
-**Open decisions:** UI design track questions; showroom mode (after H1); mesh redistribution / GrabCAD license (ASSETS.md); private
-asset repo for `Content/Jeep/` (deferred). Still to do: Day 8 LinkedIn clip (car not selected). BUG-002 parked (`docs/BUGS.md`).
+**Open decisions:** showroom mode (after H1); GrabCAD license / mesh redistribution (ASSETS.md); private asset repo for
+`Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field Guide (links to the dashboard pages added).
 
-**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` 1128 split meshes, `Blueprints/BP_VehicleTwin`,
-`Rebuilt/`), `Content/Maps/` levels, raw CAD in `RawCAD/`. MVVM reference branch `mvvm-reference` only on the office laptop.
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin`, `Rebuilt/`),
+`Content/Maps/` levels (the new `L_TwinStudio` will live there too), raw CAD in `RawCAD/`. `mvvm-reference` is now on origin.
 
 ## Phase A: Single-car digital twin
 
@@ -154,10 +153,14 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 - [x] 3. `UViewModelBase` part 1: dirty bits + `Flush` (multicast delegate)
 - [x] 4. `UViewModelBase` part 2: `SetField` (compare-before-set, float tolerance)
 - [x] 5. `UVehicleTelemetryViewModel`: field enum, getters, `ApplyTelemetrySample`
-- [ ] 6. Automation tests (`CarDigitalTwins.MVVM.Core`)
-- [ ] 7. `Subscribe` + `FViewModelSubscription` (RAII unsubscribe)
-- [ ] 8. `UViewModelSubsystem`: creates/holds ViewModels, once-per-frame flush
-- Then: `UConnectionViewModel`, `UViewModelWidget` base + BP helper library, formatting helpers, debug fake-sample command, first dashboard widget.
+- [ ] 6. Automation tests (`CarDigitalTwins.MVVM.Core`, M1–M9) ← written 2026-10-10, waiting for build + run
+- [ ] 7. `Subscribe` + `FViewModelSubscription` (RAII unsubscribe) ← written 2026-10-10, waiting for build
+- [ ] 8. `UViewModelSubsystem`: creates/holds ViewModels, once-per-frame flush ← written 2026-10-10, waiting for build
+- [ ] 9. Dashboard (decided 2026-10-10, D1–D7 on the mock: four views with camera blends, HMI rules, dark studio level).
+      Mock: https://claude.ai/artifact/TsApXH75XFbcd2muKzLx3m · build page: https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u
+      C++ written, not built: `UConnectionViewModel`, `UVehicleEventLogViewModel`, `UDashboardViewModel`, command records on
+      `UTelemetrySubsystem`, `Dashboard/` (settings, game mode, player controller with SetViewTargetWithBlend), car callout anchors +
+      studio floor scroll, 22 widget classes in `UI/`, icons in `Art/UI/Icons/`. To do: Parts A–F of the build page (A, B need no build).
 
 ### Day 12: Profiling and latency
 - [ ] Insights trace; Invalidation/Retainer before/after

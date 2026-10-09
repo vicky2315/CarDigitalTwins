@@ -167,6 +167,10 @@ FTelemetryConnectionStatus UWebSocketTelemetryReceiver::GetConnectionStatus() co
 	WebSocketConnectionStatus.AverageReceiveLatencyMs = static_cast<float>(StreamStatistics.GetAverageReceiveLatencyMs());
 	WebSocketConnectionStatus.MaxReceiveLatencyMs = static_cast<float>(StreamStatistics.MaxReceiveLatencyMs);
 	WebSocketConnectionStatus.ReconnectAttemptCount = TotalReconnectAttemptCount;
+	if (ConnectionState == ETelemetryConnectionState::Disconnected)
+	{
+		WebSocketConnectionStatus.SecondsUntilReconnectAttempt = static_cast<float>(FMath::Max(0.0, NextReconnectTimeSeconds - FPlatformTime::Seconds()));
+	}
 	return WebSocketConnectionStatus;
 }
 

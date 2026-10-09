@@ -52,6 +52,10 @@ struct FTelemetryConnectionStatus
 	// Reconnect attempts since StartReceiving.
 	UPROPERTY(BlueprintReadOnly, Category = "Telemetry|Connection")
 	int32 ReconnectAttemptCount = 0;
+
+	// While Disconnected: seconds until the next attempt, for "retry in 1.6 s". 0 in every other state.
+	UPROPERTY(BlueprintReadOnly, Category = "Telemetry|Connection")
+	float SecondsUntilReconnectAttempt = 0.f;
 };
 
 UINTERFACE(meta = (CannotImplementInterfaceInBlueprint))

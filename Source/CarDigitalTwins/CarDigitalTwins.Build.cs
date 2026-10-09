@@ -20,9 +20,9 @@ public class CarDigitalTwins : ModuleRules
 		// WebSockets: UWebSocketTelemetryReceiver connects to Tools/Relay/relay.py (SPEC.md §2.3, Day 10).
 		PrivateDependencyModuleNames.Add("WebSockets");
 
-		// Uncomment if you are using Slate UI
-		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
+		// UMG + Slate: the dashboard widgets (UI/), which set brushes, button styles and fonts from C++ (SPEC.md §8, Day 11).
+		PrivateDependencyModuleNames.AddRange(new string[] { "UMG", "Slate", "SlateCore" });
+
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 

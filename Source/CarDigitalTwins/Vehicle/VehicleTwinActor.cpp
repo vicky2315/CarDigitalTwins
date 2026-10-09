@@ -8,9 +8,11 @@
 #include "Engine/GameInstance.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "Kismet/KismetMaterialLibrary.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
+#include "Materials/MaterialParameterCollection.h"
 #include "StaticMeshResources.h"
 #include "Telemetry/TelemetrySubsystem.h"
 
@@ -195,6 +197,30 @@ bool AVehicleTwinActor::ShouldTickIfViewportsOnly() const
 	return bPreviewInEditor || bPreviewStatusOutline;
 }
 
+bool AVehicleTwinActor::FindCalloutAnchorWorldLocation(FName CalloutAnchorTag, FVector& OutWorldLocation) const
+{
+	// Wheels: the tyre centre, which stays put while the hub spins around it.
+	for (const FVehicleTwinWheel& Wheel : Wheels)
+	{
+		if (Wheel.WheelTag == CalloutAnchorTag && Wheel.Hub)
+		{
+			OutWorldLocation = Wheel.Hub->GetComponentTransform().TransformPosition(Wheel.WheelCentreInHubSpace);
+			return true;
+		}
+	}
+
+	TInlineComponentArray<USceneComponent*> SceneComponents(this);
+	for (const USceneComponent* SceneComponent : SceneComponents)
+	{
+		if (SceneComponent->ComponentHasTag(CalloutAnchorTag))
+		{
+			OutWorldLocation = SceneComponent->GetComponentLocation();
+			return true;
+		}
+	}
+	return false;
+}
+
 void AVehicleTwinActor::UpdateWheels(float SpeedKmh, float SteerDeg, float DeltaSeconds)
 {
 	const float SpeedCmPerS = SpeedKmh * (100000.f / 3600.f);
@@ -367,10 +393,16 @@ void AVehicleTwinActor::DriveFromTelemetry(const UTelemetrySubsystem& TelemetryS
 	const double SinceLatestSampleS = GetWorld()->GetTimeSeconds() - LatestSampleArrivalTimeS;
 	const float BlendAlpha = bTripLooped ? 1.f : static_cast<float>(FMath::Clamp(SinceLatestSampleS / SampleArrivalIntervalS, 0.0, 1.0));
 
-	UpdateWheels(
-		FMath::Lerp(PreviousTelemetrySample.SpeedKmh, LatestTelemetrySample.SpeedKmh, BlendAlpha),
-		FMath::Lerp(PreviousTelemetrySample.SteerDeg, LatestTelemetrySample.SteerDeg, BlendAlpha),
-		DeltaSeconds);
+	const float BlendedSpeedKmh = FMath::Lerp(PreviousTelemetrySample.SpeedKmh, LatestTelemetrySample.SpeedKmh, BlendAlpha);
+	UpdateWheels(BlendedSpeedKmh, FMath::Lerp(PreviousTelemetrySample.SteerDeg, LatestTelemetrySample.SteerDeg, BlendAlpha), DeltaSeconds);
+
+	// The floor moves instead of the car. Wrapped to one grid cell: the pattern repeats there, and the value stays small.
+	if (StudioFloorParameterCollection)
+	{
+		const double DrivenCm = BlendedSpeedKmh * (100000.0 / 3600.0) * DeltaSeconds;
+		GroundScrollCm = FMath::Fmod(GroundScrollCm + DrivenCm, static_cast<double>(StudioFloorGridCellCm));
+		UKismetMaterialLibrary::SetScalarParameterValue(this, StudioFloorParameterCollection, GroundScrollParameter, static_cast<float>(GroundScrollCm));
+	}
 
 	// Status is not blended: it comes from real samples only (FVehicleStatusEvaluator).
 	SetStatusOutline(TelemetrySubsystem.GetCurrentVehicleStatusReport().OverallStatus);
@@ -475,6 +507,7 @@ void AVehicleTwinActor::SetUpWheels(bool bLogProblems)
 
 		FVehicleTwinWheel& Wheel = Wheels.AddDefaulted_GetRef();
 		Wheel.Hub = HubComponent;
+		Wheel.WheelTag = WheelTag;
 		Wheel.BaseRelativeTransform = HubComponent->GetRelativeTransform();
 		Wheel.WheelCentreInHubSpace = HubWorldTransform.InverseTransformPosition(WheelCentreWorld);
 		Wheel.SteerAxisInHubSpace = HubWorldTransform.InverseTransformVectorNoScale(GetActorUpVector()).GetSafeNormal(KINDA_SMALL_NUMBER, FVector::UpVector);

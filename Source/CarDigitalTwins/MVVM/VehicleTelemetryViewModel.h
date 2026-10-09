@@ -15,6 +15,7 @@ UENUM(BlueprintType)
 enum class EVehicleTelemetryViewModelField : uint8
 {
 	HasReceivedTelemetry,
+	SampleTimeS,
 	SpeedKmh,
 	EngineRpm,
 	Gear,
@@ -49,15 +50,21 @@ class UVehicleTelemetryViewModel : public UViewModelBase
 
 public:
 	// Takes one received sample and its status. Only values that really changed (past their tolerance) are marked for the next flush.
-	// Called by the ViewModel subsystem for every sample from UTelemetrySubsystem (step 8); by hand in tests.
+	// Called for every sample from UTelemetrySubsystem; by hand in tests.
 	void ApplyTelemetrySample(const FVehicleTelemetry& TelemetrySample, const FVehicleStatusReport& VehicleStatusReport);
 
 	//~ UViewModelBase
 	virtual int32 GetFieldCount() const override { return static_cast<int32>(EVehicleTelemetryViewModelField::Count); }
+	virtual void InitializeViewModel(UGameInstance& OwningGameInstance) override;
+	virtual void DeinitializeViewModel() override;
 
 	// False until the first sample: widgets show "no data yet" instead of zeros.
 	UFUNCTION(BlueprintPure, Category = "Vehicle Telemetry")
 	bool HasReceivedTelemetry() const { return bHasReceivedTelemetry; }
+
+	// Trip time of the latest sample: the trip clock and event times.
+	UFUNCTION(BlueprintPure, Category = "Vehicle Telemetry")
+	double GetSampleTimeS() const { return SampleTimeS; }
 
 	UFUNCTION(BlueprintPure, Category = "Vehicle Telemetry|Motion")
 	float GetSpeedKmh() const { return SpeedKmh; }
@@ -134,7 +141,13 @@ public:
 	EVehicleStatus GetEngineRpmStatus() const { return EngineRpmStatus; }
 
 private:
+	void HandleTelemetryUpdated(const FVehicleTelemetry& NewTelemetrySample);
+
+	TWeakObjectPtr<class UTelemetrySubsystem> SubscribedTelemetrySubsystem;
+	FDelegateHandle TelemetryUpdatedDelegateHandle;
+
 	bool bHasReceivedTelemetry = false;
+	double SampleTimeS = 0.0;
 
 	float SpeedKmh = 0.f;
 	float EngineRpm = 0.f;

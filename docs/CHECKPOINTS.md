@@ -2,6 +2,34 @@
 
 Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
+## Checkpoint (2026-10-09, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+
+Commit: `bc69473` on `main`, pushed. Working tree: T1 steps 1–2 uncommitted (`docs/SPEC.md`, `docs/TESTS.md`,
+`Tools/TripGenerator/trip_generator.py`, its tests, regenerated `Data/Trips/trip_sample.json`); `Content/Maps/` untracked on purpose.
+
+**Where I stopped:** Day 9 (`9854b4a`) and Day 10 (`bc69473`) done and pushed. T1 (engine derate request, option A) steps 1–2 done:
+SPEC §2.1 `driveMode`, §2.5 `command` / `commandAck`; `VehicleSimulator` class with `set_engine_derate()` (rpm 2500, 50 km/h, coolant
+under 112 °C in ~14 s); sample differs only by `"driveMode": "Normal"`; pytest 51 pass (P4 case + P9). Step 3 (relay) not started.
+
+**Resume:**
+1. T1 step 3, `Tools/Relay/relay.py`: `--source live|file` (live runs `VehicleSimulator` in real time, new simulator on `--loop`);
+   `handle_client_message` applies `engineDerate`, `commandAck` to the sender only, file mode rejects "source is a recorded trip";
+   `relay_client.py --send-derate-after SECONDS`; tests R7–R10; update SPEC §2.3 relay bullet + TESTS §4. Expect all pytest green.
+2. T1 steps 4–5 (C++): `EVehicleDriveMode` + `DriveMode` in `FVehicleTelemetry`; `FVehicleCommand`,
+   `ITelemetryReceiver::SendVehicleCommand()` (file receiver refuses), parse `commandAck`; subsystem pending ack (2 s timeout),
+   auto derate on first Critical coolant (`bAutoEngineDerateOnCriticalCoolant`), console `Twin.EngineDerate 1/0`. User builds + PIE:
+   red ~119 s → command → ack applied → `EngineDerate` → `Critical -> Warning`.
+3. Then tick T1, update the "Vehicle Twin Field Guide" artifact (scratchpad file, same path keeps the URL), commit + push; T2, T3, Day 11.
+
+**Unverified:** SPEC §1 says 25 `Paint` meshes, BP has 8 (check the `group Paint` PIE log line). Day 4 `CarRoot` facing warning not
+looked at. Doubled outline with the editor preview ticked at PIE start, not tested. Day 10 "can't connect: no details" wording.
+
+**Open decisions:** UI design track questions; showroom mode (after H1); mesh redistribution / GrabCAD license (ASSETS.md); private
+asset repo for `Content/Jeep/` (deferred). Still to do: Day 8 LinkedIn clip (car not selected). BUG-002 parked (`docs/BUGS.md`).
+
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned` 1128 split meshes, `Blueprints/BP_VehicleTwin`,
+`Rebuilt/`), `Content/Maps/` levels, raw CAD in `RawCAD/`. MVVM reference branch `mvvm-reference` only on the office laptop.
+
 ## Checkpoint (2026-10-08, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
 Commit: `929f8d7` on `main`, pushed. Working tree: `Content/Maps/` (untracked on purpose) and the uncommitted car rebuild scripts in

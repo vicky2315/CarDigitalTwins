@@ -94,8 +94,25 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 | W4 | Bad URL | `StartReceiving` with `http://…` returns false, state stays Idle |
 | W5 | Live relay (manual, PIE) | See PROGRESS Day 10 checks: Live, drop count, Stale on pause, reconnect with backoff, relay started after PIE |
 
+## 7. MVVM core (Unreal C++, `CarDigitalTwins.MVVM.Core`): written 2026-10-10, Day 11 step 6
+
+`Source/CarDigitalTwins/Tests/ViewModelCoreTests.cpp`. No world or assets needed. Listeners bind to `OnFieldsChanged` directly
+until `Subscribe` exists (step 7; M9–M10 below come with it).
+
+| # | Test | Checks |
+|---|------|--------|
+| M1 | AllFields | 0, 3 and 64 fields give the right bits (64 = all ones, no undefined shift) |
+| M2 | Mask operations | `AddField`, `HasField`, `HasFieldIndex` (−1 and 64 are false), `AddFields` merge |
+| M3 | Field count | `GetFieldCount` = enum `Count`; `GetAllFields` matches it |
+| M4 | First sample | Nothing broadcast before `Flush`; one broadcast with exactly the fields that left their default; empty flush sends nothing |
+| M5 | Batching | Three samples, one `Flush`: one broadcast with speed and gear once each, getter has the latest value |
+| M6 | Tolerance and drift | Coolant +0.03 °C (tolerance 0.05) not marked and getter keeps 90.00; another +0.03 is reported |
+| M7 | Status and drive mode | Coolant Warning + `EngineDerate` mark overall status, coolant status and drive mode only |
+| M8 | Change during flush | A listener's change during a broadcast goes out with the next `Flush`, not lost |
+| M9 | Subscribe (step 7) | Fires once at once with all fields; RAII handle unsubscribes on destruction |
+| M10 | Subsystem flush (step 8) | Dirty ViewModels flushed once per frame |
+
 ## 6. Later (with the roadmap)
 - Day 7 `UTelemetrySubsystem`: receiver chosen from settings, one `OnTelemetryUpdated` per sample.
 - Day 8 status thresholds (SPEC §3): table-driven edges, hysteresis, battery ignored with engine off.
-- Day 11 MVVM (`CarDigitalTwins.MVVM.Core`): field masks, tolerance, once-per-frame flush, subscribe fires immediately, RAII unsubscribe.
 - Day 8 end-to-end: sample trip at ×50 turns the car amber, then red.

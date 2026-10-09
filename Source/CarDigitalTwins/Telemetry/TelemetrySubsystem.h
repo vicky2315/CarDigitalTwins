@@ -14,6 +14,67 @@
 // Broadcast once per new sample, oldest first, on the game thread.
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnVehicleTelemetryUpdated, const FVehicleTelemetry& /*NewTelemetrySample*/);
 
+// Where a command stands (SPEC.md §2.5). "Applied" only means the vehicle accepted it; telemetry DriveMode shows the effect.
+UENUM(BlueprintType)
+enum class EVehicleCommandOutcome : uint8
+{
+	// Nothing sent yet this session.
+	None,
+	// Couldn't go out at all (recorded trip, no connection); OutcomeReason says why.
+	NotSent,
+	WaitingForAck,
+	Applied,
+	Rejected,
+	// No ack within the timeout; not retried.
+	NoAck,
+};
+
+// One command and what happened to it, for the dashboard and the event log.
+USTRUCT(BlueprintType)
+struct FVehicleCommandRecord
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category = "Vehicle Command")
+	int32 CommandId = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Vehicle Command")
+	FString CommandName;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Vehicle Command")
+	bool bEnabled = false;
+
+	// Who asked: "operator", "console", "auto".
+	UPROPERTY(BlueprintReadOnly, Category = "Vehicle Command")
+	FString CommandSource;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Vehicle Command")
+	EVehicleCommandOutcome Outcome = EVehicleCommandOutcome::None;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Vehicle Command")
+	int64 AppliedAtSeq = -1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Vehicle Command")
+	float AckDelayMs = 0.f;
+
+	// Rejection or not-sent reason; empty otherwise.
+	UPROPERTY(BlueprintReadOnly, Category = "Vehicle Command")
+	FString OutcomeReason;
+
+	// Trip time of the latest sample when the command was sent, for the event log.
+	UPROPERTY(BlueprintReadOnly, Category = "Vehicle Command")
+	double SentAtTripSeconds = 0.0;
+
+	bool operator==(const FVehicleCommandRecord& OtherRecord) const
+	{
+		return CommandId == OtherRecord.CommandId && Outcome == OtherRecord.Outcome && bEnabled == OtherRecord.bEnabled
+			&& AppliedAtSeq == OtherRecord.AppliedAtSeq && OutcomeReason.Equals(OtherRecord.OutcomeReason, ESearchCase::CaseSensitive);
+	}
+};
+
+// Broadcast whenever a command is sent or its outcome changes (ack, rejection, timeout), on the game thread.
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnVehicleCommandUpdated, const FVehicleCommandRecord& /*UpdatedCommandRecord*/);
+
 // GameInstance subsystem (not World) so the receiver, and with it the WebSocket connection, survives level loads, matching
 // UViewModelSubsystem (SPEC.md §5). Ticks through FTickableGameObject, only in game worlds and not while paused.
 UCLASS()
@@ -51,10 +112,18 @@ public:
 
 	FOnVehicleTelemetryUpdated OnTelemetryUpdated;
 
-	// Asks the vehicle to switch engine protection derate on or off (SPEC.md §2.5). CommandTrigger says why, for the log ("console",
-	// "auto: coolant Critical"). Returns false, and logs why, when the command couldn't go out; true means sent, not obeyed: the
-	// ack is logged when it arrives, and the vehicle's DriveMode in telemetry shows the actual effect.
-	bool SendEngineDerateCommand(bool bEnabled, const FString& CommandTrigger);
+	// Asks the vehicle to switch engine protection derate on or off (SPEC.md §2.5). CommandSource says who asked ("operator",
+	// "console", "auto"); CommandTrigger adds why, for the log. Returns false, and logs why, when the command couldn't go out; true
+	// means sent, not obeyed: the ack is logged when it arrives, and the vehicle's DriveMode in telemetry shows the actual effect.
+	bool SendEngineDerateCommand(bool bEnabled, const FString& CommandSource, const FString& CommandTrigger = FString());
+
+	// The newest command and its outcome; Outcome None before the first one.
+	const FVehicleCommandRecord& GetLatestVehicleCommandRecord() const { return LatestVehicleCommandRecord; }
+
+	FOnVehicleCommandUpdated OnVehicleCommandUpdated;
+
+	// "WebSocket ws://127.0.0.1:8765" or "File trip_sample.json"; empty without a receiver.
+	FString GetActiveReceiverDisplayName() const;
 
 private:
 	// A sent command waiting for its ack.
@@ -64,7 +133,13 @@ private:
 		FString CommandTrigger;
 		// FPlatformTime::Seconds when sent: real time, so the timeout doesn't depend on frame rate or time dilation.
 		double SentTimeSeconds = 0.0;
+		FVehicleCommandRecord CommandRecord;
 	};
+
+	// Stores the record as the latest if it is the newest command, and tells the listeners.
+	void PublishVehicleCommandRecord(const FVehicleCommandRecord& UpdatedCommandRecord);
+
+	FVehicleCommandRecord LatestVehicleCommandRecord;
 
 	// Matches the acks the receiver got this tick to pending commands and logs each outcome.
 	void ProcessVehicleCommandAcks();

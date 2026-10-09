@@ -127,30 +127,52 @@ void UTelemetrySubsystem::Tick(float DeltaSeconds)
 	LogTelemetrySummaryOncePerSecond(DeltaSeconds, NewTelemetrySamplesThisTick);
 }
 
-bool UTelemetrySubsystem::SendEngineDerateCommand(bool bEnabled, const FString& CommandTrigger)
+bool UTelemetrySubsystem::SendEngineDerateCommand(bool bEnabled, const FString& CommandSource, const FString& CommandTrigger)
 {
-	if (!ActiveTelemetryReceiver)
-	{
-		UE_LOG(LogVehicleTelemetry, Warning, TEXT("Command engineDerate %s (%s) not sent: no telemetry receiver."), bEnabled ? TEXT("on") : TEXT("off"),
-			*CommandTrigger);
-		return false;
-	}
+	const FString CommandTriggerForLog = CommandTrigger.IsEmpty() ? CommandSource : FString::Printf(TEXT("%s: %s"), *CommandSource, *CommandTrigger);
 
 	FVehicleCommand VehicleCommand;
 	VehicleCommand.CommandId = NextVehicleCommandId++;
 	VehicleCommand.CommandName = VehicleCommandNames::EngineDerate;
 	VehicleCommand.bEnabled = bEnabled;
 
-	FString SendFailureReason;
-	if (!ActiveTelemetryReceiver->SendVehicleCommand(VehicleCommand, SendFailureReason))
+	FVehicleCommandRecord CommandRecord;
+	CommandRecord.CommandId = VehicleCommand.CommandId;
+	CommandRecord.CommandName = VehicleCommand.CommandName;
+	CommandRecord.bEnabled = bEnabled;
+	CommandRecord.CommandSource = CommandSource;
+	CommandRecord.SentAtTripSeconds = LatestTelemetrySample.SampleTimeS;
+
+	FString SendFailureReason = TEXT("no telemetry receiver");
+	if (!ActiveTelemetryReceiver || !ActiveTelemetryReceiver->SendVehicleCommand(VehicleCommand, SendFailureReason))
 	{
-		UE_LOG(LogVehicleTelemetry, Warning, TEXT("%s (%s) not sent: %s."), *DescribeVehicleCommand(VehicleCommand), *CommandTrigger, *SendFailureReason);
+		UE_LOG(LogVehicleTelemetry, Warning, TEXT("%s (%s) not sent: %s."), *DescribeVehicleCommand(VehicleCommand), *CommandTriggerForLog, *SendFailureReason);
+		CommandRecord.Outcome = EVehicleCommandOutcome::NotSent;
+		CommandRecord.OutcomeReason = SendFailureReason;
+		PublishVehicleCommandRecord(CommandRecord);
 		return false;
 	}
 
-	PendingVehicleCommands.Add({ VehicleCommand, CommandTrigger, FPlatformTime::Seconds() });
-	UE_LOG(LogVehicleTelemetry, Log, TEXT("%s sent (%s), waiting for the ack."), *DescribeVehicleCommand(VehicleCommand), *CommandTrigger);
+	CommandRecord.Outcome = EVehicleCommandOutcome::WaitingForAck;
+	PendingVehicleCommands.Add({ VehicleCommand, CommandTriggerForLog, FPlatformTime::Seconds(), CommandRecord });
+	UE_LOG(LogVehicleTelemetry, Log, TEXT("%s sent (%s), waiting for the ack."), *DescribeVehicleCommand(VehicleCommand), *CommandTriggerForLog);
+	PublishVehicleCommandRecord(CommandRecord);
 	return true;
+}
+
+void UTelemetrySubsystem::PublishVehicleCommandRecord(const FVehicleCommandRecord& UpdatedCommandRecord)
+{
+	// Acks can arrive out of order across commands; the dashboard shows the newest command, the event log hears about all of them.
+	if (UpdatedCommandRecord.CommandId >= LatestVehicleCommandRecord.CommandId)
+	{
+		LatestVehicleCommandRecord = UpdatedCommandRecord;
+	}
+	OnVehicleCommandUpdated.Broadcast(UpdatedCommandRecord);
+}
+
+FString UTelemetrySubsystem::GetActiveReceiverDisplayName() const
+{
+	return ActiveTelemetryReceiver ? ActiveTelemetryReceiver->GetReceiverDisplayName() : FString();
 }
 
 void UTelemetrySubsystem::ProcessVehicleCommandAcks()
@@ -174,17 +196,24 @@ void UTelemetrySubsystem::ProcessVehicleCommandAcks()
 
 		const FPendingVehicleCommand& PendingCommand = PendingVehicleCommands[PendingCommandIndex];
 		const double AckDelayMs = (FPlatformTime::Seconds() - PendingCommand.SentTimeSeconds) * 1000.0;
+		FVehicleCommandRecord AnsweredCommandRecord = PendingCommand.CommandRecord;
+		AnsweredCommandRecord.AckDelayMs = static_cast<float>(AckDelayMs);
+		AnsweredCommandRecord.AppliedAtSeq = VehicleCommandAck.AppliedAtSeq;
 		if (VehicleCommandAck.WasApplied())
 		{
 			UE_LOG(LogVehicleTelemetry, Log, TEXT("%s applied by the vehicle from seq %lld (ack after %.0f ms); telemetry DriveMode shows the effect."),
 				*DescribeVehicleCommand(PendingCommand.VehicleCommand), VehicleCommandAck.AppliedAtSeq, AckDelayMs);
+			AnsweredCommandRecord.Outcome = EVehicleCommandOutcome::Applied;
 		}
 		else
 		{
 			UE_LOG(LogVehicleTelemetry, Warning, TEXT("%s rejected: %s (ack after %.0f ms)."), *DescribeVehicleCommand(PendingCommand.VehicleCommand),
 				*VehicleCommandAck.Reason, AckDelayMs);
+			AnsweredCommandRecord.Outcome = EVehicleCommandOutcome::Rejected;
+			AnsweredCommandRecord.OutcomeReason = VehicleCommandAck.Reason;
 		}
 		PendingVehicleCommands.RemoveAt(PendingCommandIndex);
+		PublishVehicleCommandRecord(AnsweredCommandRecord);
 	}
 }
 
@@ -197,7 +226,11 @@ void UTelemetrySubsystem::ExpireUnansweredVehicleCommands(double NowSeconds)
 		{
 			UE_LOG(LogVehicleTelemetry, Warning, TEXT("%s (%s): no ack within %.1f s, treated as failed (not retried)."),
 				*DescribeVehicleCommand(PendingCommand.VehicleCommand), *PendingCommand.CommandTrigger, CommandAckTimeoutSeconds);
+			FVehicleCommandRecord UnansweredCommandRecord = PendingCommand.CommandRecord;
+			UnansweredCommandRecord.Outcome = EVehicleCommandOutcome::NoAck;
+			UnansweredCommandRecord.OutcomeReason = FString::Printf(TEXT("no ack within %.1f s"), CommandAckTimeoutSeconds);
 			PendingVehicleCommands.RemoveAt(PendingCommandIndex);
+			PublishVehicleCommandRecord(UnansweredCommandRecord);
 		}
 	}
 }
@@ -212,7 +245,7 @@ void UTelemetrySubsystem::SendAutoEngineDerateIfCoolantJustBecameCritical(EVehic
 	{
 		return;
 	}
-	SendEngineDerateCommand(true, FString::Printf(TEXT("auto: coolant Critical at %.1f C, t=%.1f s, seq %lld"), LatestTelemetrySample.CoolantTempC,
+	SendEngineDerateCommand(true, TEXT("auto"), FString::Printf(TEXT("coolant Critical at %.1f C, t=%.1f s, seq %lld"), LatestTelemetrySample.CoolantTempC,
 		LatestTelemetrySample.SampleTimeS, LatestTelemetrySample.Seq));
 }
 

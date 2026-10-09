@@ -9,8 +9,35 @@
 #include <type_traits>
 #include "ViewModelBase.generated.h"
 
+class UGameInstance;
+class UViewModelBase;
+
 // One event per flush, carrying every field that changed since the previous one. Listeners pull the values through getters.
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnViewModelFieldsChanged, FViewModelFieldMask /*ChangedFieldMask*/);
+
+// Owns one listener registration on a ViewModel and removes it when reset, overwritten or destroyed, so a widget that keeps its
+// subscriptions as members can never be called after it is gone. Move-only: exactly one owner per registration.
+class FViewModelSubscription
+{
+public:
+	FViewModelSubscription() = default;
+	FViewModelSubscription(UViewModelBase* InSubscribedViewModel, FDelegateHandle InListenerDelegateHandle);
+	~FViewModelSubscription();
+
+	FViewModelSubscription(FViewModelSubscription&& OtherSubscription);
+	FViewModelSubscription& operator=(FViewModelSubscription&& OtherSubscription);
+	FViewModelSubscription(const FViewModelSubscription&) = delete;
+	FViewModelSubscription& operator=(const FViewModelSubscription&) = delete;
+
+	// Removes the listener now. Safe to call twice, and after the ViewModel is gone.
+	void Reset();
+
+	bool IsActive() const { return ListenerDelegateHandle.IsValid() && SubscribedViewModel.IsValid(); }
+
+private:
+	TWeakObjectPtr<UViewModelBase> SubscribedViewModel;
+	FDelegateHandle ListenerDelegateHandle;
+};
 
 UCLASS(Abstract)
 class UViewModelBase : public UObject
@@ -18,8 +45,35 @@ class UViewModelBase : public UObject
 	GENERATED_BODY()
 
 public:
+	// Calls ListenerFunction once right away with every field set, so the widget fills itself in instead of starting blank, then once
+	// per flush with the fields that changed. Keep the returned handle: the listener stays registered exactly as long as it lives.
+	template <typename ListenerObjectType>
+	[[nodiscard]] FViewModelSubscription Subscribe(ListenerObjectType* ListenerObject, void (ListenerObjectType::*ListenerFunction)(FViewModelFieldMask))
+	{
+		check(IsInGameThread());
+		const FDelegateHandle NewListenerDelegateHandle = OnFieldsChanged.AddUObject(ListenerObject, ListenerFunction);
+		(ListenerObject->*ListenerFunction)(GetAllFields());
+		return FViewModelSubscription(this, NewListenerDelegateHandle);
+	}
+
+	// Same for a lambda, e.g. in tests or for listeners that aren't UObjects. The lambda must not outlive what it captures.
+	[[nodiscard]] FViewModelSubscription SubscribeLambda(TFunction<void(FViewModelFieldMask)> ListenerCallback);
+
+	// Used by FViewModelSubscription; call Reset on the handle instead.
+	void Unsubscribe(FDelegateHandle ListenerDelegateHandle);
+
+	// Called once by UViewModelSubsystem right after it creates the ViewModel: connect to the data sources here.
+	virtual void InitializeViewModel(UGameInstance& OwningGameInstance) {}
+
+	// Called once when the game instance shuts down: disconnect from the data sources.
+	virtual void DeinitializeViewModel() {}
+
+	// Called by UViewModelSubsystem every frame just before the flush, for ViewModels that poll a source instead of being pushed
+	// (the connection state). Most ViewModels leave it empty.
+	virtual void UpdateViewModel(float DeltaSeconds) {}
+
 	// Broadcasts the fields changed since the last flush, if any, and starts collecting again. Called once per frame by
-	// UViewModelSubsystem (step 8); until then, and in tests, by hand.
+	// UViewModelSubsystem; by hand in tests.
 	void Flush();
 
 	// True when a change is waiting for the next flush.
@@ -30,11 +84,8 @@ public:
 	// Number of values in the subclass's field enum, not counting its Count entry. At most FViewModelFieldMask::MaxFieldCount.
 	virtual int32 GetFieldCount() const PURE_VIRTUAL(UViewModelBase::GetFieldCount, return 0;);
 
-	// Every field of this ViewModel: what a new listener gets first, so it never starts blank (used by Subscribe, step 7).
+	// Every field of this ViewModel: what a new listener gets first, so it never starts blank.
 	FViewModelFieldMask GetAllFields() const { return FViewModelFieldMask::AllFields(GetFieldCount()); }
-
-	// Listeners bind here directly for now. Step 7 adds Subscribe with an RAII handle and makes this private.
-	FOnViewModelFieldsChanged OnFieldsChanged;
 
 protected:
 	// Stores NewValue in FieldStorage and marks Field changed, but only if the value is really different. Returns true if it changed.
@@ -82,4 +133,7 @@ protected:
 
 private:
 	FViewModelFieldMask ChangedFieldsSinceLastFlush;
+
+	// Private: listeners go through Subscribe, which hands out the handle that removes them again.
+	FOnViewModelFieldsChanged OnFieldsChanged;
 };
