@@ -10,9 +10,8 @@ then HMI; the portfolio shows both on one data pipeline.
 
 ## Checkpoint (2026-10-10, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commit: `861ee81` on `main`, 3 commits not pushed (Day 11 steps 2–5). Working tree: dashboard C++ written and building, uncommitted (MVVM, Telemetry,
-Vehicle, `Dashboard/`, `UI/`, `Tests/`, Build.cs), `Art/UI/Icons/` + `Tools/UnrealEditor/generate_dashboard_icons.py`, docs; Config
-`DefaultGame.ini` (source = WebSocket) and `DefaultEngine.ini` changed by the editor, keep out of commits unless meant.
+Commit: `24a1503` on `main` (+ this checkpoint fix), pushed. Working tree: clean except Config `DefaultGame.ini` (source =
+WebSocket) and `DefaultEngine.ini`, changed by the editor and kept out of commits; `Content/Maps/` untracked on purpose.
 
 **Where I stopped:** T1 done end to end (`33e884c`, PIE checked), T2 moved to optional (`a8d8f7d`); both pushed. Day 11 steps 2–5
 committed (`6c65e00`..`861ee81`). Dashboard designed and decided (D1–D7, dark studio level), mock and build page published; all C++
@@ -21,7 +20,7 @@ for steps 6–8 and the dashboard written; it builds (one fix: `Units = "px"` re
 **Resume:**
 1. Build page Parts A + B with the editor open (studio level `L_TwinStudio`, MPC + floor material, lights, 4 tagged cameras, 3
    anchors in `BP_VehicleTwin`, Barlow fonts, icons): https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u
-2. Part C is built: open the editor, Session Frontend `CarDigitalTwins.MVVM` → expect 9 green (M1–M9, not run yet); commit the C++.
+2. Part C is built and committed: open the editor, Session Frontend `CarDigitalTwins.MVVM` → expect 9 green (M1–M9, not run yet).
 3. Parts D–F: the 21 WBPs, settings, PIE vs `relay.py --source live --loop --rate 20`; commit per part, push. Mock for comparison:
    https://claude.ai/artifact/TsApXH75XFbcd2muKzLx3m
 
