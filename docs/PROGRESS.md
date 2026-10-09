@@ -153,7 +153,7 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 - [x] 2. `FViewModelFieldMask` (`MVVM/ViewModelFieldMask.h`): uint64 bitmask, one bit per field
 - [x] 3. `UViewModelBase` part 1: dirty bits + `Flush` (multicast delegate)
 - [x] 4. `UViewModelBase` part 2: `SetField` (compare-before-set, float tolerance)
-- [ ] 5. `UVehicleTelemetryViewModel`: field enum, getters, `ApplySample`
+- [x] 5. `UVehicleTelemetryViewModel`: field enum, getters, `ApplyTelemetrySample`
 - [ ] 6. Automation tests (`CarDigitalTwins.MVVM.Core`)
 - [ ] 7. `Subscribe` + `FViewModelSubscription` (RAII unsubscribe)
 - [ ] 8. `UViewModelSubsystem`: creates/holds ViewModels, once-per-frame flush
