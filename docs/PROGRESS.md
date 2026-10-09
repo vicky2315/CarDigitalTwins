@@ -150,8 +150,8 @@ Turns the project from a digital *shadow* (data flows one way) into a digital *t
 office laptop). We now rebuild it on `main` one step at a time, with an explanation per step. Compare: `git diff main mvvm-reference`.
 
 - [x] 1. `Build.cs`: module root on the include path (`PublicIncludePaths.Add(ModuleDirectory)`), so `#include "MVVM/..."` works
-- [ ] 2. `FViewModelFieldMask` (`MVVM/ViewModelFieldMask.h`): uint64 bitmask, one bit per field ← **next: explained, not written yet**
-- [ ] 3. `UViewModelBase` part 1: dirty bits + `Flush` (multicast delegate)
+- [x] 2. `FViewModelFieldMask` (`MVVM/ViewModelFieldMask.h`): uint64 bitmask, one bit per field
+- [ ] 3. `UViewModelBase` part 1: dirty bits + `Flush` (multicast delegate) ← **next**
 - [ ] 4. `UViewModelBase` part 2: `SetField` (compare-before-set, float tolerance)
 - [ ] 5. `UVehicleTelemetryViewModel`: field enum, getters, `ApplySample`
 - [ ] 6. Automation tests (`CarDigitalTwins.MVVM.Core`)
