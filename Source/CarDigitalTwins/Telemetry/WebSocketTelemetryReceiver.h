@@ -48,6 +48,8 @@ public:
 	virtual void PollNewTelemetrySamples(float DeltaSeconds, TArray<FVehicleTelemetry>& OutNewTelemetrySamples) override;
 	virtual FString GetReceiverDisplayName() const override;
 	virtual FTelemetryConnectionStatus GetConnectionStatus() const override;
+	virtual bool SendVehicleCommand(const FVehicleCommand& VehicleCommand, FString& OutFailureReason) override;
+	virtual void PollVehicleCommandAcks(TArray<FVehicleCommandAck>& OutVehicleCommandAcks) override;
 
 	//~ UObject
 	virtual void BeginDestroy() override;
@@ -55,6 +57,9 @@ public:
 	// Wait before reconnect attempt ReconnectAttemptNumber (1 = first): initial × 2^(attempt − 1), capped at the maximum, then spread by
 	// ±20 % (JitterUnit in −1..1) so many clients that lost the relay together don't all retry in the same instant.
 	static double ComputeReconnectDelaySeconds(int32 ReconnectAttemptNumber, double InitialDelaySeconds, double MaxDelaySeconds, double JitterUnit);
+
+	// The SPEC.md §2.5 command message, condensed JSON with integer commandId and sentUnixMs (the relay rejects 1.0 as an id).
+	static FString BuildVehicleCommandMessage(const FVehicleCommand& VehicleCommand, int64 SentUnixMs);
 
 private:
 	enum class ESocketEventType : uint8
@@ -88,7 +93,8 @@ private:
 
 	void ProcessSocketEvent(const FQueuedSocketEvent& SocketEvent, TArray<FVehicleTelemetry>& OutNewTelemetrySamples);
 
-	// Parses one relay message: hello is remembered, telemetry becomes a sample, unknown types are ignored (SPEC.md §2.3).
+	// Parses one relay message: hello is remembered, telemetry becomes a sample, a commandAck is queued for PollVehicleCommandAcks,
+	// unknown types are ignored (SPEC.md §2.3).
 	void ProcessRelayMessage(const FString& RelayMessageText, TArray<FVehicleTelemetry>& OutNewTelemetrySamples);
 
 	// Closes the socket and schedules the next attempt with backoff.
@@ -112,6 +118,9 @@ private:
 
 	// Swapped with QueuedSocketEvents each poll, so the lock is held only for the swap.
 	TArray<FQueuedSocketEvent> SocketEventsBeingProcessed;
+
+	// Filled on the game thread while processing socket events; emptied by PollVehicleCommandAcks.
+	TArray<FVehicleCommandAck> ReceivedVehicleCommandAcks;
 
 	ETelemetryConnectionState ConnectionState = ETelemetryConnectionState::Idle;
 	FTelemetryStreamStatistics StreamStatistics;

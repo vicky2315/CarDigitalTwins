@@ -22,6 +22,16 @@ enum class EVehicleOpening : uint8
 };
 ENUM_CLASS_FLAGS(EVehicleOpening);
 
+// What the vehicle reports it is doing (JSON: "driveMode", a string matching the value name). Changes when the vehicle obeys a
+// command (SPEC.md §2.5); UE shows this, never the command it sent.
+UENUM(BlueprintType)
+enum class EVehicleDriveMode : uint8
+{
+	Normal,
+	// Engine protection derate: rpm capped at 2500, speed at 50 km/h.
+	EngineDerate,
+};
+
 // Derived in UE from thresholds (SPEC.md §3); never sent over the wire.
 UENUM(BlueprintType)
 enum class EVehicleStatus : uint8
@@ -105,6 +115,11 @@ struct FVehicleTelemetry
 	// EVehicleOpening bitmask; a set bit = open.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Telemetry|Body", meta = (Bitmask, BitmaskEnum = "/Script/CarDigitalTwins.EVehicleOpening"))
 	int32 Openings = 0;
+
+	// Optional in the JSON: trips recorded before T1 have no "driveMode" and keep Normal. An unknown value fails the conversion, so
+	// a new mode needs this enum extended first.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Telemetry|Motion")
+	EVehicleDriveMode DriveMode = EVehicleDriveMode::Normal;
 
 	bool IsOpen(EVehicleOpening Opening) const
 	{

@@ -78,6 +78,12 @@ FTelemetryConnectionStatus UFileTelemetryReceiver::GetConnectionStatus() const
 	return FileConnectionStatus;
 }
 
+bool UFileTelemetryReceiver::SendVehicleCommand(const FVehicleCommand& VehicleCommand, FString& OutFailureReason)
+{
+	OutFailureReason = TEXT("source is a recorded trip; switch Project Settings > Vehicle Telemetry to WebSocket and run relay.py --source live");
+	return false;
+}
+
 bool UFileTelemetryReceiver::LoadRecordedTripFile()
 {
 	const FString TripFileFullPath = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TripFileRelativePath));

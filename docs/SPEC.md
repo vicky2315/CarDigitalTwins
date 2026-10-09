@@ -127,6 +127,10 @@ One JSON object per message, one sample per message:
   joiners start mid-trip, like a real car). `--rate` = messages per second (above `rateHz` plays faster; `sampleTimeS` stays trip
   time). `--drop-percent` skips messages but keeps their time slot. `--pause-after` goes quiet once for `--pause-duration` with the
   connection open (tests stall detection; a real disconnect = stop the relay).
+  `--source file` (default) plays `--trip` and rejects commands. `--source live` (T1, 2026-10-10) runs the trip generator's
+  `VehicleSimulator` (`--seed`, default 42, 10 Hz trip rate) one frame per send slot, so a command changes the next frames; without
+  commands it sends exactly `trip_sample.json`. A dropped message still steps the vehicle; a `--pause-after` pause doesn't (trip
+  time freezes). `--loop` starts a new vehicle, so derate is off again.
 
 ### 2.4 `schemaVersion` policy
 - Integer, one number (no minor). Current: **1** (`VehicleTelemetrySchemaVersion` in C++).
@@ -147,6 +151,9 @@ relay → UE  {"type": "commandAck", "commandId": 8, "status": "rejected", "reas
 - **`commandId`:** integer, rising per client connection. The ack repeats it, so the sender knows which command was answered.
 - **One ack per command,** to the client that sent it only (not broadcast). `status` is `applied` or `rejected`; `reason` says
   why a command was rejected: `source is a recorded trip` (relay `--source file`), `unknown command`, `bad command message`.
+  Checked in that order from the most specific: bad message (no integer `commandId`, `schemaVersion` not 1, `name` not a string,
+  `enabled` not a boolean) → unknown `name` → recorded trip. Without a usable `commandId` the ack carries `commandId: -1`, so the
+  sender learns it at once instead of waiting for the timeout. A client message whose `type` isn't `command` gets no ack.
   `appliedAtSeq` = the first frame produced under the new setting, −1 when rejected.
 - **Idempotent:** enabling derate while it is already on is `applied` and changes nothing, so a retry after a lost ack is harmless.
 - **Ack ≠ effect.** The ack only means "accepted". What the vehicle actually does comes back in telemetry: `driveMode` turns
@@ -155,8 +162,12 @@ relay → UE  {"type": "commandAck", "commandId": 8, "status": "rejected", "reas
 - **Effect in the simulator:** engine rpm capped at 2500, road speed at 50 km/h. Less load means less heat, so with the failed
   cooling the coolant falls back from Critical to about 109 °C (Warning, below the 112 °C Critical clear in ~14 s) but doesn't recover: derate protects, it doesn't repair.
   Stays on until a command disables it or the trip restarts; it never switches itself off when coolant recovers (no flicker).
-- **Who sends it:** UE sends derate once when the overall coolant status first becomes Critical, if the setting
-  *Auto Engine Derate On Critical Coolant* is on; the console command `Twin.EngineDerate 1/0` sends it by hand.
+- **Who sends it:** UE sends derate when the coolant status changes into Critical (an edge, not every Critical sample), if the
+  setting *Auto Engine Derate On Critical Coolant* is on and the vehicle doesn't already report `EngineDerate`. Under derate the
+  coolant falls back to Warning, so in practice that is once per trip; after a relay `--loop` restart it fires again. The console
+  command `Twin.EngineDerate 1/0` sends it by hand. In UE: `UTelemetrySubsystem::SendEngineDerateCommand` →
+  `ITelemetryReceiver::SendVehicleCommand` (the file receiver refuses before sending); acks come back through
+  `PollVehicleCommandAcks` and are matched to pending commands by `commandId`.
 - **Real-world framing:** real engines derate on board, in their own control unit, within milliseconds; no manufacturer lets a
   server change how a moving car drives over a mobile network. This demonstrates the command path of a two-way twin (command →
   ack → state reported back), as a fleet operator's protection request.

@@ -69,7 +69,7 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 | V8 | Status outline | Warning/Critical turn custom depth on with stencil 1 on all meshes (child actors too); Normal turns it off; same status twice touches no mesh |
 | V9 | Telemetry blend | Alpha 0 → 1 over the arrival interval; trip loop snaps to latest; several samples in one frame keep the last real interval |
 
-## 4. Relay (Python, pytest): done 2026-10-08
+## 4. Relay (Python, pytest): R1–R6 done 2026-10-08, R7–R10 (commands, T1) 2026-10-10
 
 | # | Test | Checks |
 |---|------|--------|
@@ -79,6 +79,10 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 | R4 | Client checks | Gap counting, a loop back to seq 0 is not a gap, latency from `sentUnixMs` |
 | R5 | Schema version | `load_trip` rejects `schemaVersion` 2 |
 | R6 | End to end | Real relay + client on a free port at 200 msg/s: `hello` first, 20 frames in order, no gaps, client hello reaches the relay |
+| R7 | Ack envelope | `commandAck` keys in SPEC §2.5 order and values |
+| R8 | File vs live | File source rejects with `source is a recorded trip`, −1; live seed 42 without commands = first 50 sample frames; a client hello gets no ack; derate `applied` at the next seq (50), repeat still `applied` at 50; next frame `EngineDerate` |
+| R9 | Bad / unknown | String or boolean `commandId` → `commandId` −1 `bad command message`; `schemaVersion` 2 and non-boolean `enabled` → bad message; other `name` → `unknown command`; all `appliedAtSeq` −1 |
+| R10 | End to end command | Live relay at 500 msg/s, client sends derate at once: exactly one ack (`commandId` 1, `applied`), first `EngineDerate` frame seq = `appliedAtSeq` |
 
 ## 5. WebSocket receiver (Unreal C++): planned, Day 10
 

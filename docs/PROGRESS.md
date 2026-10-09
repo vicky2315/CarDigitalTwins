@@ -126,11 +126,13 @@ The split front doors etc. stay in `/Game/Jeep/Cleaned` for the optional door an
 
 ### Twin completion (after Day 10, before Day 11; added 2026-10-07)
 Turns the project from a digital *shadow* (data flows one way) into a digital *twin* (two-way data plus prediction).
-- [ ] T1. Feedback loop: a command from UE goes back to the source and changes what the vehicle does. Example: "Limp mode" when
+- [x] T1. Feedback loop: a command from UE goes back to the source and changes what the vehicle does. Example: "Limp mode" when
       coolant is critical → UE sends it over the WebSocket → relay passes it to a vehicle simulator → next samples show rpm capped.
       Needs a two-way relay (Day 9) and a send path in the WebSocket receiver (Day 10); follows the "commands go down" rule (SPEC.md §5).
       2026-10-09: option A "engine protection derate request" (SPEC.md §2.5). Done: contract, simulator + tests (P9).
-      To do: relay `--source live` + ack, UE send path, subsystem auto rule + console command, PIE check.
+      2026-10-10: relay `--source live` + `commandAck`, `relay_client.py --send-derate-after`, tests R7–R10 (pytest 59 pass).
+      2026-10-10: UE side written (`EVehicleDriveMode`, `VehicleCommand.h`, `SendVehicleCommand`/`PollVehicleCommandAcks`,
+      subsystem pending acks + 2 s timeout + auto derate + `Twin.EngineDerate`). Built and checked in PIE against `relay.py --source live`: done.
 - [ ] T2. Prediction: estimate time to the next threshold from recent samples (e.g. "coolant critical in ~25 s", "RR tyre at
       180 kPa in ~6 min"); exposed through the ViewModel so both front ends can show it.
 - [ ] T3. Write both up in SPEC.md (command message format next to §2.3; prediction method and its limits).

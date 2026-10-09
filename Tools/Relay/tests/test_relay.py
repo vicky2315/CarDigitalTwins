@@ -1,4 +1,4 @@
-"""Relay tests R1–R6 (docs/TESTS.md §4). R6 runs a real relay and client on a free local port; no Unreal needed."""
+"""Relay tests R1–R10 (docs/TESTS.md §4). R6 and R10 run a real relay and client on a free local port; no Unreal needed."""
 
 import asyncio
 import itertools
@@ -82,3 +82,77 @@ def test_r6_end_to_end_stream_reaches_client_in_order(short_trip):
     assert stream_check_results.missing_message_count == 0
     assert all(0 <= latency_ms < 1000 for latency_ms in stream_check_results.latencies_ms)
     assert telemetry_relay.received_client_message_count == 1    # the client's hello came back: the return path works
+
+
+def live_relay(messages_per_second=10.0):
+    return relay.TelemetryRelay(None, relay.RelaySettings(messages_per_second=messages_per_second, source=relay.SOURCE_LIVE))
+
+
+def derate_command_text(command_id=7, enabled=True, **changed_keys):
+    command_message = {"type": "command", "schemaVersion": 1, "commandId": command_id, "name": "engineDerate",
+                       "enabled": enabled, "sentUnixMs": 1790577294123}
+    command_message.update(changed_keys)
+    return json.dumps(command_message)
+
+
+def test_r7_command_ack_envelope_matches_spec():
+    command_ack = json.loads(relay.build_command_ack_message(7, "applied", "", 1193))
+
+    assert list(command_ack.keys()) == ["type", "commandId", "status", "reason", "appliedAtSeq"]
+    assert command_ack == {"type": "commandAck", "commandId": 7, "status": "applied", "reason": "", "appliedAtSeq": 1193}
+
+
+def test_r8_file_source_rejects_live_source_applies(short_trip, committed_sample_trip):
+    file_relay = relay.TelemetryRelay(short_trip, relay.RelaySettings(messages_per_second=10.0))
+    assert json.loads(file_relay.handle_client_message("test", derate_command_text())) == {
+        "type": "commandAck", "commandId": 7, "status": "rejected", "reason": "source is a recorded trip", "appliedAtSeq": -1}
+
+    telemetry_relay = live_relay()
+    live_frames = telemetry_relay.frames_to_send()
+    sent_frames = list(itertools.islice(live_frames, 50))
+    assert sent_frames == committed_sample_trip["frames"][:50]     # live seed 42 without commands = the recorded sample
+    assert telemetry_relay.handle_client_message("test", json.dumps({"type": "hello", "client": "x"})) is None
+
+    first_ack = json.loads(telemetry_relay.handle_client_message("test", derate_command_text(7)))
+    repeated_ack = json.loads(telemetry_relay.handle_client_message("test", derate_command_text(8)))
+    assert (first_ack["status"], first_ack["appliedAtSeq"]) == ("applied", 50)
+    assert (repeated_ack["status"], repeated_ack["appliedAtSeq"]) == ("applied", 50)    # idempotent: a retry is harmless
+    assert next(live_frames)["driveMode"] == "EngineDerate"
+
+
+@pytest.mark.parametrize("command_text, expected_command_id, expected_reason", [
+    (derate_command_text(commandId="7"), -1, "bad command message"),
+    (derate_command_text(commandId=True), -1, "bad command message"),
+    (derate_command_text(schemaVersion=2), 7, "bad command message"),
+    (derate_command_text(name="launchControl"), 7, "unknown command"),
+    (derate_command_text(enabled="yes"), 7, "bad command message"),
+])
+def test_r9_bad_and_unknown_commands_are_rejected(command_text, expected_command_id, expected_reason):
+    command_ack = json.loads(live_relay().handle_client_message("test", command_text))
+
+    assert command_ack["commandId"] == expected_command_id
+    assert command_ack["status"] == "rejected"
+    assert command_ack["reason"] == expected_reason
+    assert command_ack["appliedAtSeq"] == -1
+
+
+def test_r10_end_to_end_derate_command_changes_live_stream():
+    async def run_relay_and_client():
+        listening_port_future = asyncio.get_running_loop().create_future()
+        telemetry_relay = live_relay(messages_per_second=500.0)
+        relay_task = asyncio.create_task(
+            telemetry_relay.run("127.0.0.1", 0, on_listening=listening_port_future.set_result))
+        listening_port = await listening_port_future
+
+        stream_check_results = await relay_client.watch_relay(f"ws://127.0.0.1:{listening_port}", quiet=True,
+                                                              max_telemetry_messages=60, send_derate_after_s=0.0)
+        relay_task.cancel()    # a live trip runs for minutes; the client has seen enough
+        return stream_check_results
+
+    stream_check_results = asyncio.run(asyncio.wait_for(run_relay_and_client(), timeout=10.0))
+
+    assert len(stream_check_results.command_acks) == 1                  # one ack, to the sender
+    command_ack = stream_check_results.command_acks[0]
+    assert (command_ack["commandId"], command_ack["status"]) == (1, "applied")
+    assert command_ack["appliedAtSeq"] >= 0
+    assert stream_check_results.first_engine_derate_seq == command_ack["appliedAtSeq"]

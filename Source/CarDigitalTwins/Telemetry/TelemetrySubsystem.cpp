@@ -1,11 +1,38 @@
 #include "Telemetry/TelemetrySubsystem.h"
 
 #include "Engine/GameInstance.h"
+#include "Engine/World.h"
+#include "HAL/IConsoleManager.h"
+#include "HAL/PlatformTime.h"
 #include "Telemetry/FileTelemetryReceiver.h"
 #include "Telemetry/TelemetrySettings.h"
 #include "Telemetry/WebSocketTelemetryReceiver.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogVehicleTelemetry, Log, All);
+
+// Twin.EngineDerate 1/0: sends the SPEC.md §2.5 command by hand, to the game world the console belongs to (each PIE window has its own).
+static FAutoConsoleCommandWithWorldAndArgs EngineDerateConsoleCommand(
+	TEXT("Twin.EngineDerate"),
+	TEXT("Asks the vehicle to switch engine protection derate on (1) or off (0). Needs the WebSocket source and relay.py --source live."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& ConsoleArguments, UWorld* ConsoleWorld)
+	{
+		const bool bArgumentIsOn = ConsoleArguments.Num() == 1 && (ConsoleArguments[0] == TEXT("1") || ConsoleArguments[0] == TEXT("on"));
+		const bool bArgumentIsOff = ConsoleArguments.Num() == 1 && (ConsoleArguments[0] == TEXT("0") || ConsoleArguments[0] == TEXT("off"));
+		if (!bArgumentIsOn && !bArgumentIsOff)
+		{
+			UE_LOG(LogVehicleTelemetry, Warning, TEXT("Usage: Twin.EngineDerate 1 (on) or Twin.EngineDerate 0 (off)."));
+			return;
+		}
+
+		const UGameInstance* ConsoleGameInstance = ConsoleWorld ? ConsoleWorld->GetGameInstance() : nullptr;
+		UTelemetrySubsystem* TelemetrySubsystem = ConsoleGameInstance ? ConsoleGameInstance->GetSubsystem<UTelemetrySubsystem>() : nullptr;
+		if (!TelemetrySubsystem)
+		{
+			UE_LOG(LogVehicleTelemetry, Warning, TEXT("Twin.EngineDerate: no running game here; use it during PIE, in the game window's console."));
+			return;
+		}
+		TelemetrySubsystem->SendEngineDerateCommand(bArgumentIsOn, TEXT("console"));
+	}));
 
 void UTelemetrySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -13,6 +40,8 @@ void UTelemetrySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	// One setting picks the source; nothing downstream knows which one it is (SPEC.md §5–6).
 	const UTelemetrySettings* TelemetrySettings = GetDefault<UTelemetrySettings>();
+	bAutoEngineDerateOnCriticalCoolant = TelemetrySettings->bAutoEngineDerateOnCriticalCoolant;
+	CommandAckTimeoutSeconds = TelemetrySettings->CommandAckTimeoutSeconds;
 	if (TelemetrySettings->TelemetrySource == ETelemetrySource::WebSocket)
 	{
 		UWebSocketTelemetryReceiver* WebSocketTelemetryReceiver = NewObject<UWebSocketTelemetryReceiver>(this);
@@ -71,21 +100,133 @@ void UTelemetrySubsystem::Tick(float DeltaSeconds)
 
 	for (const FVehicleTelemetry& NewTelemetrySample : NewTelemetrySamplesThisTick)
 	{
+		const EVehicleDriveMode PreviousDriveMode = bHasReceivedAnyTelemetrySample ? LatestTelemetrySample.DriveMode : NewTelemetrySample.DriveMode;
 		PreviousTelemetrySample = bHasReceivedAnyTelemetrySample ? LatestTelemetrySample : NewTelemetrySample;
 		LatestTelemetrySample = NewTelemetrySample;
 		bHasReceivedAnyTelemetrySample = true;
 
 		const EVehicleStatus PreviousOverallStatus = CurrentVehicleStatusReport.OverallStatus;
+		const EVehicleStatus PreviousCoolantTemperatureStatus = CurrentVehicleStatusReport.CoolantTemperatureStatus;
 		CurrentVehicleStatusReport = VehicleStatusEvaluator.EvaluateTelemetrySample(LatestTelemetrySample);
 		if (CurrentVehicleStatusReport.OverallStatus != PreviousOverallStatus)
 		{
 			LogOverallStatusChange(PreviousOverallStatus, LatestTelemetrySample);
 		}
+		if (LatestTelemetrySample.DriveMode != PreviousDriveMode)
+		{
+			LogDriveModeChange(PreviousDriveMode, LatestTelemetrySample);
+		}
+		SendAutoEngineDerateIfCoolantJustBecameCritical(PreviousCoolantTemperatureStatus);
 
 		OnTelemetryUpdated.Broadcast(LatestTelemetrySample);
 	}
 
+	ProcessVehicleCommandAcks();
+	ExpireUnansweredVehicleCommands(FPlatformTime::Seconds());
+
 	LogTelemetrySummaryOncePerSecond(DeltaSeconds, NewTelemetrySamplesThisTick);
+}
+
+bool UTelemetrySubsystem::SendEngineDerateCommand(bool bEnabled, const FString& CommandTrigger)
+{
+	if (!ActiveTelemetryReceiver)
+	{
+		UE_LOG(LogVehicleTelemetry, Warning, TEXT("Command engineDerate %s (%s) not sent: no telemetry receiver."), bEnabled ? TEXT("on") : TEXT("off"),
+			*CommandTrigger);
+		return false;
+	}
+
+	FVehicleCommand VehicleCommand;
+	VehicleCommand.CommandId = NextVehicleCommandId++;
+	VehicleCommand.CommandName = VehicleCommandNames::EngineDerate;
+	VehicleCommand.bEnabled = bEnabled;
+
+	FString SendFailureReason;
+	if (!ActiveTelemetryReceiver->SendVehicleCommand(VehicleCommand, SendFailureReason))
+	{
+		UE_LOG(LogVehicleTelemetry, Warning, TEXT("%s (%s) not sent: %s."), *DescribeVehicleCommand(VehicleCommand), *CommandTrigger, *SendFailureReason);
+		return false;
+	}
+
+	PendingVehicleCommands.Add({ VehicleCommand, CommandTrigger, FPlatformTime::Seconds() });
+	UE_LOG(LogVehicleTelemetry, Log, TEXT("%s sent (%s), waiting for the ack."), *DescribeVehicleCommand(VehicleCommand), *CommandTrigger);
+	return true;
+}
+
+void UTelemetrySubsystem::ProcessVehicleCommandAcks()
+{
+	VehicleCommandAcksThisTick.Reset();
+	ActiveTelemetryReceiver->PollVehicleCommandAcks(VehicleCommandAcksThisTick);
+
+	for (const FVehicleCommandAck& VehicleCommandAck : VehicleCommandAcksThisTick)
+	{
+		const int32 PendingCommandIndex = PendingVehicleCommands.IndexOfByPredicate([&VehicleCommandAck](const FPendingVehicleCommand& PendingCommand)
+		{
+			return PendingCommand.VehicleCommand.CommandId == VehicleCommandAck.CommandId;
+		});
+		if (PendingCommandIndex == INDEX_NONE)
+		{
+			// Late (after its timeout) or for a command the relay couldn't read (commandId -1).
+			UE_LOG(LogVehicleTelemetry, Warning, TEXT("Ack for command %d, which isn't waiting for one: %s%s%s."), VehicleCommandAck.CommandId,
+				*VehicleCommandAck.Status, VehicleCommandAck.Reason.IsEmpty() ? TEXT("") : TEXT(", "), *VehicleCommandAck.Reason);
+			continue;
+		}
+
+		const FPendingVehicleCommand& PendingCommand = PendingVehicleCommands[PendingCommandIndex];
+		const double AckDelayMs = (FPlatformTime::Seconds() - PendingCommand.SentTimeSeconds) * 1000.0;
+		if (VehicleCommandAck.WasApplied())
+		{
+			UE_LOG(LogVehicleTelemetry, Log, TEXT("%s applied by the vehicle from seq %lld (ack after %.0f ms); telemetry DriveMode shows the effect."),
+				*DescribeVehicleCommand(PendingCommand.VehicleCommand), VehicleCommandAck.AppliedAtSeq, AckDelayMs);
+		}
+		else
+		{
+			UE_LOG(LogVehicleTelemetry, Warning, TEXT("%s rejected: %s (ack after %.0f ms)."), *DescribeVehicleCommand(PendingCommand.VehicleCommand),
+				*VehicleCommandAck.Reason, AckDelayMs);
+		}
+		PendingVehicleCommands.RemoveAt(PendingCommandIndex);
+	}
+}
+
+void UTelemetrySubsystem::ExpireUnansweredVehicleCommands(double NowSeconds)
+{
+	for (int32 PendingCommandIndex = PendingVehicleCommands.Num() - 1; PendingCommandIndex >= 0; --PendingCommandIndex)
+	{
+		const FPendingVehicleCommand& PendingCommand = PendingVehicleCommands[PendingCommandIndex];
+		if (NowSeconds - PendingCommand.SentTimeSeconds > CommandAckTimeoutSeconds)
+		{
+			UE_LOG(LogVehicleTelemetry, Warning, TEXT("%s (%s): no ack within %.1f s, treated as failed (not retried)."),
+				*DescribeVehicleCommand(PendingCommand.VehicleCommand), *PendingCommand.CommandTrigger, CommandAckTimeoutSeconds);
+			PendingVehicleCommands.RemoveAt(PendingCommandIndex);
+		}
+	}
+}
+
+void UTelemetrySubsystem::SendAutoEngineDerateIfCoolantJustBecameCritical(EVehicleStatus PreviousCoolantTemperatureStatus)
+{
+	// Edge, not level: one command per change into Critical. Coolant falls back to Warning under derate, so this fires again only
+	// after a trip restart (relay --loop starts a new vehicle with derate off).
+	const bool bCoolantJustBecameCritical = CurrentVehicleStatusReport.CoolantTemperatureStatus == EVehicleStatus::Critical
+		&& PreviousCoolantTemperatureStatus != EVehicleStatus::Critical;
+	if (!bCoolantJustBecameCritical || !bAutoEngineDerateOnCriticalCoolant || LatestTelemetrySample.DriveMode == EVehicleDriveMode::EngineDerate)
+	{
+		return;
+	}
+	SendEngineDerateCommand(true, FString::Printf(TEXT("auto: coolant Critical at %.1f C, t=%.1f s, seq %lld"), LatestTelemetrySample.CoolantTempC,
+		LatestTelemetrySample.SampleTimeS, LatestTelemetrySample.Seq));
+}
+
+void UTelemetrySubsystem::LogDriveModeChange(EVehicleDriveMode PreviousDriveMode, const FVehicleTelemetry& TelemetrySample) const
+{
+	const UEnum* DriveModeEnum = StaticEnum<EVehicleDriveMode>();
+	UE_LOG(LogVehicleTelemetry, Log, TEXT("Vehicle drive mode: %s -> %s at t=%.1f s, seq %lld (reported by the vehicle)."),
+		*DriveModeEnum->GetNameStringByValue(static_cast<int64>(PreviousDriveMode)),
+		*DriveModeEnum->GetNameStringByValue(static_cast<int64>(TelemetrySample.DriveMode)), TelemetrySample.SampleTimeS, TelemetrySample.Seq);
+}
+
+FString UTelemetrySubsystem::DescribeVehicleCommand(const FVehicleCommand& VehicleCommand)
+{
+	return FString::Printf(TEXT("Command %d %s %s"), VehicleCommand.CommandId, *VehicleCommand.CommandName, VehicleCommand.bEnabled ? TEXT("on") : TEXT("off"));
 }
 
 FTelemetryConnectionStatus UTelemetrySubsystem::GetTelemetryConnectionStatus() const
@@ -173,10 +314,11 @@ void UTelemetrySubsystem::LogTelemetrySummaryOncePerSecond(float DeltaSeconds, c
 
 	// Seq range reads "1895..4" across a loop: expected, not dropped samples. Latency is 0 for the file receiver.
 	const FTelemetryConnectionStatus TelemetryConnectionStatus = GetTelemetryConnectionStatus();
-	UE_LOG(LogVehicleTelemetry, Log, TEXT("Telemetry: %d samples in %.2f s, seq %lld..%lld, t=%.1f s, %.1f km/h, %.0f rpm, coolant %.1f C, tyre RR %.0f kPa, openings %d [%s, dropped %lld, latency %.1f ms avg / %.1f max]."),
+	UE_LOG(LogVehicleTelemetry, Log, TEXT("Telemetry: %d samples in %.2f s, seq %lld..%lld, t=%.1f s, %.1f km/h, %.0f rpm, coolant %.1f C, tyre RR %.0f kPa, openings %d, %s [%s, dropped %lld, latency %.1f ms avg / %.1f max]."),
 		SamplesSinceLastTelemetrySummaryLog, SecondsSinceLastTelemetrySummaryLog, FirstSeqSinceLastTelemetrySummaryLog, LatestTelemetrySample.Seq,
 		LatestTelemetrySample.SampleTimeS, LatestTelemetrySample.SpeedKmh, LatestTelemetrySample.EngineRpm, LatestTelemetrySample.CoolantTempC,
 		LatestTelemetrySample.TyreKpa.RR, LatestTelemetrySample.Openings,
+		*StaticEnum<EVehicleDriveMode>()->GetNameStringByValue(static_cast<int64>(LatestTelemetrySample.DriveMode)),
 		*StaticEnum<ETelemetryConnectionState>()->GetNameStringByValue(static_cast<int64>(TelemetryConnectionStatus.ConnectionState)),
 		TelemetryConnectionStatus.DroppedMessageCount, TelemetryConnectionStatus.AverageReceiveLatencyMs, TelemetryConnectionStatus.MaxReceiveLatencyMs);
 

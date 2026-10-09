@@ -5,6 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "VehicleCommand.h"
 #include "VehicleTelemetry.h"
 #include "TelemetryReceiver.generated.h"
 
@@ -83,4 +84,11 @@ public:
 
 	// Connection state, dropped messages and latency (SPEC.md §4).
 	virtual FTelemetryConnectionStatus GetConnectionStatus() const = 0;
+
+	// Sends a command towards the vehicle (SPEC.md §2.5). Returns false with OutFailureReason when it can't go out at all (a recorded
+	// trip, no connection); true only means it was sent, the answer comes later through PollVehicleCommandAcks.
+	virtual bool SendVehicleCommand(const FVehicleCommand& VehicleCommand, FString& OutFailureReason) = 0;
+
+	// Appends the command acks that arrived since the last call, oldest first. Call after PollNewTelemetrySamples, which reads them.
+	virtual void PollVehicleCommandAcks(TArray<FVehicleCommandAck>& OutVehicleCommandAcks) = 0;
 };

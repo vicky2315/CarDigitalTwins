@@ -1,16 +1,19 @@
-"""Streams a recorded trip over WebSocket, one telemetry message per sample (docs/SPEC.md §2.3).
+"""Streams a trip over WebSocket, one telemetry message per sample (docs/SPEC.md §2.3), and takes commands back (§2.5).
 
 Stands in for the live link a real car would have (telematics unit → cloud → stream service → dashboards). The options break the
 stream on purpose, so the Unreal receiver (Day 10) can be tested against what real networks do: messages lost in a tunnel, a link
 that goes quiet, a car that never stops sending.
 
 Every connected client sees the same live stream, like viewers of one car. Playback starts when the first client connects.
-Messages from clients are logged: this is where commands for the vehicle will arrive (Twin completion T1).
+Two sources: `file` plays a recorded trip.json; `live` runs the trip generator's VehicleSimulator in real time, so a command from a
+client (engine derate, Twin completion T1) changes the samples that follow. Each command gets one commandAck, to its sender only;
+a recorded trip can't obey, so file mode rejects commands.
 
 Usage:
     python relay.py                                   # Data/Trips/trip_sample.json at its own rate on ws://127.0.0.1:8765
     python relay.py --loop --rate 50                  # 5x faster than the 10 Hz trip, never ends
     python relay.py --loop --drop-percent 5 --pause-after 30
+    python relay.py --source live --rate 50           # simulated car that obeys commands (relay_client.py --send-derate-after 3)
 """
 
 import argparse
@@ -36,6 +39,19 @@ DEFAULT_PORT = 8765
 STATUS_LOG_INTERVAL_S = 5.0
 MAX_CATCH_UP_S = 1.0                       # further behind than this (PC hitch): skip ahead instead of sending a burst
 
+SOURCE_FILE = "file"
+SOURCE_LIVE = "live"
+LIVE_VEHICLE_ID = "jeep-01"                # same car as the recorded sample
+LIVE_RATE_HZ = 10                          # trip_generator's default rate, so live seed 42 without commands = trip_sample.json
+LIVE_DEFAULT_SEED = 42
+
+COMMAND_ENGINE_DERATE = "engineDerate"
+ACK_APPLIED = "applied"
+ACK_REJECTED = "rejected"
+REJECT_REASON_RECORDED_TRIP = "source is a recorded trip"
+REJECT_REASON_UNKNOWN_COMMAND = "unknown command"
+REJECT_REASON_BAD_MESSAGE = "bad command message"
+
 
 @dataclass
 class RelaySettings:
@@ -45,6 +61,8 @@ class RelaySettings:
     pause_after_s: float | None = None     # seconds of streaming before the link goes quiet once; None = never
     pause_duration_s: float = 10.0
     drop_random_seed: int | None = None    # same seed = same messages dropped, for repeatable tests
+    source: str = SOURCE_FILE
+    live_seed: int = LIVE_DEFAULT_SEED     # VehicleSimulator seed for --source live
 
 
 def load_trip(trip_path):
@@ -61,16 +79,26 @@ def current_unix_ms():
     return int(time.time() * 1000)
 
 
-def build_hello_message(trip, messages_per_second):
+def build_hello_message(vehicle_id, messages_per_second, trip_rate_hz):
     """First message to every new client: which car this is and how fast messages will come."""
-    return json.dumps({"type": "hello", "schemaVersion": trip_generator.SCHEMA_VERSION, "vehicleId": trip["vehicleId"],
-                       "messagesPerSecond": messages_per_second, "tripRateHz": trip["rateHz"]}, separators=(",", ":"))
+    return json.dumps({"type": "hello", "schemaVersion": trip_generator.SCHEMA_VERSION, "vehicleId": vehicle_id,
+                       "messagesPerSecond": messages_per_second, "tripRateHz": trip_rate_hz}, separators=(",", ":"))
 
 
 def build_telemetry_message(vehicle_id, frame, sent_unix_ms):
     """One sample in the SPEC.md §2.3 envelope. sentUnixMs lets the receiver measure latency."""
     return json.dumps({"type": "telemetry", "schemaVersion": trip_generator.SCHEMA_VERSION, "vehicleId": vehicle_id,
                        "sentUnixMs": sent_unix_ms, "frame": frame}, separators=(",", ":"))
+
+
+def build_command_ack_message(command_id, status, reason, applied_at_seq):
+    """Answer to one command (SPEC.md §2.5), sent to the client that sent it. appliedAtSeq is -1 when rejected."""
+    return json.dumps({"type": "commandAck", "commandId": command_id, "status": status, "reason": reason,
+                       "appliedAtSeq": applied_at_seq}, separators=(",", ":"))
+
+
+def is_json_integer(value):
+    return isinstance(value, int) and not isinstance(value, bool)     # in Python True is an int; in JSON it isn't
 
 
 def frames_in_send_order(frames, loop_trip):
@@ -87,11 +115,18 @@ def should_drop_message(drop_random_generator, drop_percent):
 
 
 class TelemetryRelay:
-    """WebSocket server that plays one trip to every connected client and logs what the clients send back."""
+    """WebSocket server that streams one vehicle to every connected client and answers the commands they send back.
+    trip is the recorded trip for --source file; None for --source live."""
 
     def __init__(self, trip, relay_settings):
         self.trip = trip
         self.relay_settings = relay_settings
+        self.is_live_source = relay_settings.source == SOURCE_LIVE
+        self.vehicle_id = LIVE_VEHICLE_ID if self.is_live_source else trip["vehicleId"]
+        self.trip_rate_hz = LIVE_RATE_HZ if self.is_live_source else trip["rateHz"]
+        # Created here, not when streaming starts, so a command that arrives before the first frame still has a car to reach.
+        self.live_vehicle_simulator = (trip_generator.VehicleSimulator(relay_settings.live_seed, LIVE_RATE_HZ)
+                                       if self.is_live_source else None)
         self.connected_clients = set()
         self.first_client_connected = asyncio.Event()
         self.drop_random_generator = random.Random(relay_settings.drop_random_seed)
@@ -105,12 +140,15 @@ class TelemetryRelay:
         client_address = client_connection.remote_address
         try:
             # Hello first, then join the stream, so a client never sees telemetry before it knows the rate.
-            await client_connection.send(build_hello_message(self.trip, self.relay_settings.messages_per_second))
+            await client_connection.send(build_hello_message(self.vehicle_id, self.relay_settings.messages_per_second,
+                                                             self.trip_rate_hz))
             self.connected_clients.add(client_connection)
             print(f"Client connected: {client_address} ({len(self.connected_clients)} connected)")
             self.first_client_connected.set()
             async for client_message_text in client_connection:
-                self.handle_client_message(client_address, client_message_text)
+                command_ack_message = self.handle_client_message(client_address, client_message_text)
+                if command_ack_message is not None:
+                    await client_connection.send(command_ack_message)    # to the sender only, never broadcast
         except ConnectionClosed:
             pass    # the client vanished without a proper close (killed, network gone): normal for a live link
         finally:
@@ -119,15 +157,56 @@ class TelemetryRelay:
             print(f"Client disconnected: {client_address} ({len(self.connected_clients)} connected)")
 
     def handle_client_message(self, client_address, client_message_text):
-        """Messages going back towards the car. Only logged for now; Twin completion T1 turns them into commands."""
+        """Messages going back towards the car. A command is answered: returns its commandAck text for the sender. Anything
+        else (a client's hello, not JSON) is logged and ignored: returns None."""
         self.received_client_message_count += 1
         try:
             client_message = json.loads(client_message_text)
         except json.JSONDecodeError:
             print(f"From {client_address}: not JSON, ignored: {client_message_text[:80]!r}")
-            return
+            return None
         message_type = client_message.get("type") if isinstance(client_message, dict) else None
         print(f"From {client_address}: type {message_type!r}: {client_message_text[:200]}")
+        if message_type != "command":
+            return None
+
+        command_id, status, reason, applied_at_seq = self.apply_command(client_message)
+        print(f"  command {command_id}: {status}" + (f" ({reason})" if reason else f" at seq {applied_at_seq}"))
+        return build_command_ack_message(command_id, status, reason, applied_at_seq)
+
+    def apply_command(self, command_message):
+        """Checks one command (SPEC.md §2.5) and applies it to the live vehicle. Checks run most specific first: bad message,
+        unknown command, then a source that can't obey. Returns (commandId, status, reason, appliedAtSeq)."""
+        command_id = command_message.get("commandId")
+        if not is_json_integer(command_id):
+            return -1, ACK_REJECTED, REJECT_REASON_BAD_MESSAGE, -1
+        command_name = command_message.get("name")
+        if command_message.get("schemaVersion") != trip_generator.SCHEMA_VERSION or not isinstance(command_name, str):
+            return command_id, ACK_REJECTED, REJECT_REASON_BAD_MESSAGE, -1
+        if command_name != COMMAND_ENGINE_DERATE:
+            return command_id, ACK_REJECTED, REJECT_REASON_UNKNOWN_COMMAND, -1
+        if not isinstance(command_message.get("enabled"), bool):
+            return command_id, ACK_REJECTED, REJECT_REASON_BAD_MESSAGE, -1
+        if not self.is_live_source:
+            return command_id, ACK_REJECTED, REJECT_REASON_RECORDED_TRIP, -1
+
+        applied_at_seq = self.live_vehicle_simulator.set_engine_derate(command_message["enabled"])
+        return command_id, ACK_APPLIED, "", applied_at_seq
+
+    def frames_from_live_simulator(self):
+        """Steps the simulated vehicle one frame at a time, as the stream asks for them. With loop_trip a new vehicle starts
+        when the trip ends, so derate is off again (SPEC.md §2.5: it stays on until disabled or the trip restarts)."""
+        while True:
+            while not self.live_vehicle_simulator.is_finished():
+                yield self.live_vehicle_simulator.step()
+            if not self.relay_settings.loop_trip:
+                return
+            self.live_vehicle_simulator = trip_generator.VehicleSimulator(self.relay_settings.live_seed, LIVE_RATE_HZ)
+
+    def frames_to_send(self):
+        if self.is_live_source:
+            return self.frames_from_live_simulator()
+        return frames_in_send_order(self.trip["frames"], self.relay_settings.loop_trip)
 
     async def stream_trip(self):
         """Sends one frame every 1/messages_per_second seconds to all clients, applying the drop and pause options."""
@@ -139,10 +218,13 @@ class TelemetryRelay:
         next_status_log_time_s = stream_start_time_s + STATUS_LOG_INTERVAL_S
         pause_already_done = self.relay_settings.pause_after_s is None
         previous_seq = -1
-        print(f"Streaming {len(self.trip['frames'])} frames at {self.relay_settings.messages_per_second:g} messages/s"
+        source_text = (f"live vehicle (seed {self.relay_settings.live_seed})" if self.is_live_source
+                       else f"{len(self.trip['frames'])} recorded frames")
+        print(f"Streaming {source_text} at {self.relay_settings.messages_per_second:g} messages/s"
               f"{', looping' if self.relay_settings.loop_trip else ''}")
 
-        for frame in frames_in_send_order(self.trip["frames"], self.relay_settings.loop_trip):
+        # A dropped frame still steps the live vehicle (the car sent it, the network lost it); a --pause-after pause doesn't.
+        for frame in self.frames_to_send():
             await asyncio.sleep(max(0.0, next_send_time_s - event_loop.time()))
             if event_loop.time() - next_send_time_s > MAX_CATCH_UP_S:
                 next_send_time_s = event_loop.time()
@@ -163,7 +245,7 @@ class TelemetryRelay:
             if should_drop_message(self.drop_random_generator, self.relay_settings.drop_percent):
                 self.dropped_message_count += 1
             else:
-                broadcast(self.connected_clients, build_telemetry_message(self.trip["vehicleId"], frame, current_unix_ms()))
+                broadcast(self.connected_clients, build_telemetry_message(self.vehicle_id, frame, current_unix_ms()))
                 self.sent_message_count += 1
             next_send_time_s += send_interval_s
 
@@ -191,11 +273,14 @@ class TelemetryRelay:
 
 def parse_arguments(argument_list=None):
     parser = argparse.ArgumentParser(description="Stream a trip.json over WebSocket (docs/SPEC.md §2.3).")
-    parser.add_argument("--trip", type=Path, default=trip_generator.DEFAULT_OUTPUT_PATH, help="trip.json to play")
+    parser.add_argument("--source", choices=[SOURCE_FILE, SOURCE_LIVE], default=SOURCE_FILE,
+                        help="file: play --trip (rejects commands); live: simulate the vehicle in real time (obeys commands)")
+    parser.add_argument("--trip", type=Path, default=trip_generator.DEFAULT_OUTPUT_PATH, help="trip.json to play (--source file)")
+    parser.add_argument("--seed", type=int, default=LIVE_DEFAULT_SEED, help="vehicle simulator seed (--source live)")
     parser.add_argument("--host", default=DEFAULT_HOST, help="address to listen on (default: this machine only)")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--rate", type=float, default=None,
-                        help="messages per second (default: the trip's own rateHz; higher plays the trip faster)")
+                        help="messages per second (default: the trip's own rateHz, 10 for live; higher plays the trip faster)")
     parser.add_argument("--loop", action="store_true", help="start again at frame 0 when the trip ends, forever")
     parser.add_argument("--drop-percent", type=float, default=0.0, help="lose this %% of messages at random (0-100)")
     parser.add_argument("--drop-seed", type=int, default=None, help="random seed for --drop-percent, for repeatable runs")
@@ -213,10 +298,12 @@ def parse_arguments(argument_list=None):
 
 def main(argument_list=None):
     arguments = parse_arguments(argument_list)
-    trip = load_trip(arguments.trip)
-    relay_settings = RelaySettings(messages_per_second=arguments.rate or trip["rateHz"], loop_trip=arguments.loop,
+    trip = load_trip(arguments.trip) if arguments.source == SOURCE_FILE else None
+    trip_rate_hz = trip["rateHz"] if trip else LIVE_RATE_HZ
+    relay_settings = RelaySettings(messages_per_second=arguments.rate or trip_rate_hz, loop_trip=arguments.loop,
                                    drop_percent=arguments.drop_percent, pause_after_s=arguments.pause_after,
-                                   pause_duration_s=arguments.pause_duration, drop_random_seed=arguments.drop_seed)
+                                   pause_duration_s=arguments.pause_duration, drop_random_seed=arguments.drop_seed,
+                                   source=arguments.source, live_seed=arguments.seed)
     telemetry_relay = TelemetryRelay(trip, relay_settings)
     try:
         asyncio.run(telemetry_relay.run(arguments.host, arguments.port))

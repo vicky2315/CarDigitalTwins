@@ -7,7 +7,9 @@
 #include "Misc/ScopeLock.h"
 #include "Modules/ModuleManager.h"
 #include "Serialization/JsonReader.h"
+#include "Policies/CondensedJsonPrintPolicy.h"
 #include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonWriter.h"
 #include "WebSocketsModule.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogVehicleTelemetry, Log, All);
@@ -44,6 +46,45 @@ double UWebSocketTelemetryReceiver::ComputeReconnectDelaySeconds(int32 Reconnect
 	return DelayBeforeJitterSeconds * (1.0 + WebSocketTelemetryReceiverConstants::ReconnectJitterFraction * FMath::Clamp(JitterUnit, -1.0, 1.0));
 }
 
+FString UWebSocketTelemetryReceiver::BuildVehicleCommandMessage(const FVehicleCommand& VehicleCommand, int64 SentUnixMs)
+{
+	// Written field by field: TJsonWriter's int32/int64 overloads print integers, where an FJsonObject number could print "1.0".
+	FString VehicleCommandMessageText;
+	const TSharedRef<TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>> VehicleCommandWriter =
+		TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&VehicleCommandMessageText);
+	VehicleCommandWriter->WriteObjectStart();
+	VehicleCommandWriter->WriteValue(TEXT("type"), FString(TEXT("command")));
+	VehicleCommandWriter->WriteValue(TEXT("schemaVersion"), VehicleTelemetrySchemaVersion);
+	VehicleCommandWriter->WriteValue(TEXT("commandId"), VehicleCommand.CommandId);
+	VehicleCommandWriter->WriteValue(TEXT("name"), VehicleCommand.CommandName);
+	VehicleCommandWriter->WriteValue(TEXT("enabled"), VehicleCommand.bEnabled);
+	VehicleCommandWriter->WriteValue(TEXT("sentUnixMs"), SentUnixMs);
+	VehicleCommandWriter->WriteObjectEnd();
+	VehicleCommandWriter->Close();
+	return VehicleCommandMessageText;
+}
+
+bool UWebSocketTelemetryReceiver::SendVehicleCommand(const FVehicleCommand& VehicleCommand, FString& OutFailureReason)
+{
+	// Stale still has an open socket, so a command can go out while telemetry is paused.
+	const bool bHasOpenConnection = ConnectionState == ETelemetryConnectionState::Live || ConnectionState == ETelemetryConnectionState::Stale;
+	if (!bHasOpenConnection || !RelayWebSocket.IsValid() || !RelayWebSocket->IsConnected())
+	{
+		OutFailureReason = FString::Printf(TEXT("not connected to the relay (%s)"),
+			*StaticEnum<ETelemetryConnectionState>()->GetNameStringByValue(static_cast<int64>(ConnectionState)));
+		return false;
+	}
+
+	RelayWebSocket->Send(BuildVehicleCommandMessage(VehicleCommand, static_cast<int64>(GetCurrentUnixMs())));
+	return true;
+}
+
+void UWebSocketTelemetryReceiver::PollVehicleCommandAcks(TArray<FVehicleCommandAck>& OutVehicleCommandAcks)
+{
+	OutVehicleCommandAcks.Append(ReceivedVehicleCommandAcks);
+	ReceivedVehicleCommandAcks.Reset();
+}
+
 bool UWebSocketTelemetryReceiver::StartReceiving()
 {
 	StopReceiving();
@@ -63,6 +104,7 @@ bool UWebSocketTelemetryReceiver::StartReceiving()
 	TotalReconnectAttemptCount = 0;
 	RelayMessagesPerSecond = 0.0;
 	RejectedMessageCount = 0;
+	ReceivedVehicleCommandAcks.Reset();
 	bIsReceiving = true;
 
 	// A relay that isn't running yet is not a start failure: the receiver keeps retrying with backoff until it appears.
@@ -243,6 +285,21 @@ void UWebSocketTelemetryReceiver::ProcessRelayMessage(const FString& RelayMessag
 		RelayMessageObject->TryGetNumberField(TEXT("messagesPerSecond"), RelayMessagesPerSecond);
 		UE_LOG(LogVehicleTelemetry, Log, TEXT("%s: relay hello: vehicle %s, %.1f messages/s, stale after %.2f s without data."),
 			*GetReceiverDisplayName(), *RelayVehicleId, RelayMessagesPerSecond, GetEffectiveStaleAfterSeconds());
+		return;
+	}
+
+	if (RelayMessageType == TEXT("commandAck"))
+	{
+		FVehicleCommandAck ReceivedVehicleCommandAck;
+		if (FJsonObjectConverter::JsonObjectToUStruct(RelayMessageObject.ToSharedRef(), &ReceivedVehicleCommandAck))
+		{
+			ReceivedVehicleCommandAcks.Add(ReceivedVehicleCommandAck);
+		}
+		else
+		{
+			UE_LOG(LogVehicleTelemetry, Warning, TEXT("%s: commandAck doesn't match SPEC.md §2.5, ignored: %s"), *GetReceiverDisplayName(),
+				*RelayMessageText.Left(200));
+		}
 		return;
 	}
 

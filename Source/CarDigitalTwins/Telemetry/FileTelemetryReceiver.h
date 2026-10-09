@@ -27,6 +27,9 @@ public:
 	virtual void PollNewTelemetrySamples(float DeltaSeconds, TArray<FVehicleTelemetry>& OutNewTelemetrySamples) override;
 	virtual FString GetReceiverDisplayName() const override;
 	virtual FTelemetryConnectionStatus GetConnectionStatus() const override;
+	// A recorded trip can't change what already happened: every command is refused here, before it is sent anywhere.
+	virtual bool SendVehicleCommand(const FVehicleCommand& VehicleCommand, FString& OutFailureReason) override;
+	virtual void PollVehicleCommandAcks(TArray<FVehicleCommandAck>& OutVehicleCommandAcks) override {}
 
 private:
 	// Reads, checks and converts the trip file into LoadedRecordedTrip. Logs the reason and returns false on any problem.

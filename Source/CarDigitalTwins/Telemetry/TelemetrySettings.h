@@ -50,4 +50,13 @@ public:
 
 	UPROPERTY(config, EditAnywhere, Category = "WebSocket Receiver", meta = (ClampMin = "0.1", Units = "s"))
 	float ReconnectMaxDelaySeconds = 10.f;
+
+	// Send an engine derate command each time the coolant status changes to Critical (SPEC.md §2.5). Needs the WebSocket source and
+	// relay.py --source live; a recorded trip refuses it. By hand: console command Twin.EngineDerate 1/0.
+	UPROPERTY(config, EditAnywhere, Category = "Commands")
+	bool bAutoEngineDerateOnCriticalCoolant = true;
+
+	// A command with no ack within this time is logged as failed. Not retried automatically.
+	UPROPERTY(config, EditAnywhere, Category = "Commands", meta = (ClampMin = "0.1", Units = "s"))
+	float CommandAckTimeoutSeconds = 2.f;
 };

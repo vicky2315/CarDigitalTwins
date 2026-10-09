@@ -1,11 +1,13 @@
 """Command-line client for relay.py: prints the stream and checks it the way the Unreal receiver (Day 10) will.
 
 Counts lost messages from gaps in seq, notices trip loops (seq going backwards), measures latency from sentUnixMs, and says when
-no data has arrived for a while. Sends one hello back on connect, to prove the return path to the car works (Twin completion T1).
+no data has arrived for a while. Sends one hello back on connect, to prove the return path to the car works, and with
+--send-derate-after one engine derate command (Twin completion T1, SPEC.md §2.5) whose commandAck it prints.
 
 Usage:
     python relay_client.py                     # ws://127.0.0.1:8765, prints every 10th message
     python relay_client.py --print-every 1
+    python relay_client.py --send-derate-after 3     # against relay.py --source live: driveMode turns EngineDerate
 """
 
 import argparse
@@ -28,6 +30,14 @@ class StreamCheckResults:
     other_message_types: list = field(default_factory=list)
     latencies_ms: list = field(default_factory=list)
     last_seq: int | None = None
+    command_acks: list = field(default_factory=list)       # commandAck messages as dicts, in arrival order
+    first_engine_derate_seq: int | None = None             # first telemetry seq with driveMode EngineDerate
+
+
+def build_engine_derate_command(command_id, enabled):
+    """The SPEC.md §2.5 command, as UE sends it."""
+    return json.dumps({"type": "command", "schemaVersion": 1, "commandId": command_id, "name": "engineDerate",
+                       "enabled": enabled, "sentUnixMs": int(time.time() * 1000)}, separators=(",", ":"))
 
 
 def check_telemetry_message(stream_check_results, telemetry_message, receive_unix_ms):
@@ -46,13 +56,15 @@ def check_telemetry_message(stream_check_results, telemetry_message, receive_uni
             stream_check_results.missing_message_count += seq - previous_seq - 1
             seq_note = f"gap of {seq - previous_seq - 1}"
     stream_check_results.last_seq = seq
+    if telemetry_message["frame"].get("driveMode") == "EngineDerate" and stream_check_results.first_engine_derate_seq is None:
+        stream_check_results.first_engine_derate_seq = seq
     return seq_note
 
 
 def describe_frame(telemetry_message, latency_ms):
     frame = telemetry_message["frame"]
     return (f"seq {frame['seq']:5d}  t {frame['sampleTimeS']:6.1f} s  {frame['speedKmh']:5.1f} km/h  {frame['engineRpm']:4.0f} rpm  "
-            f"coolant {frame['coolantTempC']:5.1f} C  latency {latency_ms} ms")
+            f"coolant {frame['coolantTempC']:5.1f} C  {frame.get('driveMode', '?')}  latency {latency_ms} ms")
 
 
 def print_results(stream_check_results):
@@ -63,13 +75,21 @@ def print_results(stream_check_results):
           f"loops {stream_check_results.loop_count}, {latency_text}")
 
 
-async def watch_relay(relay_url, print_every=10, stall_warning_s=1.0, max_telemetry_messages=None, quiet=False):
-    """Connects, says hello, then reads until the relay closes or max_telemetry_messages arrived. Returns the results."""
+async def watch_relay(relay_url, print_every=10, stall_warning_s=1.0, max_telemetry_messages=None, quiet=False,
+                      send_derate_after_s=None):
+    """Connects, says hello, then reads until the relay closes or max_telemetry_messages arrived. With send_derate_after_s it
+    sends one engine derate command (commandId 1) once that many seconds have passed. Returns the results."""
     stream_check_results = StreamCheckResults()
     async with connect(relay_url) as relay_connection:
         print(f"Connected to {relay_url}")
         await relay_connection.send(json.dumps({"type": "hello", "client": "relay_client"}))
+        connect_time_s = time.monotonic()
+        derate_command_pending = send_derate_after_s is not None
         while max_telemetry_messages is None or stream_check_results.telemetry_message_count < max_telemetry_messages:
+            if derate_command_pending and time.monotonic() - connect_time_s >= send_derate_after_s:
+                derate_command_pending = False
+                await relay_connection.send(build_engine_derate_command(1, True))
+                print("Sent engineDerate on (commandId 1)")
             try:
                 relay_message_text = await asyncio.wait_for(relay_connection.recv(), timeout=stall_warning_s)
             except asyncio.TimeoutError:
@@ -81,6 +101,10 @@ async def watch_relay(relay_url, print_every=10, stall_warning_s=1.0, max_teleme
 
             receive_unix_ms = int(time.time() * 1000)
             relay_message = json.loads(relay_message_text)
+            if relay_message.get("type") == "commandAck":
+                stream_check_results.command_acks.append(relay_message)
+                print(f"commandAck: {relay_message_text}")
+                continue
             if relay_message.get("type") != "telemetry":
                 # Unknown types are ignored by the receivers (SPEC.md §2.3); hello is shown so the setup is visible.
                 stream_check_results.other_message_types.append(relay_message.get("type"))
@@ -103,11 +127,14 @@ def main():
     parser.add_argument("--url", default=DEFAULT_RELAY_URL)
     parser.add_argument("--print-every", type=int, default=10, help="print one line per N telemetry messages")
     parser.add_argument("--stall-warning", type=float, default=1.0, metavar="SECONDS", help="say so when nothing arrives this long")
+    parser.add_argument("--send-derate-after", type=float, default=None, metavar="SECONDS",
+                        help="send one engine derate command this many seconds after connecting (needs relay.py --source live)")
     arguments = parser.parse_args()
 
     stream_check_results = StreamCheckResults()
     try:
-        stream_check_results = asyncio.run(watch_relay(arguments.url, max(1, arguments.print_every), arguments.stall_warning))
+        stream_check_results = asyncio.run(watch_relay(arguments.url, max(1, arguments.print_every), arguments.stall_warning,
+                                                       send_derate_after_s=arguments.send_derate_after))
     except KeyboardInterrupt:
         print("Stopped (Ctrl+C)")
     except OSError as connection_error:
