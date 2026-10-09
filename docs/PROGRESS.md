@@ -1,7 +1,7 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
-Last updated: 2026-10-09
-Current day: **Twin completion T1** (steps 1–2 of 5 done 2026-10-09), then T2–T3, then Day 11.
+Last updated: 2026-10-10
+Current day: **Day 11** MVVM rewrite, step 2 next. Twin completion done 2026-10-10 (T1 + T3; T2 moved to Optional / later).
 Days 1–10 complete. Day 11 MVVM rewrite paused before step 2 (machine-independent, can continue on either laptop).
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
@@ -133,9 +133,9 @@ Turns the project from a digital *shadow* (data flows one way) into a digital *t
       2026-10-10: relay `--source live` + `commandAck`, `relay_client.py --send-derate-after`, tests R7–R10 (pytest 59 pass).
       2026-10-10: UE side written (`EVehicleDriveMode`, `VehicleCommand.h`, `SendVehicleCommand`/`PollVehicleCommandAcks`,
       subsystem pending acks + 2 s timeout + auto derate + `Twin.EngineDerate`). Built and checked in PIE against `relay.py --source live`: done.
-- [ ] T2. Prediction: estimate time to the next threshold from recent samples (e.g. "coolant critical in ~25 s", "RR tyre at
-      180 kPa in ~6 min"); exposed through the ViewModel so both front ends can show it.
-- [ ] T3. Write both up in SPEC.md (command message format next to §2.3; prediction method and its limits).
+- [x] T3. Command write-up in SPEC.md: done as §2.5 with T1. The prediction half moved with T2.
+- T2 (prediction) moved to "Optional / later" on 2026-10-10: two-way data is what separates a twin from a shadow; prediction is an
+  add-on. Describe the project as a "two-way digital twin", not a predictive one, until T2 is done.
 
 ### Day 11: MVVM dashboard (custom MVVM, option B)
 - [x] Design decided (two ViewModels, 10 Hz dashboard, formatting in widgets, BP read + one event; SPEC.md §5)
@@ -258,6 +258,10 @@ own; leave room for the Showroom mode idea (Optional / later), which would add a
       README (e.g. `speedKmh` → `Vehicle.Speed`). Industry vocabulary for both the twin and the HMI.
 
 ## Optional / later
+- [ ] **T2. Prediction** (moved from Twin completion 2026-10-10, ~1 day): estimate time to the next threshold from recent samples
+      (e.g. "coolant critical in ~25 s", "RR tyre at 180 kPa in ~6 min"), linear trend over ~10 s, shown only while heading toward
+      a threshold (none under derate, when coolant falls). Exposed through the ViewModel so both front ends can show it; method
+      and limits go in SPEC.md.
 - [ ] MQTT upgrade
 - [ ] Phase B (fleet → SUMO → Cesium)
 - [ ] Phase C (OpenUSD → Kit extension → side-by-side demo)
