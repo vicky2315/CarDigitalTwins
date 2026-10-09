@@ -151,8 +151,8 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 
 - [x] 1. `Build.cs`: module root on the include path (`PublicIncludePaths.Add(ModuleDirectory)`), so `#include "MVVM/..."` works
 - [x] 2. `FViewModelFieldMask` (`MVVM/ViewModelFieldMask.h`): uint64 bitmask, one bit per field
-- [ ] 3. `UViewModelBase` part 1: dirty bits + `Flush` (multicast delegate) ← **next**
-- [ ] 4. `UViewModelBase` part 2: `SetField` (compare-before-set, float tolerance)
+- [x] 3. `UViewModelBase` part 1: dirty bits + `Flush` (multicast delegate)
+- [x] 4. `UViewModelBase` part 2: `SetField` (compare-before-set, float tolerance)
 - [ ] 5. `UVehicleTelemetryViewModel`: field enum, getters, `ApplySample`
 - [ ] 6. Automation tests (`CarDigitalTwins.MVVM.Core`)
 - [ ] 7. `Subscribe` + `FViewModelSubscription` (RAII unsubscribe)
