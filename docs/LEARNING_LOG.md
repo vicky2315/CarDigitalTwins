@@ -185,3 +185,39 @@ uses a near-constant deceleration instead (1.0–2.8 m/s²), plus clutch in belo
    output, and the demo shows the same story every time. A different seed (`--seed 7`) still gives a new trip when wanted.
 2. *At 10 Hz, how many frames does a 3-minute trip contain?* 3 × 60 s × 10 frames/s = **1,800 frames**, one every 0.1 s.
    The sample trip is 190 s, so 1,900 frames (`seq` 0–1899, last `sampleTimeS` 189.9).
+
+## Day 11: studio level by script, and a unity-build collision (2026-10-12)
+
+**Tried:** built the dashboard's studio level (Part A of the build page) with Python Editor Scripts instead of by hand, and built the
+dashboard C++ on the office laptop for the first time.
+
+**Editor scripts (`Tools/UnrealEditor/`, Python Editor Script Plugin, editor only).** Run from the Output Log with the console box in
+**Cmd** mode: `py "<project>/Tools/UnrealEditor/<script>.py"` (full path, quoted: the folder name has spaces). In Python mode the same
+line is read as a file name and fails with "Could not load Python file".
+
+| Script | Makes | Re-run behaviour |
+|---|---|---|
+| `create_status_outline_material.py` | `PP_VehicleStatusOutline` (Day 8) | one-off |
+| `create_studio_floor_material.py` | `M_StudioFloor`, scrolling 1 m grid (A3) | never overwrites: delete the asset to rebuild |
+| `create_studio_lighting.py` | `KeyLight`, `RimLight`, `FillLight`, `StudioPostProcess` (A5) | updates by label: edit the constants, re-run |
+| `create_studio_cameras.py` | `CAM_Overview/Powertrain/Tyres/Body` with `TwinView.*` tags (A8) | updates by label |
+| `generate_dashboard_icons.py` | icon PNGs in `Art/UI/Icons/` | plain Python, redraws |
+| `export_vehicle_twin_recipe.py`, `rebuild_vehicle_twin_from_cad.py` | car rebuild experiment (BUG-002) | parked |
+
+**Learned (scripting the editor):**
+- A level, its lights and cameras can be made reproducible by script, so a numbers table on a build page becomes code you can re-run
+  and tune. Find actors by **label** and update them, so a re-run fixes values instead of duplicating actors.
+- Post Process settings need the `override_*` flag set for every value, or the volume silently keeps the project default.
+- Rotation is `Rotator(roll, pitch, yaw)`, which matches the details panel's X, Y, Z. Wrap `set_editor_property` so a wrong property
+  name for the engine version (5.7 here) is reported by name.
+- Only what needs no car can be scripted on the office laptop (`BP_VehicleTwin` is local-only): floor, lights, cameras. Framing and the
+  light on the paint still need a look with the car.
+- A camera that looked "under the floor" was the floor's Z being off, not the camera: check the reference actor's transform first.
+
+**Broke:** the first build on the office laptop failed with a wall of `UE_LOG` errors (`use of undefined type FLogCategoryLogVehicleTelemetry`).
+**Learned:** the first error in the UBT log (`Log.txt`, not the pasted tail) was `C2011 'struct' type redefinition`. Three `.cpp` files each
+had `DEFINE_LOG_CATEGORY_STATIC(LogVehicleTelemetry, ...)`. Unreal merges `.cpp` files into one translation unit (a *unity build*), and
+adding the dashboard files changed which files were grouped, so the three definitions landed together. The rest were knock-on errors.
+Fix: one shared category, `DECLARE_LOG_CATEGORY_EXTERN` in `Telemetry/TelemetryLog.h`, one `DEFINE_LOG_CATEGORY` in
+`TelemetrySubsystem.cpp`. Rule: a log category used by more than one file is declared in a header and defined once; `_STATIC` only
+for a category used by a single `.cpp`. Compile errors: read the **first** one.
