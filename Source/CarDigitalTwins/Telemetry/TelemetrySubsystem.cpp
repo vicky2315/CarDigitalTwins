@@ -8,7 +8,9 @@
 #include "Telemetry/TelemetrySettings.h"
 #include "Telemetry/WebSocketTelemetryReceiver.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogVehicleTelemetry, Log, All);
+#include "Telemetry/TelemetryLog.h"
+
+DEFINE_LOG_CATEGORY(LogVehicleTelemetry);
 
 // Twin.EngineDerate 1/0: sends the SPEC.md §2.5 command by hand, to the game world the console belongs to (each PIE window has its own).
 static FAutoConsoleCommandWithWorldAndArgs EngineDerateConsoleCommand(

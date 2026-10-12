@@ -12,7 +12,7 @@
 #include "Serialization/JsonWriter.h"
 #include "WebSocketsModule.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogVehicleTelemetry, Log, All);
+#include "Telemetry/TelemetryLog.h"
 
 namespace WebSocketTelemetryReceiverConstants
 {

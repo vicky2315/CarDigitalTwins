@@ -7,7 +7,7 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogVehicleTelemetry, Log, All);
+#include "Telemetry/TelemetryLog.h"
 
 bool UFileTelemetryReceiver::StartReceiving()
 {
