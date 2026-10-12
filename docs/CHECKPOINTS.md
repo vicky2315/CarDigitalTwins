@@ -2,6 +2,20 @@
 
 Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
+## Checkpoint (2026-10-12, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+
+Commit: the handoff commit `7b8b536` on `main`, pushed. Working tree: Config `DefaultGame.ini` (source = WebSocket) and
+`DefaultEngine.ini` changed by the editor, kept out of commits; the other `Content/Maps/` levels untracked on purpose.
+
+**Where I stopped:** handing off to the office laptop. Part A1 done: `L_TwinStudio` created, empty, now **in git** (first level in
+git; the other maps stay local). A2 done: `MPC_TwinStudio` (scalar `GroundScrollCm` = 0) at `/Game/Twin/Studio/Materials/` (a
+`Materials` subfolder, unlike the build page). A3 not done: `Tools/UnrealEditor/create_studio_floor_material.py` written, not run.
+
+**Resume (office laptop):** git pull, Part C build + M1–M9, A3 script, Parts B, D, E; A4–A8 and F need `BP_VehicleTwin`.
+
+**Unverified:** floor material script never run; dashboard C++ compiles but nothing has run. Part A camera/light values calculated,
+not seen.
+
 ## Checkpoint (2026-10-10, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
 Commit: `24a1503` on `main` (+ this checkpoint fix), pushed. Working tree: clean except Config `DefaultGame.ini` (source =
