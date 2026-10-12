@@ -2,6 +2,39 @@
 
 Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
+## Checkpoint (2026-10-12, office laptop `DESKTOP-MRMGNPL`, RTX 4060 Ti)
+
+Commit: `493f78f` on `main`, pushed (`5ee045f` is the build fix before it). Working tree: clean apart from editor-changed Config
+files, kept out of commits; the other `Content/Maps/` levels untracked on purpose.
+
+**Where I stopped:** Part A done except the car-dependent steps, in `L_TwinStudio` (in git). A3 `M_StudioFloor` made by script.
+A4 floor placed (its Z was off, fixed by hand). A5 lights + unbound manual-exposure volume by
+`Tools/UnrealEditor/create_studio_lighting.py` (look checked on the empty floor only). A8 four tagged cameras by
+`Tools/UnrealEditor/create_studio_cameras.py` (framing not judged without the car). Both scripts update by label: change the constants
+at the top and re-run. Build fix: `LogVehicleTelemetry` was defined in three `.cpp` files and collided in the unity build; now one
+`TelemetryLog.h` and a single define in `TelemetrySubsystem.cpp`.
+
+**Resume:**
+1. Part C with the editor closed: build `CarDigitalTwinsEditor` (a build after the log fix is not confirmed yet); open the editor,
+   Session Frontend › Automation `CarDigitalTwins.MVVM` → expect 9 green (M1–M9). Part D's parent classes only exist after this build.
+2. Parts B, D, E of the build page (fonts, icons, the WBPs): https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u. Commit per part.
+   **Push before going home.**
+3. Personal laptop (needs `BP_VehicleTwin`, `Content/Jeep/`, gitignored): A6 place the car, A7 callout anchors, then F; frame the four
+   cameras by eye (F3) and judge the lights on the paint (tune `create_studio_lighting.py`, re-run).
+4. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull. Once the car
+   is placed in `L_TwinStudio` (A6, personal laptop), the office copy will show a missing-asset reference: expected.
+
+**Unverified:** dashboard C++ compiled before the log fix, but tests M1–M9 and every widget have not run; still open:
+UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning. Light and camera values are calculated, not seen with the car.
+Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE
+start; Day 10 "can't connect: no details" wording.
+
+**Open decisions:** showroom mode (after H1); GrabCAD license / mesh redistribution (ASSETS.md); private asset repo for
+`Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field Guide.
+
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin`, `Rebuilt/`),
+`Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`.
+
 ## Checkpoint (2026-10-12, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
 Commit: the handoff commit `7b8b536` on `main`, pushed. Working tree: Config `DefaultGame.ini` (source = WebSocket) and

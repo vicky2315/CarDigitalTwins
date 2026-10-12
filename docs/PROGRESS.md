@@ -1,45 +1,45 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
-Last updated: 2026-10-12
-Current day: **Day 11** dashboard: build page Parts A–F; A1–A5 and A8 done (office laptop); C, B, D, E next; A6, A7, F need the car (personal laptop).
-Days 1–10 complete. Day 11 MVVM steps 2–5 done; 6–8 and the dashboard written and building, tests not run.
+Last updated: 2026-10-13
+Current day: **Day 11** dashboard: build page A1–A8, B, D1–D10, E1–E5 done; E6–E11 next (office PC), then F (personal laptop).
+Days 1–10 complete. Day 11 MVVM steps 2–5 done; 6–8 and the dashboard written and building, dashboard WBPs half built, tests not run.
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
 then HMI; the portfolio shows both on one data pipeline.
 
-## Checkpoint (2026-10-12, office laptop `DESKTOP-MRMGNPL`, RTX 4060 Ti)
+## Checkpoint (2026-10-13, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commit: `493f78f` on `main`, pushed (`5ee045f` is the build fix before it). Working tree: clean apart from editor-changed Config
-files, kept out of commits; the other `Content/Maps/` levels untracked on purpose.
+Commit: `91b533b` on `main`, pushed. Working tree: editor-changed Config `.ini` files and `CarDigitalTwins.uproject.DotSettings.user`
+kept out of commits; the other `Content/Maps/` levels untracked on purpose.
 
-**Where I stopped:** Part A done except the car-dependent steps, in `L_TwinStudio` (in git). A3 `M_StudioFloor` made by script.
-A4 floor placed (its Z was off, fixed by hand). A5 lights + unbound manual-exposure volume by
-`Tools/UnrealEditor/create_studio_lighting.py` (look checked on the empty floor only). A8 four tagged cameras by
-`Tools/UnrealEditor/create_studio_cameras.py` (framing not judged without the car). Both scripts update by label: change the constants
-at the top and re-run. Build fix: `LogVehicleTelemetry` was defined in three `.cpp` files and collided in the unity build; now one
-`TelemetryLog.h` and a single define in `TelemetrySubsystem.cpp`.
+**Where I stopped:** dashboard WBPs D1–D10 and E1–E5 done and pushed in `91b533b` (editor built here with the new C++ parents).
+B done: fonts `F_Barlow` / `F_BarlowCondensed` and the 7 icons, at `/Game/Art/UI/` (not `/Game/UI/`); WBPs at `/Game/Blueprints/UI/`
+(parts in `Dashboard/Parts/`). A6 car placed in `L_TwinStudio`; A7 three callout anchors added to `BP_VehicleTwin` by
+`Tools/UnrealEditor/create_callout_anchors.py`. Next on the build page: E6.
 
-**Resume:**
-1. Part C with the editor closed: build `CarDigitalTwinsEditor` (a build after the log fix is not confirmed yet); open the editor,
-   Session Frontend › Automation `CarDigitalTwins.MVVM` → expect 9 green (M1–M9). Part D's parent classes only exist after this build.
-2. Parts B, D, E of the build page (fonts, icons, the WBPs): https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u. Commit per part.
-   **Push before going home.**
-3. Personal laptop (needs `BP_VehicleTwin`, `Content/Jeep/`, gitignored): A6 place the car, A7 callout anchors, then F; frame the four
-   cameras by eye (F3) and judge the lights on the paint (tune `create_studio_lighting.py`, re-run).
-4. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull. Once the car
-   is placed in `L_TwinStudio` (A6, personal laptop), the office copy will show a missing-asset reference: expected.
+**Resume (office PC):**
+1. `git pull` (LFS fetches fonts and WBPs). Editor closed, build `CarDigitalTwinsEditor` (first office build after the log fix), then
+   Session Frontend › Automation `CarDigitalTwins.MVVM` → expect 9 green (M1–M9). `L_TwinStudio` will warn about missing
+   `BP_VehicleTwin`: expected.
+2. Build page E6–E11 (PowertrainPanel, TyresPanel, BodyPanel, SidePanel, CarCalloutLayer, TwinOpsHUD):
+   https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u. Panel frame = Background Blur › Border per panel (E0), no separate widget.
+   Commit per part, **push before going home**.
+3. Personal laptop: F (settings, play against the relay), frame the four cameras by eye (F3), judge the lights on the paint.
+4. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
 
-**Unverified:** dashboard C++ compiled before the log fix, but tests M1–M9 and every widget have not run; still open:
-UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning. Light and camera values are calculated, not seen with the car.
+**Unverified:** tests M1–M9 not run on either machine; no widget seen running in PIE. Callout anchor places not checked on the car.
+Still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning; light and camera values not judged with the car.
 Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE
 start; Day 10 "can't connect: no details" wording.
 
 **Open decisions:** showroom mode (after H1); GrabCAD license / mesh redistribution (ASSETS.md); private asset repo for
-`Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field Guide.
+`Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field Guide; clean up the unused
+font faces and duplicate `.ttf` folders in `/Game/Art/UI/Fonts/` (only 4 faces are used); build page fixes: B3 label is
+`Uncompressed (RGBA8)` in 5.7, asset folders differ from the page.
 
-**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin`, `Rebuilt/`),
-`Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`.
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin` now with the callout
+anchors, `Rebuilt/`), `Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`.
 
 ## Phase A: Single-car digital twin
 
@@ -166,7 +166,7 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
       Mock: https://claude.ai/artifact/TsApXH75XFbcd2muKzLx3m · build page: https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u
       C++ written, not built: `UConnectionViewModel`, `UVehicleEventLogViewModel`, `UDashboardViewModel`, command records on
       `UTelemetrySubsystem`, `Dashboard/` (settings, game mode, player controller with SetViewTargetWithBlend), car callout anchors +
-      studio floor scroll, 22 widget classes in `UI/`, icons in `Art/UI/Icons/`. To do: Parts A–F of the build page (A, B need no build).
+      studio floor scroll, 22 widget classes in `UI/`, icons in `Art/UI/Icons/`. Build page: A, B, D, E1–E5 done (2026-10-13); E6–E11, F to do.
 
 ### Day 12: Profiling and latency
 - [ ] Insights trace; Invalidation/Retainer before/after
