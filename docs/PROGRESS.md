@@ -1,38 +1,42 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
-Last updated: 2026-10-10
-Current day: **Day 11** dashboard: build page Parts A–F (C++ builds). Twin completion done 2026-10-10 (T1 + T3; T2 optional).
+Last updated: 2026-10-12
+Current day: **Day 11** dashboard: build page Parts A–F; A1 + A2 done, handing off to the office laptop for C, A3, B, D, E.
 Days 1–10 complete. Day 11 MVVM steps 2–5 done; 6–8 and the dashboard written and building, tests not run.
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
 then HMI; the portfolio shows both on one data pipeline.
 
-## Checkpoint (2026-10-10, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+## Checkpoint (2026-10-12, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commit: `24a1503` on `main` (+ this checkpoint fix), pushed. Working tree: clean except Config `DefaultGame.ini` (source =
-WebSocket) and `DefaultEngine.ini`, changed by the editor and kept out of commits; `Content/Maps/` untracked on purpose.
+Commit: the handoff commit on top of `4bcd413` on `main`, pushed. Working tree: Config `DefaultGame.ini` (source = WebSocket) and
+`DefaultEngine.ini` changed by the editor, kept out of commits; the other `Content/Maps/` levels untracked on purpose.
 
-**Where I stopped:** T1 done end to end (`33e884c`, PIE checked), T2 moved to optional (`a8d8f7d`); both pushed. Day 11 steps 2–5
-committed (`6c65e00`..`861ee81`). Dashboard designed and decided (D1–D7, dark studio level), mock and build page published; all C++
-for steps 6–8 and the dashboard written; it builds (one fix: `Units = "px"` removed). Starting Parts A–F next session.
+**Where I stopped:** handing off to the office laptop. Part A1 done: `L_TwinStudio` created, empty, now **in git** (first level in
+git; the other maps stay local). A2 done: `MPC_TwinStudio` (scalar `GroundScrollCm` = 0) at `/Game/Twin/Studio/Materials/` (a
+`Materials` subfolder, unlike the build page). A3 not done: `Tools/UnrealEditor/create_studio_floor_material.py` written, not run.
 
-**Resume:**
-1. Build page Parts A + B with the editor open (studio level `L_TwinStudio`, MPC + floor material, lights, 4 tagged cameras, 3
-   anchors in `BP_VehicleTwin`, Barlow fonts, icons): https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u
-2. Part C is built and committed: open the editor, Session Frontend `CarDigitalTwins.MVVM` → expect 9 green (M1–M9, not run yet).
-3. Parts D–F: the 21 WBPs, settings, PIE vs `relay.py --source live --loop --rate 20`; commit per part, push. Mock for comparison:
-   https://claude.ai/artifact/TsApXH75XFbcd2muKzLx3m
+**Resume (office laptop):**
+1. `git pull` (LFS installed), then Part C with the editor closed: build `CarDigitalTwinsEditor`; open the editor, Session Frontend
+   › Automation `CarDigitalTwins.MVVM` → expect 9 green (M1–M9). Part D's parent classes only exist after this build.
+2. A3: Output Log console in **Cmd** mode (Python mode gives `SyntaxError`), run
+   `py "<project>/Tools/UnrealEditor/create_studio_floor_material.py"` → expect `Created /Game/Twin/Studio/Materials/M_StudioFloor`.
+3. Parts B, D, E of the build page (fonts, icons, the WBPs): https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u. Commit per part.
+   **Push before going home.** A4–A8 and F need `BP_VehicleTwin` (`Content/Jeep/`, gitignored): personal laptop only.
+4. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull. Once the car
+   is placed in `L_TwinStudio` (A6, personal laptop), the office copy will show a missing-asset reference: expected.
 
-**Unverified:** dashboard C++ compiles but nothing has run (tests M1–M9, any widget); still open: UMG float font sizes,
-BackgroundBlur Corner Radius, Custom node LWC warning. Camera/light start values in Part A are calculated, not seen. Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4
-`CarRoot` facing warning; doubled outline with editor preview at PIE start; Day 10 "can't connect: no details" wording.
+**Unverified:** floor material script never run; dashboard C++ compiles but nothing has run (tests M1–M9, any widget); still open:
+UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning. Part A camera/light values calculated, not seen.
+Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE
+start; Day 10 "can't connect: no details" wording.
 
 **Open decisions:** showroom mode (after H1); GrabCAD license / mesh redistribution (ASSETS.md); private asset repo for
-`Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field Guide (links to the dashboard pages added).
+`Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field Guide.
 
 **Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin`, `Rebuilt/`),
-`Content/Maps/` levels (the new `L_TwinStudio` will live there too), raw CAD in `RawCAD/`. `mvvm-reference` is now on origin.
+`Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`.
 
 ## Phase A: Single-car digital twin
 

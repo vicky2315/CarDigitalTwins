@@ -2,6 +2,32 @@
 
 Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
+## Checkpoint (2026-10-10, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+
+Commit: `24a1503` on `main` (+ this checkpoint fix), pushed. Working tree: clean except Config `DefaultGame.ini` (source =
+WebSocket) and `DefaultEngine.ini`, changed by the editor and kept out of commits; `Content/Maps/` untracked on purpose.
+
+**Where I stopped:** T1 done end to end (`33e884c`, PIE checked), T2 moved to optional (`a8d8f7d`); both pushed. Day 11 steps 2–5
+committed (`6c65e00`..`861ee81`). Dashboard designed and decided (D1–D7, dark studio level), mock and build page published; all C++
+for steps 6–8 and the dashboard written; it builds (one fix: `Units = "px"` removed). Starting Parts A–F next session.
+
+**Resume:**
+1. Build page Parts A + B with the editor open (studio level `L_TwinStudio`, MPC + floor material, lights, 4 tagged cameras, 3
+   anchors in `BP_VehicleTwin`, Barlow fonts, icons): https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u
+2. Part C is built and committed: open the editor, Session Frontend `CarDigitalTwins.MVVM` → expect 9 green (M1–M9, not run yet).
+3. Parts D–F: the 21 WBPs, settings, PIE vs `relay.py --source live --loop --rate 20`; commit per part, push. Mock for comparison:
+   https://claude.ai/artifact/TsApXH75XFbcd2muKzLx3m
+
+**Unverified:** dashboard C++ compiles but nothing has run (tests M1–M9, any widget); still open: UMG float font sizes,
+BackgroundBlur Corner Radius, Custom node LWC warning. Camera/light start values in Part A are calculated, not seen. Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4
+`CarRoot` facing warning; doubled outline with editor preview at PIE start; Day 10 "can't connect: no details" wording.
+
+**Open decisions:** showroom mode (after H1); GrabCAD license / mesh redistribution (ASSETS.md); private asset repo for
+`Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field Guide (links to the dashboard pages added).
+
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin`, `Rebuilt/`),
+`Content/Maps/` levels (the new `L_TwinStudio` will live there too), raw CAD in `RawCAD/`. `mvvm-reference` is now on origin.
+
 ## Checkpoint (2026-10-09, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
 Commit: `bc69473` on `main`, pushed. Working tree: T1 steps 1–2 uncommitted (`docs/SPEC.md`, `docs/TESTS.md`,
