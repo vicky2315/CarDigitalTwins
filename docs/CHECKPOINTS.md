@@ -2,6 +2,39 @@
 
 Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
+## Checkpoint (2026-10-13, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+
+Commit: `91b533b` on `main`, pushed. Working tree: editor-changed Config `.ini` files and `CarDigitalTwins.uproject.DotSettings.user`
+kept out of commits; the other `Content/Maps/` levels untracked on purpose.
+
+**Where I stopped:** dashboard WBPs D1–D10 and E1–E5 done and pushed in `91b533b` (editor built here with the new C++ parents).
+B done: fonts `F_Barlow` / `F_BarlowCondensed` and the 7 icons, at `/Game/Art/UI/` (not `/Game/UI/`); WBPs at `/Game/Blueprints/UI/`
+(parts in `Dashboard/Parts/`). A6 car placed in `L_TwinStudio`; A7 three callout anchors added to `BP_VehicleTwin` by
+`Tools/UnrealEditor/create_callout_anchors.py`. Next on the build page: E6.
+
+**Resume (office PC):**
+1. `git pull` (LFS fetches fonts and WBPs). Editor closed, build `CarDigitalTwinsEditor` (first office build after the log fix), then
+   Session Frontend › Automation `CarDigitalTwins.MVVM` → expect 9 green (M1–M9). `L_TwinStudio` will warn about missing
+   `BP_VehicleTwin`: expected.
+2. Build page E6–E11 (PowertrainPanel, TyresPanel, BodyPanel, SidePanel, CarCalloutLayer, TwinOpsHUD):
+   https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u. Panel frame = Background Blur › Border per panel (E0), no separate widget.
+   Commit per part, **push before going home**.
+3. Personal laptop: F (settings, play against the relay), frame the four cameras by eye (F3), judge the lights on the paint.
+4. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
+
+**Unverified:** tests M1–M9 not run on either machine; no widget seen running in PIE. Callout anchor places not checked on the car.
+Still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning; light and camera values not judged with the car.
+Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE
+start; Day 10 "can't connect: no details" wording.
+
+**Open decisions:** showroom mode (after H1); GrabCAD license / mesh redistribution (ASSETS.md); private asset repo for
+`Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field Guide; clean up the unused
+font faces and duplicate `.ttf` folders in `/Game/Art/UI/Fonts/` (only 4 faces are used); build page fixes: B3 label is
+`Uncompressed (RGBA8)` in 5.7, asset folders differ from the page.
+
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin` now with the callout
+anchors, `Rebuilt/`), `Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`.
+
 ## Checkpoint (2026-10-12, office laptop `DESKTOP-MRMGNPL`, RTX 4060 Ti)
 
 Commit: `493f78f` on `main`, pushed (`5ee045f` is the build fix before it). Working tree: clean apart from editor-changed Config
