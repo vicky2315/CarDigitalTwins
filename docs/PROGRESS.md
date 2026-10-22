@@ -1,40 +1,39 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
-Last updated: 2026-10-14
-Current day: **Day 11** dashboard: build page A–E done (E1–E11 WBPs built, 2026-10-14); UI fixes, tests and F (hook up, play) next.
-Days 1–10 complete. Day 11 MVVM steps 2–5 done; 6–8 and the dashboard written and building, dashboard WBPs built (A–E), tests not run.
+Last updated: 2026-10-23
+Current day: **Day 11** dashboard: build page A–E done (E1–E11 WBPs built, 2026-10-14), UI fixes done (2026-10-23); MVVM tests M1–M9 pass (2026-10-23); part rings and F (hook up, play) next.
+Days 1–10 complete. Day 11 MVVM steps 2–5 done; 6–7 done (tests pass), 8 and the dashboard built, dashboard WBPs built (A–E).
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
 then HMI; the portfolio shows both on one data pipeline.
 
-## Checkpoint (2026-10-14, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+## Checkpoint (2026-10-23, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commit: checkpoint commit after `923e645` on `main`, pushed (includes `DefaultGame.ini` with F1 `HudWidgetClass` = `WBP_TwinOpsHUD`).
+Commit: checkpoint commit after `6bf70a8` on `main`, pushed (UI fix `.uasset`s, PROGRESS/TESTS updates).
 Working tree: `DefaultEngine.ini` (startup map `L_VehicleTwin`) and `CarDigitalTwins.uproject.DotSettings.user` kept out of commits; `ImportTestMap` and `L_VehicleTwin` untracked on purpose.
 
-**Where I stopped:** build page Part E finished: E6 `WBP_PowertrainPanel` (in `91b533b`), E7–E11 `WBP_TyresPanel`, `WBP_BodyPanel`,
-`WBP_SidePanel`, `WBP_CarCalloutLayer`, `HUD/WBP_TwinOpsHUD` in `923e645`. Some UI issues seen at the end of the session, not written down yet.
-Build page updated: E11 canvas slot fields named as the Details panel shows them (Offset vs Position/Size per anchor), E10 slot anchors
-stay top-left (C++ sets alignment, size, position), E11 waiting-panel frame rows spelled out.
+**Where I stopped:** UI issues from 2026-10-14 fixed (layout adjustments to match the mock; 12 dashboard WBPs in this commit). MVVM automation
+tests run headless: M1–M9 all pass (TESTS.md §7; headless needs the `RestoreOpenAssetTabsOnRestart=NeverRestore` override, TESTS.md top).
+Part rings not seen on the car yet: by design hidden until a part leaves Normal (Day 11 backlog has the timings and checks).
 
 **Resume (personal laptop):**
-1. Write down the UI issues from 2026-10-14 here, then fix them.
-2. Session Frontend › Automation `CarDigitalTwins.MVVM` → expect 9 green (M1–M9).
-3. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 settings (HUD Widget Class done and committed; Telemetry Source WebSocket, GameMode Override
-   `TwinOpsGameMode` on `L_TwinStudio`, MPC on `BP_VehicleTwin`), F2 PIE against `python Tools/Relay/relay.py --source live --loop --rate 20`,
-   F3 frame the four cameras and judge the lights on the paint.
+1. Rings: relay `python Tools/Relay/relay.py --source live --loop --rate 20` + PIE, wait > 90 s → hood ring pulses amber (coolant ≥ 105 °C),
+   ~153 s RR wheel ring. Not there → check `WBP_PartRing` copies in `CalloutCanvas` (`RingSignal`, anchor tag) and the tag on `BP_VehicleTwin`.
+2. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 Telemetry Source WebSocket, GameMode Override `TwinOpsGameMode`
+   on `L_TwinStudio`, MPC on `BP_VehicleTwin`; F2 PIE against the relay; F3 frame the four cameras.
+3. Studio lighting looks off: retune `L_TwinStudio` lights on the paint together with F3 (Day 11 backlog).
 4. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
 
-**Unverified:** tests M1–M9 not run on either machine; no widget seen running in PIE (HUD, callouts, camera blends). Callout anchor places
-not checked on the car. Still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning; light and camera values not
-judged with the car. Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at
-PIE start; Day 10 "can't connect: no details" wording.
+**Unverified:** part rings never seen running; callout anchor places not checked on the car; camera blends; `UViewModelSubsystem` once-per-frame
+flush (M10 not written). Check whether still open after the UI fixes: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC
+warning. Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE start;
+Day 10 "can't connect: no details" wording.
 
-**Open decisions:** showroom mode (after H1); GrabCAD license / mesh
-redistribution (ASSETS.md); private asset repo for `Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the
-Vehicle Twin Field Guide; clean up unused font faces and duplicate `.ttf` folders in `/Game/Art/UI/Fonts/` (4 faces used); build page fixes:
-B3 label is `Uncompressed (RGBA8)` in 5.7, asset folders on the page (`/Game/UI/...`) differ from the project (`/Game/Art/UI/`, `/Game/Blueprints/UI/`).
+**Open decisions:** idle (dim) ring when all Normal, if the mock shows one; showroom mode (after H1); GrabCAD license / mesh redistribution
+(ASSETS.md); private asset repo for `Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field
+Guide; clean up unused font faces and duplicate `.ttf` folders in `/Game/Art/UI/Fonts/` (4 faces used); build page fixes: B3 label is
+`Uncompressed (RGBA8)` in 5.7, asset folders on the page (`/Game/UI/...`) differ from the project (`/Game/Art/UI/`, `/Game/Blueprints/UI/`).
 
 **Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin` with the callout anchors,
 `Rebuilt/`), `Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`.
@@ -157,14 +156,22 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 - [x] 3. `UViewModelBase` part 1: dirty bits + `Flush` (multicast delegate)
 - [x] 4. `UViewModelBase` part 2: `SetField` (compare-before-set, float tolerance)
 - [x] 5. `UVehicleTelemetryViewModel`: field enum, getters, `ApplyTelemetrySample`
-- [ ] 6. Automation tests (`CarDigitalTwins.MVVM.Core`, M1–M9) ← written 2026-10-10, waiting for build + run
-- [ ] 7. `Subscribe` + `FViewModelSubscription` (RAII unsubscribe) ← written 2026-10-10, waiting for build
-- [ ] 8. `UViewModelSubsystem`: creates/holds ViewModels, once-per-frame flush ← written 2026-10-10, waiting for build
+- [x] 6. Automation tests (`CarDigitalTwins.MVVM.Core`, M1–M9): all 9 pass (2026-10-23, personal laptop, headless; TESTS.md §7)
+- [x] 7. `Subscribe` + `FViewModelSubscription` (RAII unsubscribe): built, M9 passes (2026-10-23)
+- [ ] 8. `UViewModelSubsystem`: creates/holds ViewModels, once-per-frame flush ← built; M10 test not written, not yet seen in PIE
 - [ ] 9. Dashboard (decided 2026-10-10, D1–D7 on the mock: four views with camera blends, HMI rules, dark studio level).
       Mock: https://claude.ai/artifact/TsApXH75XFbcd2muKzLx3m · build page: https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u
       C++ written, not built: `UConnectionViewModel`, `UVehicleEventLogViewModel`, `UDashboardViewModel`, command records on
       `UTelemetrySubsystem`, `Dashboard/` (settings, game mode, player controller with SetViewTargetWithBlend), car callout anchors +
-      studio floor scroll, 22 widget classes in `UI/`, icons in `Art/UI/Icons/`. Build page: A, B, D, E1–E11 done (2026-10-14); F and UI fixes to do.
+      studio floor scroll, 22 widget classes in `UI/`, icons in `Art/UI/Icons/`. Build page: A, B, D, E1–E11 done (2026-10-14); UI fixes
+      done (2026-10-23); F to do.
+      Backlog (added 2026-10-23):
+      - [ ] **Part rings not seen on the car.** By design, `UTwinPartRingWidget` is hidden at Play (Collapsed) until its part leaves Normal:
+            the hood ring shows when coolant ≥ 105 °C or rpm is off (the live sim crosses 105 °C ~86 s into each loop), and the RR wheel ring
+            shows when the tyre drops below 180 kPa (~153 s). Check first: let PIE run past 90 s, then confirm the `WBP_PartRing` copies are inside
+            `CalloutCanvas` with `RingSignal` + anchor tag set and the tag exists on `BP_VehicleTwin`. If the mock shows rings while everything is
+            Normal, decide whether to add a dim idle ring.
+      - [ ] **Studio lighting looks off** (next session): judge and retune the `L_TwinStudio` lights on the paint together with F3 camera framing.
 
 ### Day 12: Profiling and latency
 - [ ] Insights trace; Invalidation/Retainer before/after

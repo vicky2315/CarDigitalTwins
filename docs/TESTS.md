@@ -15,8 +15,11 @@ Runs in a few seconds and doesn't need Unreal. A test marked `xfail` flags an op
 it turns into an error (`XPASS(strict)`) once the bug is fixed, as a reminder to remove the marker.
 
 **Unreal (C++ automation):** _planned, see sections 2–3 below._ Headless:
-`UnrealEditor-Cmd.exe CarDigitalTwins.uproject -ExecCmds="Automation RunTests CarDigitalTwins; Quit" -nullrhi -unattended -log`.
-Needs a compiled editor, so don't run it while another session is building.
+`UnrealEditor-Cmd.exe CarDigitalTwins.uproject -ExecCmds="Automation RunTests CarDigitalTwins; Quit" -nullrhi -unattended -log`
+`"-ini:EditorPerProjectUserSettings:[/Script/UnrealEd.EditorLoadingSavingSettings]:RestoreOpenAssetTabsOnRestart=NeverRestore"`.
+The `-ini` override matters: without it the editor reopens the asset editors left open last session, and under `-nullrhi` that
+crashes (`GetRestoredDimensions is not expected to be called on this platform`) before any test runs. It can run while the normal
+editor is open. Needs a compiled editor, so don't run it while another session is building.
 
 ## Conventions
 - Python tests live in `Tools/TripGenerator/tests/`; Unreal tests will live in `Source/CarDigitalTwins/Tests/`, so test work never
@@ -95,6 +98,8 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 | W5 | Live relay (manual, PIE) | See PROGRESS Day 10 checks: Live, drop count, Stale on pause, reconnect with backoff, relay started after PIE |
 
 ## 7. MVVM core (Unreal C++, `CarDigitalTwins.MVVM.Core`): written 2026-10-10, Day 11 step 6
+
+**Run 2026-10-23 (personal laptop, headless): M1–M9 all pass.** M10 is not written yet.
 
 `Source/CarDigitalTwins/Tests/ViewModelCoreTests.cpp`. No world or assets needed. Listeners bind to `OnFieldsChanged` directly
 until `Subscribe` exists (step 7; M9–M10 below come with it).
