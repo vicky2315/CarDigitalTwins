@@ -43,6 +43,9 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UTwinPartRingWidget>> PartRings;
 
+	// Rings already reported as unplaceable, so the warning logs once per ring.
+	TSet<TObjectKey<UTwinPartRingWidget>> UnplacedPartRings;
+
 	// Parallel to CarCallouts: 0 = hidden, 1 = shown; eased towards the target each frame.
 	TArray<float> CalloutOpacities;
 

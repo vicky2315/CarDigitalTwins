@@ -8,6 +8,8 @@
 #include "UI/TwinHmiStyle.h"
 #include "UI/TwinPartRingWidget.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogTwinCallouts, Log, All);
+
 namespace CalloutLayerTiming
 {
 	static constexpr float FadeSeconds = 0.35f;
@@ -39,6 +41,8 @@ void UTwinCarCalloutLayerWidget::NativeConstruct()
 			PartRings.Add(PartRing);
 			ChildSlot->SetAlignment(FVector2D(0.5f, 0.5f));
 			ChildSlot->SetAutoSize(true);
+			UE_LOG(LogTwinCallouts, Log, TEXT("Part ring %s: signal %s, anchor %s."), *PartRing->GetName(),
+				*UEnum::GetValueAsString(PartRing->GetRingSignal()), *PartRing->GetAnchorTag().ToString());
 		}
 	}
 	CalloutOpacities.Init(0.f, CarCallouts.Num());
@@ -159,9 +163,19 @@ void UTwinCarCalloutLayerWidget::NativeTick(const FGeometry& MyGeometry, float I
 	for (UTwinPartRingWidget* PartRing : PartRings)
 	{
 		FVector2D RingScreenPosition;
-		if (TwinOpsPlayerController->ProjectCarAnchorToWidgetPosition(PartRing->GetAnchorTag(), FVector::ZeroVector, RingScreenPosition))
+		const bool bIsOnScreen = TwinOpsPlayerController->ProjectCarAnchorToWidgetPosition(PartRing->GetAnchorTag(), FVector::ZeroVector,
+			RingScreenPosition);
+		if (bIsOnScreen)
 		{
 			Cast<UCanvasPanelSlot>(PartRing->Slot)->SetPosition(RingScreenPosition);
 		}
+		if (!bIsOnScreen && !UnplacedPartRings.Contains(PartRing))
+		{
+			UnplacedPartRings.Add(PartRing);
+			UE_LOG(LogTwinCallouts, Warning, TEXT("Part ring %s can't be placed: no component on the car carries %s (or it is off screen)."),
+				*PartRing->GetName(), *PartRing->GetAnchorTag().ToString());
+		}
+		// No car or no anchor: hide it rather than leave it at its designer position (top left).
+		PartRing->SetRenderOpacity(bIsOnScreen ? 1.f : 0.f);
 	}
 }
