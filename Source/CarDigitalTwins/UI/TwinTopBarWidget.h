@@ -13,6 +13,7 @@ class UBorder;
 class UImage;
 class UTextBlock;
 class UTexture2D;
+class UTwinMarqueeTextWidget;
 
 UCLASS()
 class UTwinTopBarWidget : public UTwinViewModelWidget
@@ -56,8 +57,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> LinkStateText;
 
+	// WBP_MarqueeText: the receiver URL while connecting is longer than the chip.
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> LinkDetailText;
+	TObjectPtr<UTwinMarqueeTextWidget> LinkDetailText;
 
 	// T_Icon_StatusOk: the circled tick shown while everything is Normal.
 	UPROPERTY(EditAnywhere, Category = "Top Bar")
@@ -80,4 +82,7 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UConnectionViewModel> ConnectionViewModel;
+
+	// The link detail restarts its scroll when the state (and so what it says) changes, not on every countdown tick.
+	TOptional<ETelemetryConnectionState> LastLinkState;
 };

@@ -5,6 +5,7 @@
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "UI/TwinHmiStyle.h"
+#include "UI/TwinMarqueeTextWidget.h"
 
 namespace TopBarText
 {
@@ -214,6 +215,11 @@ void UTwinTopBarWidget::RefreshTopBar()
 	if (LinkDetailText)
 	{
 		LinkDetailText->SetText(FText::FromString(LinkDetail));
-		LinkDetailText->SetColorAndOpacity(FSlateColor(TwinHmiColors::TextSecondary()));
+		LinkDetailText->SetTextColor(FSlateColor(TwinHmiColors::TextSecondary()));
+		if (LastLinkState != ConnectionState)
+		{
+			LinkDetailText->RestartScroll();
+		}
 	}
+	LastLinkState = ConnectionState;
 }
