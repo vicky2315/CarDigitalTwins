@@ -99,7 +99,7 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 
 ## 7. MVVM core (Unreal C++, `CarDigitalTwins.MVVM.Core`): written 2026-10-10, Day 11 step 6
 
-**Run 2026-10-23 (personal laptop, headless): M1–M9 all pass.** M10 is not written yet.
+**Run 2026-10-23 (personal laptop, headless): M1–M9 all pass.** **Run 2026-10-23 (office laptop, headless): M1–M11 all pass.**
 
 `Source/CarDigitalTwins/Tests/ViewModelCoreTests.cpp`. No world or assets needed. Listeners bind to `OnFieldsChanged` directly
 until `Subscribe` exists (step 7; M9–M10 below come with it).
@@ -115,7 +115,12 @@ until `Subscribe` exists (step 7; M9–M10 below come with it).
 | M7 | Status and drive mode | Coolant Warning + `EngineDerate` mark overall status, coolant status and drive mode only |
 | M8 | Change during flush | A listener's change during a broadcast goes out with the next `Flush`, not lost |
 | M9 | Subscribe (step 7) | Fires once at once with all fields; RAII handle unsubscribes on destruction |
-| M10 | Subsystem flush (step 8) | Dirty ViewModels flushed once per frame |
+| M10 | Subsystem flush (step 8) | One `Tick` flushes each ViewModel with changes once (two samples + a view change → one broadcast each, with all changes); idle `Tick` sends nothing; only the changed ViewModel broadcasts |
+| M11 | Subsystem lifetime (step 8) | `GetViewModel` returns one ViewModel per class, owned by the subsystem; after `Deinitialize` the old one isn't flushed and a new request makes a new one |
+
+M10–M11: `Source/CarDigitalTwins/Tests/ViewModelSubsystemTests.cpp` (`CarDigitalTwins.MVVM.Subsystem`). The subsystem is made by hand on a
+bare `UGameInstance` (no world, no telemetry source) and the test calls `Tick` in place of the engine tick; the engine registration
+itself is checked in PIE.
 
 ## 6. Later (with the roadmap)
 - Day 7 `UTelemetrySubsystem`: receiver chosen from settings, one `OnTelemetryUpdated` per sample.

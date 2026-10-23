@@ -18,11 +18,11 @@ Working tree: `DefaultEngine.ini` and `DefaultGame.ini` (local `TelemetrySource=
 checked. Part rings: seen only in the top-left corner, also on the personal laptop with the Jeep. Cause found in `WBP_CarCalloutLayer`:
 the five ring copies (`RingHood`, `RingTyreFL/FR/RL/RR`) never had **Ring Signal** set (all Engine), and their Anchor Tag is most likely
 the default `CalloutAnchor.Hood`, which `BP_VehicleTwin` doesn't seem to carry, so the ring can't be placed and stays at its designer
-position. Code fix in `93af806` (**not built yet**): unplaceable rings are hidden, Play start logs each ring's signal and anchor
+position. Code fix in `93af806` (builds, office laptop; not seen running): unplaceable rings are hidden, Play start logs each ring's signal and anchor
 (`LogTwinCallouts`), one warning per ring that can't be placed. `WBP_CarCalloutLayer` now stretches in `WBP_TwinOpsHUD`.
 
 **Resume (personal laptop):**
-1. Pull, build (ring code is unbuilt), open the editor.
+1. Pull, build, open the editor.
 2. `WBP_CarCalloutLayer` › each ring copy › Part Ring: `RingHood` Engine / `CalloutAnchor.Engine`; `RingTyreFL` Tyre Front Left / `Wheel.FL`;
    `RingTyreFR` / `Wheel.FR`; `RingTyreRL` / `Wheel.RL`; `RingTyreRR` / `Wheel.RR`. Set on the instances, not in `WBP_PartRing` Class Defaults.
 3. Relay `python Tools/Relay/relay.py --source live --loop --rate 20` + PIE: Output Log `Part ring ...` lines show the settings; no
@@ -33,8 +33,8 @@ position. Code fix in `93af806` (**not built yet**): unplaceable rings are hidde
 6. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
 
 **Unverified:** ring diagnosis read from the binary asset, not seen in the editor; whether `BP_VehicleTwin` has a `CalloutAnchor.Hood` tag;
-part rings never seen on the car; callout anchor places not checked on the car; camera blends; `UViewModelSubsystem` once-per-frame flush
-(M10 not written). Check whether still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning. Older: SPEC §1 25
+part rings never seen on the car; callout anchor places not checked on the car; camera blends; `UViewModelSubsystem` engine tick seen in PIE
+(M10–M11 test it by hand, pass). Check whether still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning. Older: SPEC §1 25
 `Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE start; Day 10 "can't connect: no
 details" wording.
 
@@ -167,7 +167,7 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 - [x] 5. `UVehicleTelemetryViewModel`: field enum, getters, `ApplyTelemetrySample`
 - [x] 6. Automation tests (`CarDigitalTwins.MVVM.Core`, M1–M9): all 9 pass (2026-10-23, personal laptop, headless; TESTS.md §7)
 - [x] 7. `Subscribe` + `FViewModelSubscription` (RAII unsubscribe): built, M9 passes (2026-10-23)
-- [ ] 8. `UViewModelSubsystem`: creates/holds ViewModels, once-per-frame flush ← built; M10 test not written, not yet seen in PIE
+- [ ] 8. `UViewModelSubsystem`: creates/holds ViewModels, once-per-frame flush ← built; M10–M11 pass (2026-10-23, office laptop); not yet seen in PIE
 - [ ] 9. Dashboard (decided 2026-10-10, D1–D7 on the mock: four views with camera blends, HMI rules, dark studio level).
       Mock: https://claude.ai/artifact/TsApXH75XFbcd2muKzLx3m · build page: https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u
       C++ written, not built: `UConnectionViewModel`, `UVehicleEventLogViewModel`, `UDashboardViewModel`, command records on
