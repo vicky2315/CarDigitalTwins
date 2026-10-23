@@ -32,7 +32,7 @@ void UTwinViewTabWidget::NativePreConstruct()
 	if (StatusPipImage)
 	{
 		FSlateBrush PipBrush = TwinHmiBrushes::MakeRoundedBox(FLinearColor::White, TwinHmiColors::Transparent(), 0.f, 3.f);
-		PipBrush.ImageSize = FVector2D(14.f, 14.f);
+		PipBrush.ImageSize = FVector2D(10.f, 10.f);
 		StatusPipImage->SetBrush(PipBrush);
 		StatusPipImage->SetRenderTransformAngle(45.f);
 	}
