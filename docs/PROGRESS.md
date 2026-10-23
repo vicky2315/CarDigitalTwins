@@ -232,7 +232,7 @@ resolution, low latency, day/night themes, minimal distraction.
 ## Testing (parallel track, started 2026-10-07)
 Written in a separate session alongside the feature days. Plan and how to run: [TESTS.md](TESTS.md); bugs found: [BUGS.md](BUGS.md).
 - [x] 1. Trip generator pytest suite, P1–P8 (`Tools/TripGenerator/tests/`); found BUG-001 (`--rate` 3/7 fail validation, fixed 2026-10-07)
-- [ ] 2. Telemetry automation tests U1–U9 (needs Day 7 committed)
+- [x] 2. Telemetry automation tests U1–U9: all pass (2026-10-23, office laptop, headless; TESTS.md §2)
 - [ ] 3. `AVehicleTwinActor` automation tests V1–V7 (synthetic actor, no Jeep assets)
 - [ ] 4. Roadmap tests as days land (status thresholds Day 8, relay Day 9 done: R1–R6, MVVM Day 11)
 

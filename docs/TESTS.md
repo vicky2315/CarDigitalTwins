@@ -44,19 +44,24 @@ File: `Tools/TripGenerator/tests/test_trip_generator.py`.
 | P8 | Output format | One frame per line, LF endings, reads back with `json.load` equal to the generated trip |
 | P9 | Engine derate (T1, SPEC §2.5) | `driveMode` Normal without a command; `set_engine_derate` returns the next seq and is idempotent; derate at Critical (119.1 s): speed ≤ 50.5 km/h, coolant < 112 °C within 20 s then stays ≥ 105 °C while running; rpm cap 2500 reached and held while accelerating; switching off restores 90 km/h |
 
-## 2. Telemetry (Unreal C++): planned
+## 2. Telemetry (Unreal C++, `CarDigitalTwins.Telemetry.FileReceiver`): written 2026-10-23
+
+**Run 2026-10-23 (office laptop, headless): U1–U9 all pass.** `Source/CarDigitalTwins/Tests/FileTelemetryReceiverTests.cpp`. U1 reads
+the committed `Data/Trips/trip_sample.json`; the rest write small trips to `Saved/Automation/TelemetryTests/` and delete them afterwards.
+U3's rejection log lines are declared as expected, so they don't fail the run. Test names must not contain a dot (Unreal splits the
+path there). The subsystem side (receiver chosen from settings, one `OnTelemetryUpdated` per sample) is still under §6 "Later".
 
 | # | Test | Checks |
 |---|------|--------|
 | U1 | Load the real sample | 1900 frames, 10 Hz, first frame non-zero (catches misspelt JSON keys, which convert silently to 0) |
 | U2 | Field mapping | One frame with distinct values in all 14 fields lands in the right `FVehicleTelemetry` members |
 | U3 | Rejection | Missing file, invalid JSON, schemaVersion 2 / missing, no frames, `rateHz` 0, non-increasing `sampleTimeS` |
-| U4 | Playback timing | 60 fps for 1 s → exactly 10 frames, in order, no `seq` gaps |
-| U5 | Hitch | One 5 s poll → 50 frames, none skipped |
-| U6 | Looping | Last frame held one period, wrap to frame 0, 3 loops = 3 × N frames, no drift |
+| U4 | Playback timing | 60 fps for just under 1 s (59 polls) → frames 0–9, in order, no `seq` gaps, never two in one poll |
+| U5 | Hitch | One 4.95 s poll → 50 frames, none skipped; the next poll carries on at frame 50 |
+| U6 | Looping | Last frame held one period, wrap to frame 0, 3 loops = 3 × N frames, 100 loops at 60 fps = 100 × N (no drift) |
 | U7 | Speed multiplier | ×10 → 100 frames/s; ≤ 0 delivers nothing; change mid-playback |
 | U8 | Lifecycle | Poll before start / after stop delivers nothing; double stop safe; restart from frame 0 |
-| U9 | Helpers | `GetLoopDurationSeconds` with rate 0, `IsOpen` per bit, display name, settings defaults |
+| U9 | Helpers | `GetLoopDurationSeconds` with rate 0, `IsOpen` per bit, display name, commands refused with a reason, configured settings usable (trip file exists, ranges) |
 
 ## 3. `AVehicleTwinActor` (Unreal C++, synthetic actor): planned
 
