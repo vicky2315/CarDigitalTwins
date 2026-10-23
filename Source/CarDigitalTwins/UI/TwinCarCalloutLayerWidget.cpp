@@ -159,6 +159,12 @@ void UTwinCarCalloutLayerWidget::NativeTick(const FGeometry& MyGeometry, float I
 		const float TargetOpacity = bHasTelemetry && bIsOnScreen && CarCallout->GetShownInView() == ActiveView ? 1.f : 0.f;
 		CalloutOpacities[CalloutIndex] = FMath::FInterpConstantTo(CalloutOpacities[CalloutIndex], TargetOpacity, 1.f, FadeStep);
 		CarCallout->SetRenderOpacity(CalloutOpacities[CalloutIndex]);
+		// Collapse once faded out: the box's rounded outline ignores render opacity and would stay as an empty frame.
+		const ESlateVisibility CalloutVisibility = CalloutOpacities[CalloutIndex] > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed;
+		if (CarCallout->GetVisibility() != CalloutVisibility)
+		{
+			CarCallout->SetVisibility(CalloutVisibility);
+		}
 	}
 	for (UTwinPartRingWidget* PartRing : PartRings)
 	{

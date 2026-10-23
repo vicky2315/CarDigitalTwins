@@ -13,6 +13,8 @@ void UTwinPartRingWidget::NativePreConstruct()
 		RingImage->SetColorAndOpacity(TwinHmiColors::Warning());
 	}
 	SetVisibility(IsDesignTime() ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	// Collapsed again matches Normal: a rebuilt HUD then shows a part that is still off instead of skipping it as unchanged.
+	ShownStatus = EVehicleStatus::Normal;
 }
 
 void UTwinPartRingWidget::ShowPartStatus(EVehicleStatus PartStatus)

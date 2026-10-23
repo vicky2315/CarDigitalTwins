@@ -70,7 +70,7 @@ private:
 		Message,
 	};
 
-	// What a socket callback reported, kept until the next poll. SocketGeneration tells events of an old, replaced socket apart.
+	// What a socket callback reported, kept until the next poll. SocketGeneration tells events of an old, closed or replaced socket apart.
 	struct FQueuedSocketEvent
 	{
 		ESocketEventType SocketEventType;

@@ -2,6 +2,45 @@
 
 Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
+## Checkpoint (2026-10-23, office laptop `DESKTOP-MRMGNPL`, RTX 4060 Ti)
+
+Commits: `43338c3` (marquee text), `93af806` (part ring fixes), `0dcfa78` (view tab pip) on `main`, plus this checkpoint commit, all pushed.
+Working tree: `DefaultEngine.ini` and `DefaultGame.ini` (local `TelemetrySource=WebSocket`; committed default stays File) kept out of commits.
+
+**Where I stopped:** text overflow fixed: new `UTwinMarqueeTextWidget` / `WBP_MarqueeText` (SizeBox > ScrollBox > TextBlock, caps at
+`MaxVisibleWidth`, scrolls longer text with holds at both ends); top bar link detail uses it (receiver URL while Connecting). Built and
+checked. Part rings: seen only in the top-left corner, also on the personal laptop with the Jeep. Cause found in `WBP_CarCalloutLayer`:
+the five ring copies (`RingHood`, `RingTyreFL/FR/RL/RR`) never had **Ring Signal** set (all Engine), and their Anchor Tag is most likely
+the default `CalloutAnchor.Hood`, which `BP_VehicleTwin` doesn't seem to carry, so the ring can't be placed and stays at its designer
+position. Code fix in `93af806` (builds, office laptop; not seen running): unplaceable rings are hidden, Play start logs each ring's signal and anchor
+(`LogTwinCallouts`), one warning per ring that can't be placed. `WBP_CarCalloutLayer` now stretches in `WBP_TwinOpsHUD`.
+
+**Resume (personal laptop):**
+1. Pull, build, open the editor.
+2. `WBP_CarCalloutLayer` › each ring copy › Part Ring: `RingHood` Engine / `CalloutAnchor.Engine`; `RingTyreFL` Tyre Front Left / `Wheel.FL`;
+   `RingTyreFR` / `Wheel.FR`; `RingTyreRL` / `Wheel.RL`; `RingTyreRR` / `Wheel.RR`. Set on the instances, not in `WBP_PartRing` Class Defaults.
+3. Relay `python Tools/Relay/relay.py --source live --loop --rate 20` + PIE: Output Log `Part ring ...` lines show the settings; no
+   "can't be placed" warning; > 90 s hood ring pulses amber on the car (coolant ≥ 105 °C), ~153 s RR wheel ring.
+4. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 (Telemetry Source WebSocket, MPC on `BP_VehicleTwin`;
+   `L_TwinStudio` already references `TwinOpsGameMode`), F2 PIE against the relay, F3 frame the four cameras + retune the studio lights.
+5. Other overflowing labels: reuse `WBP_MarqueeText`, or for text that changes every refresh use Overflow Policy Ellipsis in a capped SizeBox.
+6. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
+
+**Unverified:** ring diagnosis read from the binary asset, not seen in the editor; whether `BP_VehicleTwin` has a `CalloutAnchor.Hood` tag;
+part rings never seen on the car; callout anchor places not checked on the car; camera blends; `UViewModelSubsystem` engine tick seen in PIE
+(M10–M11 test it by hand, pass). Check whether still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning. Older: SPEC §1 25
+`Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE start; Day 10 "can't connect: no
+details" wording.
+
+**Open decisions:** idle (dim) ring when all Normal, if the mock shows one; showroom mode (after H1); GrabCAD license / mesh redistribution
+(ASSETS.md); private asset repo for `Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field
+Guide; clean up unused font faces and duplicate `.ttf` folders in `/Game/Art/UI/Fonts/` (4 faces used); build page fixes: B3 label is
+`Uncompressed (RGBA8)` in 5.7, asset folders on the page (`/Game/UI/...`) differ from the project (`/Game/Art/UI/`, `/Game/Blueprints/UI/`).
+
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin` with the callout anchors,
+`Rebuilt/`), `Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`. The office laptop has no car: `L_TwinStudio` loads without
+`BP_VehicleTwin`, so rings and callouts can't be checked here.
+
 ## Checkpoint (2026-10-23, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
 Commit: checkpoint commit after `6bf70a8` on `main`, pushed (UI fix `.uasset`s, PROGRESS/TESTS updates).

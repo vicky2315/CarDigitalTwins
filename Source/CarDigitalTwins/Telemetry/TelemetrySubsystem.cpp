@@ -86,6 +86,8 @@ void UTelemetrySubsystem::Deinitialize()
 		ActiveTelemetryReceiver = nullptr;
 	}
 	OnTelemetryUpdated.Clear();
+	OnVehicleCommandUpdated.Clear();
+	PendingVehicleCommands.Reset();
 
 	Super::Deinitialize();
 }
@@ -118,9 +120,11 @@ void UTelemetrySubsystem::Tick(float DeltaSeconds)
 		{
 			LogDriveModeChange(PreviousDriveMode, LatestTelemetrySample);
 		}
-		SendAutoEngineDerateIfCoolantJustBecameCritical(PreviousCoolantTemperatureStatus);
 
+		// Sample first, then the command it causes: listeners raise the coolant alarm on the sample, and the auto derate then joins
+		// that alarm (event log order, banner detail).
 		OnTelemetryUpdated.Broadcast(LatestTelemetrySample);
+		SendAutoEngineDerateIfCoolantJustBecameCritical(PreviousCoolantTemperatureStatus);
 	}
 
 	ProcessVehicleCommandAcks();

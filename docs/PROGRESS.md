@@ -1,51 +1,46 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-23
-Current day: **Day 11** dashboard: build page A–E done (E1–E11 WBPs built, 2026-10-14), UI fixes + marquee text done (2026-10-23); MVVM tests M1–M9 pass (2026-10-23); part ring settings (cause found) and F (hook up, play) next.
+Current day: **Day 11** dashboard: build page A–E done (E1–E11 WBPs built, 2026-10-14), UI fixes + marquee text done (2026-10-23); MVVM tests M1–M11 pass (2026-10-23); part rings on the car (2026-10-23); code audit run, first C++ fixes not built; then audit follow-ups and F (hook up, play).
 Days 1–10 complete. Day 11 MVVM steps 2–5 done; 6–7 done (tests pass), 8 and the dashboard built, dashboard WBPs built (A–E).
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
 then HMI; the portfolio shows both on one data pipeline.
 
-## Checkpoint (2026-10-23, office laptop `DESKTOP-MRMGNPL`, RTX 4060 Ti)
+## Checkpoint (2026-10-23, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
-Commits: `43338c3` (marquee text), `93af806` (part ring fixes), `0dcfa78` (view tab pip) on `main`, plus this checkpoint commit, all pushed.
-Working tree: `DefaultEngine.ini` and `DefaultGame.ini` (local `TelemetrySource=WebSocket`; committed default stays File) kept out of commits.
+Commit: the audit-pass commit after `2a95971` on `main`, pushed. Working tree: local-only `DefaultGame.ini` (`TelemetrySource=WebSocket`) and
+`DefaultEngine.ini` (`EditorStartupMap=L_VehicleTwin`) kept out of commits; untracked `Content/Maps/ImportTestMap`, `L_VehicleTwin`.
 
-**Where I stopped:** text overflow fixed: new `UTwinMarqueeTextWidget` / `WBP_MarqueeText` (SizeBox > ScrollBox > TextBlock, caps at
-`MaxVisibleWidth`, scrolls longer text with holds at both ends); top bar link detail uses it (receiver URL while Connecting). Built and
-checked. Part rings: seen only in the top-left corner, also on the personal laptop with the Jeep. Cause found in `WBP_CarCalloutLayer`:
-the five ring copies (`RingHood`, `RingTyreFL/FR/RL/RR`) never had **Ring Signal** set (all Engine), and their Anchor Tag is most likely
-the default `CalloutAnchor.Hood`, which `BP_VehicleTwin` doesn't seem to carry, so the ring can't be placed and stays at its designer
-position. Code fix in `93af806` (builds, office laptop; not seen running): unplaceable rings are hidden, Play start logs each ring's signal and anchor
-(`LogTwinCallouts`), one warning per ring that can't be placed. `WBP_CarCalloutLayer` now stretches in `WBP_TwinOpsHUD`.
+**Where I stopped:** part rings now sit on the car (hood, RR wheel) and pulse: Ring Signal / Anchor Tag set on the five copies. They drew
+as squares (`RingImage` had no brush); `WBP_PartRing` is edited and committed, not re-checked. Callouts of other views left an empty
+frame (rounded-box outline ignores Render Opacity): they now collapse once faded. Code review set up (`.claude/agents/code-reviewer.md`,
+`.claude/docs/review-checklist.md`, `.claude/rules/engineering-standards.md`) and a full audit run; first C++ pass from it done, not built:
+auto-derate sent after the sample broadcast (banner shows "Engine derate requested automatically"), WebSocket `CloseSocket` retires queued
+events (no double failure count, no stuck Stale), part ring `ShownStatus` reset on rebuild, `Deinitialize` clears command delegate + pending.
 
-**Resume (personal laptop):**
-1. Pull, build, open the editor.
-2. `WBP_CarCalloutLayer` › each ring copy › Part Ring: `RingHood` Engine / `CalloutAnchor.Engine`; `RingTyreFL` Tyre Front Left / `Wheel.FL`;
-   `RingTyreFR` / `Wheel.FR`; `RingTyreRL` / `Wheel.RL`; `RingTyreRR` / `Wheel.RR`. Set on the instances, not in `WBP_PartRing` Class Defaults.
-3. Relay `python Tools/Relay/relay.py --source live --loop --rate 20` + PIE: Output Log `Part ring ...` lines show the settings; no
-   "can't be placed" warning; > 90 s hood ring pulses amber on the car (coolant ≥ 105 °C), ~153 s RR wheel ring.
-4. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 (Telemetry Source WebSocket, MPC on `BP_VehicleTwin`;
-   `L_TwinStudio` already references `TwinOpsGameMode`), F2 PIE against the relay, F3 frame the four cameras + retune the studio lights.
-5. Other overflowing labels: reuse `WBP_MarqueeText`, or for text that changes every refresh use Overflow Policy Ellipsis in a capped SizeBox.
-6. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
+**Resume:**
+1. Build, then PIE with relay `--source live --loop --rate 20`: at coolant Critical the banner reads "Engine derate requested automatically",
+   "Command N derate on sent (auto)" sits right above "Coolant Critical" with the same time; rings are round. Stop the relay mid-run:
+   Disconnected, retry 1, 2, 3 (+1 each, ~0.5 → 1 → 2 s), back to LIVE when it restarts. Headless `CarDigitalTwins`: 20 pass.
+2. Audit follow-ups, in order: editor scripts check every save + MANUAL lines (Must-fix); relay `UnicodeDecodeError`, `relay_client`
+   Ctrl+C summary; U9 own setup + `wss://`, trip generator test not importing `conftest`; stale TESTS/PROGRESS/BUGS/README lines.
+3. Refactor step (b): cache anchor components in `AVehicleTwinActor`; widgets gate refreshes on the field mask (top bar, banner, overview,
+   HUD, callout values); `ConnectionViewModel` display name not per frame; callout outline fades with opacity (pops for 0.35 s now).
+4. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 MPC on `BP_VehicleTwin`, F2 PIE against the relay, F3 cameras + lights.
+5. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
 
-**Unverified:** ring diagnosis read from the binary asset, not seen in the editor; whether `BP_VehicleTwin` has a `CalloutAnchor.Hood` tag;
-part rings never seen on the car; callout anchor places not checked on the car; camera blends; `UViewModelSubsystem` engine tick seen in PIE
-(M10–M11 test it by hand, pass). Check whether still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning. Older: SPEC §1 25
-`Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE start; Day 10 "can't connect: no
-details" wording.
+**Unverified:** the four audit fixes and the callout collapse (not built); `WBP_PartRing` brush; camera blends; `UViewModelSubsystem` tick in
+PIE. Older, check whether still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning; SPEC §1 25 `Paint` meshes
+vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline at PIE start; Day 10 "can't connect: no details" wording.
 
-**Open decisions:** idle (dim) ring when all Normal, if the mock shows one; showroom mode (after H1); GrabCAD license / mesh redistribution
-(ASSETS.md); private asset repo for `Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field
-Guide; clean up unused font faces and duplicate `.ttf` folders in `/Game/Art/UI/Fonts/` (4 faces used); build page fixes: B3 label is
-`Uncompressed (RGBA8)` in 5.7, asset folders on the page (`/Game/UI/...`) differ from the project (`/Game/Art/UI/`, `/Game/Blueprints/UI/`).
+**Open decisions:** SPEC follows the build (four ViewModels, event log text, §8) rather than being fixed now; idle (dim) ring when all
+Normal; showroom mode (after H1); GrabCAD license / mesh redistribution (ASSETS.md); private asset repo for `Content/Jeep/`; Day 8
+LinkedIn clip; BUG-002 parked. Pending: T1 content in the Field Guide; unused font faces in `/Game/Art/UI/Fonts/`; build page path fixes.
 
-**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin` with the callout anchors,
-`Rebuilt/`), `Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`. The office laptop has no car: `L_TwinStudio` loads without
-`BP_VehicleTwin`, so rings and callouts can't be checked here.
+**Not in git (local only, personal laptop):** `Content/Jeep/` (incl. `BP_VehicleTwin` with callout anchors), `Content/Maps/` levels except
+`L_TwinStudio`, raw CAD in `RawCAD/`. The office laptop has no car: rings and callouts can only be checked here.
 
 ## Phase A: Single-car digital twin
 
@@ -175,7 +170,7 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
       studio floor scroll, 22 widget classes in `UI/`, icons in `Art/UI/Icons/`. Build page: A, B, D, E1–E11 done (2026-10-14); UI fixes
       done (2026-10-23); F to do.
       Backlog (added 2026-10-23):
-      - [ ] **Part rings not seen on the car.** 2026-10-23: they showed only in the top-left corner; cause: Ring Signal / Anchor Tag never set
+      - [ ] **Part rings not seen on the car.** Placed and pulsing on the car (2026-10-23, personal laptop); round ring brush to re-check. Before: they showed only in the top-left corner; cause: Ring Signal / Anchor Tag never set
             on the five ring copies in `WBP_CarCalloutLayer` (fix steps in the checkpoint above; code now hides and logs unplaceable rings). By design, `UTwinPartRingWidget` is hidden at Play (Collapsed) until its part leaves Normal:
             the hood ring shows when coolant ≥ 105 °C or rpm is off (the live sim crosses 105 °C ~86 s into each loop), and the RR wheel ring
             shows when the tyre drops below 180 kPa (~153 s). Check first: let PIE run past 90 s, then confirm the `WBP_PartRing` copies are inside

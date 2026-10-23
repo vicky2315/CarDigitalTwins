@@ -201,6 +201,9 @@ void UWebSocketTelemetryReceiver::CloseSocket()
 	RelayWebSocket->OnConnectionError().RemoveAll(this);
 	RelayWebSocket->OnClosed().RemoveAll(this);
 	RelayWebSocket->OnMessage().RemoveAll(this);
+	// Events this socket already queued are stale now: a second "lost" would count the failure twice, a late "connected" would
+	// turn a socket that no longer exists Live (then Stale for good, never reconnecting).
+	++CurrentSocketGeneration;
 	if (RelayWebSocket->IsConnected())
 	{
 		RelayWebSocket->Close();
