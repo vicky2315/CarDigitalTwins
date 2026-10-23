@@ -1,34 +1,42 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-23
-Current day: **Day 11** dashboard: build page A–E done (E1–E11 WBPs built, 2026-10-14), UI fixes done (2026-10-23); MVVM tests M1–M9 pass (2026-10-23); part rings and F (hook up, play) next.
+Current day: **Day 11** dashboard: build page A–E done (E1–E11 WBPs built, 2026-10-14), UI fixes + marquee text done (2026-10-23); MVVM tests M1–M9 pass (2026-10-23); part ring settings (cause found) and F (hook up, play) next.
 Days 1–10 complete. Day 11 MVVM steps 2–5 done; 6–7 done (tests pass), 8 and the dashboard built, dashboard WBPs built (A–E).
 
 **Direction (decided 2026-10-07, option 3):** one backend, two front ends. Digital twin first (Phase A + Twin completion: remote
 ops view, two-way data, prediction), then expand the same core into an in-car HMI view (Phase H). Aim: get solid at digital twins,
 then HMI; the portfolio shows both on one data pipeline.
 
-## Checkpoint (2026-10-23, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+## Checkpoint (2026-10-23, office laptop `DESKTOP-MRMGNPL`, RTX 4060 Ti)
 
-Commit: checkpoint commit after `6bf70a8` on `main`, pushed (UI fix `.uasset`s, PROGRESS/TESTS updates).
-Working tree: `DefaultEngine.ini` (startup map `L_VehicleTwin`) and `CarDigitalTwins.uproject.DotSettings.user` kept out of commits; `ImportTestMap` and `L_VehicleTwin` untracked on purpose.
+Commits: `43338c3` (marquee text), `93af806` (part ring fixes), `0dcfa78` (view tab pip) on `main`, plus this checkpoint commit, all pushed.
+Working tree: `DefaultEngine.ini` and `DefaultGame.ini` (local `TelemetrySource=WebSocket`; committed default stays File) kept out of commits.
 
-**Where I stopped:** UI issues from 2026-10-14 fixed (layout adjustments to match the mock; 12 dashboard WBPs in this commit). MVVM automation
-tests run headless: M1–M9 all pass (TESTS.md §7; headless needs the `RestoreOpenAssetTabsOnRestart=NeverRestore` override, TESTS.md top).
-Part rings not seen on the car yet: by design hidden until a part leaves Normal (Day 11 backlog has the timings and checks).
+**Where I stopped:** text overflow fixed: new `UTwinMarqueeTextWidget` / `WBP_MarqueeText` (SizeBox > ScrollBox > TextBlock, caps at
+`MaxVisibleWidth`, scrolls longer text with holds at both ends); top bar link detail uses it (receiver URL while Connecting). Built and
+checked. Part rings: seen only in the top-left corner, also on the personal laptop with the Jeep. Cause found in `WBP_CarCalloutLayer`:
+the five ring copies (`RingHood`, `RingTyreFL/FR/RL/RR`) never had **Ring Signal** set (all Engine), and their Anchor Tag is most likely
+the default `CalloutAnchor.Hood`, which `BP_VehicleTwin` doesn't seem to carry, so the ring can't be placed and stays at its designer
+position. Code fix in `93af806` (**not built yet**): unplaceable rings are hidden, Play start logs each ring's signal and anchor
+(`LogTwinCallouts`), one warning per ring that can't be placed. `WBP_CarCalloutLayer` now stretches in `WBP_TwinOpsHUD`.
 
 **Resume (personal laptop):**
-1. Rings: relay `python Tools/Relay/relay.py --source live --loop --rate 20` + PIE, wait > 90 s → hood ring pulses amber (coolant ≥ 105 °C),
-   ~153 s RR wheel ring. Not there → check `WBP_PartRing` copies in `CalloutCanvas` (`RingSignal`, anchor tag) and the tag on `BP_VehicleTwin`.
-2. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 Telemetry Source WebSocket, GameMode Override `TwinOpsGameMode`
-   on `L_TwinStudio`, MPC on `BP_VehicleTwin`; F2 PIE against the relay; F3 frame the four cameras.
-3. Studio lighting looks off: retune `L_TwinStudio` lights on the paint together with F3 (Day 11 backlog).
-4. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
+1. Pull, build (ring code is unbuilt), open the editor.
+2. `WBP_CarCalloutLayer` › each ring copy › Part Ring: `RingHood` Engine / `CalloutAnchor.Engine`; `RingTyreFL` Tyre Front Left / `Wheel.FL`;
+   `RingTyreFR` / `Wheel.FR`; `RingTyreRL` / `Wheel.RL`; `RingTyreRR` / `Wheel.RR`. Set on the instances, not in `WBP_PartRing` Class Defaults.
+3. Relay `python Tools/Relay/relay.py --source live --loop --rate 20` + PIE: Output Log `Part ring ...` lines show the settings; no
+   "can't be placed" warning; > 90 s hood ring pulses amber on the car (coolant ≥ 105 °C), ~153 s RR wheel ring.
+4. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 (Telemetry Source WebSocket, MPC on `BP_VehicleTwin`;
+   `L_TwinStudio` already references `TwinOpsGameMode`), F2 PIE against the relay, F3 frame the four cameras + retune the studio lights.
+5. Other overflowing labels: reuse `WBP_MarqueeText`, or for text that changes every refresh use Overflow Policy Ellipsis in a capped SizeBox.
+6. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
 
-**Unverified:** part rings never seen running; callout anchor places not checked on the car; camera blends; `UViewModelSubsystem` once-per-frame
-flush (M10 not written). Check whether still open after the UI fixes: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC
-warning. Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE start;
-Day 10 "can't connect: no details" wording.
+**Unverified:** ring diagnosis read from the binary asset, not seen in the editor; whether `BP_VehicleTwin` has a `CalloutAnchor.Hood` tag;
+part rings never seen on the car; callout anchor places not checked on the car; camera blends; `UViewModelSubsystem` once-per-frame flush
+(M10 not written). Check whether still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning. Older: SPEC §1 25
+`Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE start; Day 10 "can't connect: no
+details" wording.
 
 **Open decisions:** idle (dim) ring when all Normal, if the mock shows one; showroom mode (after H1); GrabCAD license / mesh redistribution
 (ASSETS.md); private asset repo for `Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field
@@ -36,7 +44,8 @@ Guide; clean up unused font faces and duplicate `.ttf` folders in `/Game/Art/UI/
 `Uncompressed (RGBA8)` in 5.7, asset folders on the page (`/Game/UI/...`) differ from the project (`/Game/Art/UI/`, `/Game/Blueprints/UI/`).
 
 **Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin` with the callout anchors,
-`Rebuilt/`), `Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`.
+`Rebuilt/`), `Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`. The office laptop has no car: `L_TwinStudio` loads without
+`BP_VehicleTwin`, so rings and callouts can't be checked here.
 
 ## Phase A: Single-car digital twin
 
@@ -166,11 +175,13 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
       studio floor scroll, 22 widget classes in `UI/`, icons in `Art/UI/Icons/`. Build page: A, B, D, E1–E11 done (2026-10-14); UI fixes
       done (2026-10-23); F to do.
       Backlog (added 2026-10-23):
-      - [ ] **Part rings not seen on the car.** By design, `UTwinPartRingWidget` is hidden at Play (Collapsed) until its part leaves Normal:
+      - [ ] **Part rings not seen on the car.** 2026-10-23: they showed only in the top-left corner; cause: Ring Signal / Anchor Tag never set
+            on the five ring copies in `WBP_CarCalloutLayer` (fix steps in the checkpoint above; code now hides and logs unplaceable rings). By design, `UTwinPartRingWidget` is hidden at Play (Collapsed) until its part leaves Normal:
             the hood ring shows when coolant ≥ 105 °C or rpm is off (the live sim crosses 105 °C ~86 s into each loop), and the RR wheel ring
             shows when the tyre drops below 180 kPa (~153 s). Check first: let PIE run past 90 s, then confirm the `WBP_PartRing` copies are inside
             `CalloutCanvas` with `RingSignal` + anchor tag set and the tag exists on `BP_VehicleTwin`. If the mock shows rings while everything is
             Normal, decide whether to add a dim idle ring.
+      - [x] **Text overflow** (2026-10-23): `WBP_MarqueeText` scrolls text wider than its cap; top bar link detail uses it.
       - [ ] **Studio lighting looks off** (next session): judge and retune the `L_TwinStudio` lights on the paint together with F3 camera framing.
 
 ### Day 12: Profiling and latency

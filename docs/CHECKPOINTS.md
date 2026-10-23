@@ -2,6 +2,36 @@
 
 Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
+## Checkpoint (2026-10-23, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+
+Commit: checkpoint commit after `6bf70a8` on `main`, pushed (UI fix `.uasset`s, PROGRESS/TESTS updates).
+Working tree: `DefaultEngine.ini` (startup map `L_VehicleTwin`) and `CarDigitalTwins.uproject.DotSettings.user` kept out of commits; `ImportTestMap` and `L_VehicleTwin` untracked on purpose.
+
+**Where I stopped:** UI issues from 2026-10-14 fixed (layout adjustments to match the mock; 12 dashboard WBPs in this commit). MVVM automation
+tests run headless: M1–M9 all pass (TESTS.md §7; headless needs the `RestoreOpenAssetTabsOnRestart=NeverRestore` override, TESTS.md top).
+Part rings not seen on the car yet: by design hidden until a part leaves Normal (Day 11 backlog has the timings and checks).
+
+**Resume (personal laptop):**
+1. Rings: relay `python Tools/Relay/relay.py --source live --loop --rate 20` + PIE, wait > 90 s → hood ring pulses amber (coolant ≥ 105 °C),
+   ~153 s RR wheel ring. Not there → check `WBP_PartRing` copies in `CalloutCanvas` (`RingSignal`, anchor tag) and the tag on `BP_VehicleTwin`.
+2. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 Telemetry Source WebSocket, GameMode Override `TwinOpsGameMode`
+   on `L_TwinStudio`, MPC on `BP_VehicleTwin`; F2 PIE against the relay; F3 frame the four cameras.
+3. Studio lighting looks off: retune `L_TwinStudio` lights on the paint together with F3 (Day 11 backlog).
+4. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
+
+**Unverified:** part rings never seen running; callout anchor places not checked on the car; camera blends; `UViewModelSubsystem` once-per-frame
+flush (M10 not written). Check whether still open after the UI fixes: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC
+warning. Older: SPEC §1 25 `Paint` meshes vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline with editor preview at PIE start;
+Day 10 "can't connect: no details" wording.
+
+**Open decisions:** idle (dim) ring when all Normal, if the mock shows one; showroom mode (after H1); GrabCAD license / mesh redistribution
+(ASSETS.md); private asset repo for `Content/Jeep/`; Day 8 LinkedIn clip; BUG-002 parked. Pending: add T1 content to the Vehicle Twin Field
+Guide; clean up unused font faces and duplicate `.ttf` folders in `/Game/Art/UI/Fonts/` (4 faces used); build page fixes: B3 label is
+`Uncompressed (RGBA8)` in 5.7, asset folders on the page (`/Game/UI/...`) differ from the project (`/Game/Art/UI/`, `/Game/Blueprints/UI/`).
+
+**Not in git (local only, personal laptop):** `Content/Jeep/` (`ImportA`, `Cleaned`, `Blueprints/BP_VehicleTwin` with the callout anchors,
+`Rebuilt/`), `Content/Maps/` levels except `L_TwinStudio`, raw CAD in `RawCAD/`.
+
 ## Checkpoint (2026-10-14, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
 
 Commit: checkpoint commit after `923e645` on `main`, pushed (includes `DefaultGame.ini` with F1 `HudWidgetClass` = `WBP_TwinOpsHUD`).
