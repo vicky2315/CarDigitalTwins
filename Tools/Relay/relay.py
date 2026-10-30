@@ -158,11 +158,11 @@ class TelemetryRelay:
 
     def handle_client_message(self, client_address, client_message_text):
         """Messages going back towards the car. A command is answered: returns its commandAck text for the sender. Anything
-        else (a client's hello, not JSON) is logged and ignored: returns None."""
+        else (a client's hello, not JSON, a binary frame that isn't UTF-8) is logged and ignored: returns None."""
         self.received_client_message_count += 1
         try:
             client_message = json.loads(client_message_text)
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, UnicodeDecodeError):    # a binary frame arrives as bytes; json.loads decodes it as UTF-8
             print(f"From {client_address}: not JSON, ignored: {client_message_text[:80]!r}")
             return None
         message_type = client_message.get("type") if isinstance(client_message, dict) else None

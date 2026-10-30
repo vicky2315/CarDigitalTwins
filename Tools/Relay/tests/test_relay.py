@@ -1,4 +1,4 @@
-"""Relay tests R1–R10 (docs/TESTS.md §4). R6 and R10 run a real relay and client on a free local port; no Unreal needed."""
+"""Relay tests R1–R11 (docs/TESTS.md §4). R6 and R10 run a real relay and client on a free local port; no Unreal needed."""
 
 import asyncio
 import itertools
@@ -6,6 +6,7 @@ import json
 import random
 
 import pytest
+import websockets
 
 import relay
 import relay_client
@@ -156,3 +157,29 @@ def test_r10_end_to_end_derate_command_changes_live_stream():
     assert (command_ack["commandId"], command_ack["status"]) == (1, "applied")
     assert command_ack["appliedAtSeq"] >= 0
     assert stream_check_results.first_engine_derate_seq == command_ack["appliedAtSeq"]
+
+
+def test_r11_binary_frame_that_is_not_utf8_is_ignored_and_the_client_stays_connected():
+    assert live_relay().handle_client_message("test", b"\x80\x81") is None
+
+    async def run_relay_and_client():
+        listening_port_future = asyncio.get_running_loop().create_future()
+        telemetry_relay = live_relay(messages_per_second=50.0)
+        relay_task = asyncio.create_task(
+            telemetry_relay.run("127.0.0.1", 0, on_listening=listening_port_future.set_result))
+        listening_port = await listening_port_future
+
+        async with websockets.connect(f"ws://127.0.0.1:{listening_port}") as client_connection:
+            await client_connection.send(b"\x80\x81")              # a binary frame: arrives as bytes, not valid UTF-8
+            await client_connection.send(derate_command_text(3))
+            async for relay_message_text in client_connection:
+                relay_message = json.loads(relay_message_text)
+                if relay_message["type"] == "commandAck":
+                    break
+        relay_task.cancel()
+        return telemetry_relay, relay_message
+
+    telemetry_relay, command_ack = asyncio.run(asyncio.wait_for(run_relay_and_client(), timeout=10.0))
+
+    assert (command_ack["commandId"], command_ack["status"]) == (3, "applied")    # same connection, still answered
+    assert telemetry_relay.received_client_message_count == 2

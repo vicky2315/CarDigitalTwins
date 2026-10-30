@@ -86,7 +86,7 @@ the car in its own empty game world; with no game mode, play is started through 
 | V9 | Telemetry blend | Alpha 0 → 0.5 → 1 (held) over the arrival interval; trip loop and interval 0 snap to latest; arrival interval from the world clock, three samples in one frame keep the last real interval |
 | V10 | Callout anchors | `Wheel.FR` = FR tyre centre (not the hub), still right while spinning; `CalloutAnchor.Hood` = its component; unknown tag → false |
 
-## 4. Relay (Python, pytest): R1–R6 done 2026-10-08, R7–R10 (commands, T1) 2026-10-10
+## 4. Relay (Python, pytest): R1–R6 done 2026-10-08, R7–R10 (commands, T1) 2026-10-10, R11 2026-10-30
 
 | # | Test | Checks |
 |---|------|--------|
@@ -100,6 +100,7 @@ the car in its own empty game world; with no game mode, play is started through 
 | R8 | File vs live | File source rejects with `source is a recorded trip`, −1; live seed 42 without commands = first 50 sample frames; a client hello gets no ack; derate `applied` at the next seq (50), repeat still `applied` at 50; next frame `EngineDerate` |
 | R9 | Bad / unknown | String or boolean `commandId` → `commandId` −1 `bad command message`; `schemaVersion` 2 and non-boolean `enabled` → bad message; other `name` → `unknown command`; all `appliedAtSeq` −1 |
 | R10 | End to end command | Live relay at 500 msg/s, client sends derate at once: exactly one ack (`commandId` 1, `applied`), first `EngineDerate` frame seq = `appliedAtSeq` |
+| R11 | Binary frame | A binary frame that isn't UTF-8 (`b""`) is ignored, not a `UnicodeDecodeError` that drops the client; a derate sent next on the same connection is still answered |
 
 ## 5. WebSocket receiver (Unreal C++): planned, Day 10
 
