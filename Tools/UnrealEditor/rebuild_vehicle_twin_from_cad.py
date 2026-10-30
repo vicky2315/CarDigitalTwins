@@ -67,7 +67,9 @@ def import_step_file():
     import_result = datasmith_scene.import_scene(REBUILD_IMPORT_FOLDER)
     if not import_result.get_editor_property("import_succeed"):
         raise RuntimeError("Datasmith import failed; see the Output Log above.")
-    unreal.EditorAssetLibrary.save_directory(REBUILD_IMPORT_FOLDER)
+    if not unreal.EditorAssetLibrary.save_directory(REBUILD_IMPORT_FOLDER):
+        raise RuntimeError(f"Could not save every asset in {REBUILD_IMPORT_FOLDER}: some imported meshes exist only in memory. "
+                           "MANUAL: File > Save All, then run this script again (the import is skipped once the folder has assets).")
     unreal.log(f"Imported {len(import_result.get_editor_property('imported_meshes'))} meshes into {REBUILD_IMPORT_FOLDER}.")
 
 
@@ -178,8 +180,15 @@ def build_blueprint(recipe):
     status_outline_material = load_recipe_asset(recipe["class_defaults"].get("status_outline_material"))
     if status_outline_material is not None:
         class_defaults.set_editor_property("status_outline_material", status_outline_material)
+    else:
+        unreal.log_warning("Status Outline Material not set: the recipe has none or its asset is missing.")
+    # A Blueprint class default edit: the comparison below reads it back, and the MANUAL line covers it if it didn't take.
+    unreal.log(f"MANUAL: if the comparison below shows the Status Outline Material empty, open {rebuilt_blueprint_path} > Class "
+               "Defaults > Vehicle Twin | Status Outline, set it to PP_VehicleStatusOutline, Compile and Save.")
 
-    unreal.EditorAssetLibrary.save_asset(rebuilt_blueprint_path, only_if_is_dirty=False)
+    if not unreal.EditorAssetLibrary.save_asset(rebuilt_blueprint_path, only_if_is_dirty=False):
+        raise RuntimeError(f"Could not save {rebuilt_blueprint_path} (read-only file or open elsewhere?): it exists only in memory. "
+                           "MANUAL: open it, Compile, then File > Save All.")
     return blueprint, missing_assets
 
 

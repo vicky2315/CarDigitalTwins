@@ -94,8 +94,11 @@ def create_callout_anchors():
                    f"{location.x:.0f}, {location.y:.0f}, {location.z:.0f}.")
 
     unreal.BlueprintEditorLibrary.compile_blueprint(blueprint)
-    unreal.EditorAssetLibrary.save_asset(BLUEPRINT_PATH, only_if_is_dirty=False)
-    unreal.log(f"Callout anchors done; {BLUEPRINT_PATH} compiled and saved. Check their places in the Blueprint viewport.")
+    if not unreal.EditorAssetLibrary.save_asset(BLUEPRINT_PATH, only_if_is_dirty=False):
+        raise RuntimeError(f"Could not save {BLUEPRINT_PATH} (read-only file or open elsewhere?): the anchors exist only in memory. "
+                           "MANUAL: open the Blueprint, Compile, then File > Save All.")
+    unreal.log(f"Callout anchors done; {BLUEPRINT_PATH} compiled and saved.")
+    unreal.log("MANUAL: check the anchors' places in the Blueprint viewport and move them with the gizmo if needed.")
 
 
 create_callout_anchors()

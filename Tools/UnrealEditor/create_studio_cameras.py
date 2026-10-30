@@ -68,8 +68,11 @@ def create_studio_cameras():
     for spec in VIEW_CAMERAS:
         apply_view_camera(spec)
 
-    unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
-    unreal.log(f"View cameras done and {LEVEL_NAME} saved. Frame them by eye once the car is in (step F3).")
+    if not unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level():
+        raise RuntimeError(f"Could not save {LEVEL_NAME} (read-only file or open elsewhere?): the cameras exist only in memory. "
+                           "MANUAL: File > Save Current Level.")
+    unreal.log(f"View cameras done and {LEVEL_NAME} saved.")
+    unreal.log("MANUAL: frame the four cameras by eye once the car is in (step F3).")
 
 
 create_studio_cameras()

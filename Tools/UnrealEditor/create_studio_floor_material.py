@@ -135,8 +135,11 @@ def create_studio_floor_material():
 
     MaterialEditing.layout_material_expressions(material)
     MaterialEditing.recompile_material(material)
-    unreal.EditorAssetLibrary.save_asset(material_asset_path, only_if_is_dirty=False)
-    unreal.log(f"Created {material_asset_path}. Assign it to StudioFloor > Materials > Element 0 (step A4).")
+    if not unreal.EditorAssetLibrary.save_asset(material_asset_path, only_if_is_dirty=False):
+        raise RuntimeError(f"Could not save {material_asset_path} (read-only file or open elsewhere?): it exists only in memory. "
+                           "MANUAL: File > Save All.")
+    unreal.log(f"Created and saved {material_asset_path}.")
+    unreal.log("MANUAL: assign it to StudioFloor > Materials > Element 0 (step A4), then save the level.")
 
 
 create_studio_floor_material()

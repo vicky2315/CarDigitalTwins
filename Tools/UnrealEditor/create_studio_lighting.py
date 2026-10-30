@@ -115,8 +115,11 @@ def create_studio_lighting():
         apply_rect_light(spec)
     apply_post_process_volume()
 
-    unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
-    unreal.log(f"Studio lighting done and {LEVEL_NAME} saved. Judge the look in the viewport, then tune the numbers at the top and re-run.")
+    if not unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level():
+        raise RuntimeError(f"Could not save {LEVEL_NAME} (read-only file or open elsewhere?): the lights exist only in memory. "
+                           "MANUAL: File > Save Current Level.")
+    unreal.log(f"Studio lighting done and {LEVEL_NAME} saved.")
+    unreal.log("MANUAL: judge the look in the viewport, then tune the numbers at the top of this script and re-run.")
 
 
 create_studio_lighting()
