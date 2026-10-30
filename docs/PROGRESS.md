@@ -15,7 +15,7 @@ OpenUSD is a separate future project. Everything not in the list below is under 
 | 3 | Status evaluator tests (done 2026-10-30: S1–S11 pass) | SPEC §3 thresholds, enter/clear hysteresis and worst-of covered by UE automation tests, all passing |
 | 4 | Measured numbers (2026-10-30: PERFORMANCE.md; car figures from Day 3, re-measure with the dashboard in item 2) | Frame time, end-to-end latency (generator → dashboard), triangles / draw calls, test count in a short PERFORMANCE.md, measured figures only |
 | 5 | Demo video, 60–90 s (script done 2026-10-30: DEMO_SCRIPT.md; recording after item 2) | Overheating Warning → Critical; connection drop and recovery; derate command round trip visible on the dashboard |
-| 6 | README | GIF, one-line description, architecture diagram, 3–4 measured figures, how to run; Decisions, tests, credits, known issues; no TODOs |
+| 6 | README (done 2026-10-30 except the GIF, which comes from the recording after item 2) | GIF, one-line description, architecture diagram, 3–4 measured figures, how to run; Decisions, tests, credits, known issues; no TODOs |
 | 7 | Asset safety | `Content/Jeep/`, `BP_VehicleTwin` and the levels in the private asset repo; procedure in ASSETS.md |
 
 Unverified items to check in item 2 or list as known issues in the README: `UViewModelSubsystem` engine tick in PIE; camera blends;
@@ -217,9 +217,10 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 - [ ] Record and edit it (personal laptop, after item 2)
 
 ### Day 16: Documentation and portfolio (wrap-up item 6)
-- [ ] README complete; portfolio section (demo video, no live link); runnable in < 15 min
-- [ ] Positioning: a vehicle telemetry twin with a remote-operations dashboard. Don't lead with "digital twin"; never "predictive"
-- [ ] Portfolio fixes (2026-10-08): README first screen = GIF + architecture diagram (simulator → relay → `ITelemetryReceiver` →
+- [x] README: one screen with diagram, measured figures and how to run; Decisions, tests, known issues, follow-ons, credits
+- [ ] README GIF and demo video link (after the recording, item 5)
+- [x] Positioning: a vehicle telemetry twin with a remote-operations dashboard. Don't lead with "digital twin"; never "predictive"
+- [x] Portfolio fixes (2026-10-08, done in the README except the GIF): README first screen = GIF + architecture diagram (simulator → relay → `ITelemetryReceiver` →
       twin + dashboard) + 3–4 measured numbers from Day 12 (latency, frame time, dropouts survived). Reviewers can't get the meshes
       (license), so the video carries the demo; README gives "download STEP from GrabCAD + run the rebuild script" (needs BUG-002
       fixed). Never publish a packaged build (it redistributes the meshes). Present the car as a vehicle model, not anything official
