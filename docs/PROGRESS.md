@@ -14,7 +14,7 @@ OpenUSD is a separate future project. Everything not in the list below is under 
 | 2 | Build page F (personal laptop, from 2026-11-04) | Dashboard runs in PIE against `relay.py --source live`; part rings and callouts correct on the car; four cameras framed; lights retuned |
 | 3 | Status evaluator tests (done 2026-10-30: S1–S11 pass) | SPEC §3 thresholds, enter/clear hysteresis and worst-of covered by UE automation tests, all passing |
 | 4 | Measured numbers (2026-10-30: PERFORMANCE.md; car figures from Day 3, re-measure with the dashboard in item 2) | Frame time, end-to-end latency (generator → dashboard), triangles / draw calls, test count in a short PERFORMANCE.md, measured figures only |
-| 5 | Demo video, 60–90 s | Overheating Warning → Critical; connection drop and recovery; derate command round trip visible on the dashboard |
+| 5 | Demo video, 60–90 s (script done 2026-10-30: DEMO_SCRIPT.md; recording after item 2) | Overheating Warning → Critical; connection drop and recovery; derate command round trip visible on the dashboard |
 | 6 | README | GIF, one-line description, architecture diagram, 3–4 measured figures, how to run; Decisions, tests, credits, known issues; no TODOs |
 | 7 | Asset safety | `Content/Jeep/`, `BP_VehicleTwin` and the levels in the private asset repo; procedure in ASSETS.md |
 
@@ -212,8 +212,9 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 
 ### Day 15: Polish and demo video (wrap-up item 5)
 - [ ] Camera presets, lighting, scripted demo run, video + GIF
-- [ ] Demo video 60–90 s: live stream → overheating Warning → Critical → connection drop and recovery → derate command round trip
-      visible on the dashboard (request, ack, `driveMode` EngineDerate, rpm and speed capped). First 30 s must carry it.
+- [x] Demo video script, 60–90 s: [DEMO_SCRIPT.md](DEMO_SCRIPT.md) (2026-10-30): link drop and recovery → overheating Warning →
+      Critical → auto derate round trip (ack, `driveMode` EngineDerate, rpm and speed capped) → back to Warning
+- [ ] Record and edit it (personal laptop, after item 2)
 
 ### Day 16: Documentation and portfolio (wrap-up item 6)
 - [ ] README complete; portfolio section (demo video, no live link); runnable in < 15 min
