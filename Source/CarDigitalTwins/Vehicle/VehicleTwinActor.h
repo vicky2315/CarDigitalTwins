@@ -196,6 +196,9 @@ protected:
 	FName StatusBlendParameter = TEXT("StatusBlend");
 
 private:
+	// Automation tests V1–V10 (Tests/VehicleTwinActorTests.cpp) read the wheels and call the setup steps directly.
+	friend class FVehicleTwinActorSpec;
+
 	// Finds the tagged hubs, resets them to their authored pose and measures each wheel's centre, axle and radius. Safe to call again.
 	void SetUpWheels(bool bLogProblems);
 

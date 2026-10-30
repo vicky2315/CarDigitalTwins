@@ -63,19 +63,28 @@ path there). The subsystem side (receiver chosen from settings, one `OnTelemetry
 | U8 | Lifecycle | Poll before start / after stop delivers nothing; double stop safe; restart from frame 0 |
 | U9 | Helpers | `GetLoopDurationSeconds` with rate 0, `IsOpen` per bit, display name, commands refused with a reason, configured settings usable (trip file exists, ranges) |
 
-## 3. `AVehicleTwinActor` (Unreal C++, synthetic actor): planned
+## 3. `AVehicleTwinActor` (Unreal C++, `CarDigitalTwins.Vehicle.TwinActor`): written 2026-10-23
+
+**Run 2026-10-23 (office laptop, headless): V1–V10 all pass.** `Source/CarDigitalTwins/Tests/VehicleTwinActorTests.cpp` on
+`AVehicleTwinTestActor` (`Tests/VehicleTwinTestActor.h`): a stand-in car from engine shapes with the real tags (four hubs, cylinder
+tyres scaled to 43.5 cm and offset from their hubs, Paint/Trim meshes, `CalloutAnchor.Hood`, one child actor), so no Jeep assets are
+needed. Paint and outline use `MI_CarPaint`, `MI_CarPaintBlack` and `PP_VehicleStatusOutline` from `/Game/Materials`. Each test spawns
+the car in its own empty game world; with no game mode, play is started through `AWorldSettings::NotifyBeginPlay`. The spec is a
+`friend` of `AVehicleTwinActor` to read the wheels and call the setup steps; the V9 blend maths moved into the static
+`ComputeTelemetryBlendAlpha` (it now also returns 1 for an interval of 0 instead of dividing by it).
 
 | # | Test | Checks |
 |---|------|--------|
-| V1 | Wheel setup | 4 tagged hubs → 4 wheels; missing tag → 3 + warning |
-| V2 | Spin maths | Degrees = speed / radius over time, wraps within 0–360 |
-| V3 | Steer | Front only, + = right |
-| V4 | Pivot | Wheel centre stays in place while spinning (regression for `9f64240`) |
-| V5 | Setup idempotent | Re-running setup mid-spin resets to the authored pose, same radius |
-| V6 | Tyre radius | From vertices of a known cylinder; bounds fallback |
-| V7 | Status colour | Blend clamp, per-group scale, slots without `StatusColor` untouched, no stacked instances |
-| V8 | Status outline | Warning/Critical turn custom depth on with stencil 1 on all meshes (child actors too); Normal turns it off; same status twice touches no mesh |
-| V9 | Telemetry blend | Alpha 0 → 1 over the arrival interval; trip loop snaps to latest; several samples in one frame keep the last real interval |
+| V1 | Wheel setup | 4 tagged hubs → 4 wheels in FL, FR, RL, RR order, only the front steer, axle +Y; missing `Wheel.RR` → 3 + warning, RL without partner falls back to the actor's Y |
+| V2 | Spin maths | 36 km/h for 0.1 s = 100 cm / 43.5 cm in degrees on every wheel; positive spin moves the top of the tyre forward; 100 s at 100 km/h stays in 0–360 without losing angle |
+| V3 | Steer | +20° turns the front of the FL tyre right by 20°; rear hub untouched |
+| V4 | Pivot | Tyre centres stay within 0.05 cm over 12 steps of spin and ±25° steer, with the tyre offset from its hub (regression for `9f64240`) |
+| V5 | Setup idempotent | Re-running setup mid-spin returns hubs to the authored pose; same radius and centre; spin back to 0 |
+| V6 | Tyre radius | 43.5 cm from the cylinder's vertices; a sphere component (no vertex data) falls back to its bounds radius |
+| V7 | Status colour | Blend 2 → 1 on the body, 0.5 on Trim (group scale), −1 → 0; a Paint-tagged slot without `StatusColor` untouched + warning; setup again reuses the instances |
+| V8 | Status outline | Warning/Critical put every mesh, child actor included, in custom depth with stencil 1; Normal takes them out; same status twice touches no mesh; no outline material → nothing turned on |
+| V9 | Telemetry blend | Alpha 0 → 0.5 → 1 (held) over the arrival interval; trip loop and interval 0 snap to latest; arrival interval from the world clock, three samples in one frame keep the last real interval |
+| V10 | Callout anchors | `Wheel.FR` = FR tyre centre (not the hub), still right while spinning; `CalloutAnchor.Hood` = its component; unknown tag → false |
 
 ## 4. Relay (Python, pytest): R1–R6 done 2026-10-08, R7–R10 (commands, T1) 2026-10-10
 
