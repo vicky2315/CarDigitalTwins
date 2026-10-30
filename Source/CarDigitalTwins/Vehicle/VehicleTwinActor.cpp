@@ -221,6 +221,17 @@ bool AVehicleTwinActor::FindCalloutAnchorWorldLocation(FName CalloutAnchorTag, F
 	return false;
 }
 
+float AVehicleTwinActor::ComputeTelemetryBlendAlpha(double PreviousSampleTimeS, double LatestSampleTimeS, double SecondsSinceLatestArrival,
+	double SampleArrivalIntervalS)
+{
+	// A trip loop jumps back in time: snap to the new sample instead of blending across it.
+	if (LatestSampleTimeS < PreviousSampleTimeS || SampleArrivalIntervalS <= 0.0)
+	{
+		return 1.f;
+	}
+	return static_cast<float>(FMath::Clamp(SecondsSinceLatestArrival / SampleArrivalIntervalS, 0.0, 1.0));
+}
+
 void AVehicleTwinActor::UpdateWheels(float SpeedKmh, float SteerDeg, float DeltaSeconds)
 {
 	const float SpeedCmPerS = SpeedKmh * (100000.f / 3600.f);
@@ -388,10 +399,9 @@ void AVehicleTwinActor::DriveFromTelemetry(const UTelemetrySubsystem& TelemetryS
 	const FVehicleTelemetry& LatestTelemetrySample = TelemetrySubsystem.GetLatestTelemetrySample();
 
 	// Shows the motion one sample behind, blending previous -> latest over the time the latest one took to arrive, so 10 Hz data
-	// moves smoothly at any frame rate. A trip loop jumps back in time: snap to the new sample instead of blending across it.
-	const bool bTripLooped = LatestTelemetrySample.SampleTimeS < PreviousTelemetrySample.SampleTimeS;
-	const double SinceLatestSampleS = GetWorld()->GetTimeSeconds() - LatestSampleArrivalTimeS;
-	const float BlendAlpha = bTripLooped ? 1.f : static_cast<float>(FMath::Clamp(SinceLatestSampleS / SampleArrivalIntervalS, 0.0, 1.0));
+	// moves smoothly at any frame rate.
+	const float BlendAlpha = ComputeTelemetryBlendAlpha(PreviousTelemetrySample.SampleTimeS, LatestTelemetrySample.SampleTimeS,
+		GetWorld()->GetTimeSeconds() - LatestSampleArrivalTimeS, SampleArrivalIntervalS);
 
 	const float BlendedSpeedKmh = FMath::Lerp(PreviousTelemetrySample.SpeedKmh, LatestTelemetrySample.SpeedKmh, BlendAlpha);
 	UpdateWheels(BlendedSpeedKmh, FMath::Lerp(PreviousTelemetrySample.SteerDeg, LatestTelemetrySample.SteerDeg, BlendAlpha), DeltaSeconds);

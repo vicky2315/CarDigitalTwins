@@ -98,6 +98,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Vehicle Twin")
 	bool FindCalloutAnchorWorldLocation(FName CalloutAnchorTag, FVector& OutWorldLocation) const;
 
+	// How far to blend from the previous to the latest sample: 0 when the latest just arrived, 1 once the time it took to arrive has
+	// passed again. A trip loop (latest earlier than previous) snaps straight to the latest sample.
+	static float ComputeTelemetryBlendAlpha(double PreviousSampleTimeS, double LatestSampleTimeS, double SecondsSinceLatestArrival,
+		double SampleArrivalIntervalS);
+
 protected:
 	// Material Parameter Collection the studio floor reads (MPC_TwinStudio). The car stands still, so the floor grid scrolls backwards
 	// at the car's speed instead, to show it driving. Empty = no scrolling (e.g. in a level without the studio floor).
