@@ -31,6 +31,9 @@ class UTwinPartRingWidget : public UUserWidget
 public:
 	void ShowPartStatus(EVehicleStatus PartStatus);
 
+	// Called by UTwinCarCalloutLayerWidget for the copies it knows by name, overriding what the copy has in Details.
+	void SetRingTarget(ETwinPartRingSignal NewRingSignal, FName NewAnchorTag);
+
 	FName GetAnchorTag() const { return AnchorTag; }
 	ETwinPartRingSignal GetRingSignal() const { return RingSignal; }
 

@@ -17,6 +17,12 @@ void UTwinPartRingWidget::NativePreConstruct()
 	ShownStatus = EVehicleStatus::Normal;
 }
 
+void UTwinPartRingWidget::SetRingTarget(ETwinPartRingSignal NewRingSignal, FName NewAnchorTag)
+{
+	RingSignal = NewRingSignal;
+	AnchorTag = NewAnchorTag;
+}
+
 void UTwinPartRingWidget::ShowPartStatus(EVehicleStatus PartStatus)
 {
 	if (PartStatus == ShownStatus)

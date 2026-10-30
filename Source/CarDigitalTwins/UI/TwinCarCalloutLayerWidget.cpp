@@ -15,6 +15,37 @@ namespace CalloutLayerTiming
 	static constexpr float FadeSeconds = 0.35f;
 }
 
+namespace CalloutLayerRings
+{
+	struct FRingTarget
+	{
+		const TCHAR* WidgetName;
+		ETwinPartRingSignal RingSignal;
+		const TCHAR* AnchorTag;
+	};
+
+	// The ring copies of the build page (E10), set from here so nothing has to be set on each copy in the WBP.
+	static const FRingTarget RingTargets[] = {
+		{ TEXT("RingHood"), ETwinPartRingSignal::Engine, TEXT("CalloutAnchor.Engine") },
+		{ TEXT("RingTyreFL"), ETwinPartRingSignal::TyreFrontLeft, TEXT("Wheel.FL") },
+		{ TEXT("RingTyreFR"), ETwinPartRingSignal::TyreFrontRight, TEXT("Wheel.FR") },
+		{ TEXT("RingTyreRL"), ETwinPartRingSignal::TyreRearLeft, TEXT("Wheel.RL") },
+		{ TEXT("RingTyreRR"), ETwinPartRingSignal::TyreRearRight, TEXT("Wheel.RR") },
+	};
+
+	static const FRingTarget* FindRingTarget(const UWidget& RingWidget)
+	{
+		for (const FRingTarget& RingTarget : RingTargets)
+		{
+			if (RingWidget.GetFName() == FName(RingTarget.WidgetName))
+			{
+				return &RingTarget;
+			}
+		}
+		return nullptr;
+	}
+}
+
 void UTwinCarCalloutLayerWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -39,6 +70,10 @@ void UTwinCarCalloutLayerWidget::NativeConstruct()
 		else if (UTwinPartRingWidget* PartRing = Cast<UTwinPartRingWidget>(CanvasChild))
 		{
 			PartRings.Add(PartRing);
+			if (const CalloutLayerRings::FRingTarget* RingTarget = CalloutLayerRings::FindRingTarget(*PartRing))
+			{
+				PartRing->SetRingTarget(RingTarget->RingSignal, FName(RingTarget->AnchorTag));
+			}
 			ChildSlot->SetAlignment(FVector2D(0.5f, 0.5f));
 			ChildSlot->SetAutoSize(true);
 			UE_LOG(LogTwinCallouts, Log, TEXT("Part ring %s: signal %s, anchor %s."), *PartRing->GetName(),
