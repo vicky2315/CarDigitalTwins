@@ -2,6 +2,40 @@
 
 Newest first. Live checkpoint is in [PROGRESS.md](PROGRESS.md).
 
+## Checkpoint (2026-10-23, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+
+Commit: the audit-pass commit after `2a95971` on `main`, pushed. Working tree: local-only `DefaultGame.ini` (`TelemetrySource=WebSocket`) and
+`DefaultEngine.ini` (`EditorStartupMap=L_VehicleTwin`) kept out of commits; untracked `Content/Maps/ImportTestMap`, `L_VehicleTwin`.
+
+**Where I stopped:** part rings now sit on the car (hood, RR wheel) and pulse: Ring Signal / Anchor Tag set on the five copies. They drew
+as squares (`RingImage` had no brush); `WBP_PartRing` is edited and committed, not re-checked. Callouts of other views left an empty
+frame (rounded-box outline ignores Render Opacity): they now collapse once faded. Code review set up (`.claude/agents/code-reviewer.md`,
+`.claude/docs/review-checklist.md`, `.claude/rules/engineering-standards.md`) and a full audit run; first C++ pass from it done, not built:
+auto-derate sent after the sample broadcast (banner shows "Engine derate requested automatically"), WebSocket `CloseSocket` retires queued
+events (no double failure count, no stuck Stale), part ring `ShownStatus` reset on rebuild, `Deinitialize` clears command delegate + pending.
+
+**Resume:**
+1. Build, then PIE with relay `--source live --loop --rate 20`: at coolant Critical the banner reads "Engine derate requested automatically",
+   "Command N derate on sent (auto)" sits right above "Coolant Critical" with the same time; rings are round. Stop the relay mid-run:
+   Disconnected, retry 1, 2, 3 (+1 each, ~0.5 → 1 → 2 s), back to LIVE when it restarts. Headless `CarDigitalTwins`: 20 pass.
+2. Audit follow-ups, in order: editor scripts check every save + MANUAL lines (Must-fix); relay `UnicodeDecodeError`, `relay_client`
+   Ctrl+C summary; U9 own setup + `wss://`, trip generator test not importing `conftest`; stale TESTS/PROGRESS/BUGS/README lines.
+3. Refactor step (b): cache anchor components in `AVehicleTwinActor`; widgets gate refreshes on the field mask (top bar, banner, overview,
+   HUD, callout values); `ConnectionViewModel` display name not per frame; callout outline fades with opacity (pops for 0.35 s now).
+4. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 MPC on `BP_VehicleTwin`, F2 PIE against the relay, F3 cameras + lights.
+5. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
+
+**Unverified:** the four audit fixes and the callout collapse (not built); `WBP_PartRing` brush; camera blends; `UViewModelSubsystem` tick in
+PIE. Older, check whether still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning; SPEC §1 25 `Paint` meshes
+vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline at PIE start; Day 10 "can't connect: no details" wording.
+
+**Open decisions:** SPEC follows the build (four ViewModels, event log text, §8) rather than being fixed now; idle (dim) ring when all
+Normal; showroom mode (after H1); GrabCAD license / mesh redistribution (ASSETS.md); private asset repo for `Content/Jeep/`; Day 8
+LinkedIn clip; BUG-002 parked. Pending: T1 content in the Field Guide; unused font faces in `/Game/Art/UI/Fonts/`; build page path fixes.
+
+**Not in git (local only, personal laptop):** `Content/Jeep/` (incl. `BP_VehicleTwin` with callout anchors), `Content/Maps/` levels except
+`L_TwinStudio`, raw CAD in `RawCAD/`. The office laptop has no car: rings and callouts can only be checked here.
+
 ## Checkpoint (2026-10-23, office laptop `DESKTOP-MRMGNPL`, RTX 4060 Ti)
 
 Commits: `43338c3` (marquee text), `93af806` (part ring fixes), `0dcfa78` (view tab pip) on `main`, plus this checkpoint commit, all pushed.

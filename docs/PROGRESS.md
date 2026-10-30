@@ -1,22 +1,22 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-30
-Current day: **Wrap-up** (decided 2026-10-30): finish the seven items below and ship. Day 11 dashboard: MVVM steps 1–8 done, build
-page A–E done, part rings on the car (2026-10-23, personal laptop), F (hook up, play on the car) waits for the personal laptop (from
-2026-11-04). Day 13 Pixel Streaming started 2026-10-28. Days 1–10 complete.
+Current day: **Wrap-up** (decided 2026-10-30). Items 1 and 3–6 done and pushed 2026-10-30; item 7 dropped. Left, all on the personal
+laptop (from 2026-11-04): item 2 (build page F, the dashboard on the car), then the demo recording and the README GIF. Days 1–10
+complete; Day 11 build page A–E done; Day 13 Pixel Streaming runs locally.
 
 **Wrap-up (decided 2026-10-30): ship as-is.** The project is a **vehicle telemetry twin with a remote-operations dashboard**. Omniverse /
 OpenUSD is a separate future project. Everything not in the list below is under "Follow-ons (not built)" at the end of this file.
 
 | # | Item | Done when |
 |---|------|-----------|
-| 1 | Commit all open work | V1–V10 tests, ring-target fix, blend-alpha refactor, `Tools/PixelStreaming/` on `main`; doc fixes |
+| 1 | Commit all open work (done 2026-10-30) | V1–V10 tests, ring-target fix, blend-alpha refactor, `Tools/PixelStreaming/` on `main`; doc fixes |
 | 2 | Build page F (personal laptop, from 2026-11-04) | Dashboard runs in PIE against `relay.py --source live`; part rings and callouts correct on the car; four cameras framed; lights retuned |
 | 3 | Status evaluator tests (done 2026-10-30: S1–S11 pass) | SPEC §3 thresholds, enter/clear hysteresis and worst-of covered by UE automation tests, all passing |
 | 4 | Measured numbers (2026-10-30: PERFORMANCE.md; car figures from Day 3, re-measure with the dashboard in item 2) | Frame time, end-to-end latency (generator → dashboard), triangles / draw calls, test count in a short PERFORMANCE.md, measured figures only |
 | 5 | Demo video, 60–90 s (script done 2026-10-30: DEMO_SCRIPT.md; recording after item 2) | Overheating Warning → Critical; connection drop and recovery; derate command round trip visible on the dashboard |
 | 6 | README (done 2026-10-30 except the GIF, which comes from the recording after item 2) | GIF, one-line description, architecture diagram, 3–4 measured figures, how to run; Decisions, tests, credits, known issues; no TODOs |
-| 7 | Asset safety | `Content/Jeep/`, `BP_VehicleTwin` and the levels in the private asset repo; procedure in ASSETS.md |
+| 7 | ~~Asset safety~~ (dropped 2026-10-30: no private asset repo; `Content/Jeep/` stays local on the personal laptop) | ~~`Content/Jeep/`, `BP_VehicleTwin` and the levels in the private asset repo~~ |
 
 Unverified items to check in item 2 or list as known issues in the README: `UViewModelSubsystem` engine tick in PIE; camera blends;
 studio lighting; `CarRoot` facing warning; doubled outline at PIE start; BUG-002 (open, parked).
@@ -24,39 +24,38 @@ studio lighting; `CarRoot` facing warning; doubled outline at PIE start; BUG-002
 **Earlier direction (2026-10-07, option 3, superseded by the wrap-up):** one backend, two front ends: the remote ops view first, then an
 in-car HMI view (Phase H) on the same core. Phase H is now a follow-on.
 
-## Checkpoint (2026-10-23, personal laptop, RTX 3070 Ti Laptop, host `VigneshSuresh`)
+## Checkpoint (2026-10-30, office laptop `DESKTOP-MRMGNPL`, RTX 4060 Ti)
 
-Commit: the audit-pass commit after `2a95971` on `main`, pushed. Working tree: local-only `DefaultGame.ini` (`TelemetrySource=WebSocket`) and
-`DefaultEngine.ini` (`EditorStartupMap=L_VehicleTwin`) kept out of commits; untracked `Content/Maps/ImportTestMap`, `L_VehicleTwin`.
+Commits `231fed4` … `01b5353` on `main`, plus this checkpoint commit, all pushed. Working tree: local `DefaultGame.ini`
+(`TelemetrySource=WebSocket`; committed default stays File) kept out of commits; `docs/review/` (progress review PDF) untracked.
 
-**Where I stopped:** part rings now sit on the car (hood, RR wheel) and pulse: Ring Signal / Anchor Tag set on the five copies. They drew
-as squares (`RingImage` had no brush); `WBP_PartRing` is edited and committed, not re-checked. Callouts of other views left an empty
-frame (rounded-box outline ignores Render Opacity): they now collapse once faded. Code review set up (`.claude/agents/code-reviewer.md`,
-`.claude/docs/review-checklist.md`, `.claude/rules/engineering-standards.md`) and a full audit run; first C++ pass from it done, not built:
-auto-derate sent after the sample broadcast (banner shows "Engine derate requested automatically"), WebSocket `CloseSocket` retires queued
-events (no double failure count, no stuck Stale), part ring `ShownStatus` reset on rebuild, `Deinitialize` clears command delegate + pending.
+**Done today:** wrap-up plan written into this file (seven items, follow-ons). Item 1: blend-alpha refactor, V1–V10, part-ring signal
+and anchor set from C++, Pixel Streaming notes, doc fixes, startup map `L_TwinStudio`. Item 3: status evaluator tests S1–S11. Audit
+fixes: editor scripts check every save and print MANUAL lines; relay ignores a non-UTF-8 binary frame (R11). Item 4: PERFORMANCE.md
+(5.0 ms median frame without the car, 2.9 ms latency, 101 tests: 41 UE + 60 Python, all pass). Item 5: DEMO_SCRIPT.md. Item 6: README
+rewritten, no TODOs left in README or docs. Item 7 dropped (no private asset repo).
 
-**Resume:**
-1. Build, then PIE with relay `--source live --loop --rate 20`: at coolant Critical the banner reads "Engine derate requested automatically",
-   "Command N derate on sent (auto)" sits right above "Coolant Critical" with the same time; rings are round. Stop the relay mid-run:
-   Disconnected, retry 1, 2, 3 (+1 each, ~0.5 → 1 → 2 s), back to LIVE when it restarts. Headless `CarDigitalTwins`: 20 pass.
-2. Audit follow-ups, in order: editor scripts check every save + MANUAL lines (Must-fix); relay `UnicodeDecodeError`, `relay_client`
-   Ctrl+C summary; U9 own setup + `wss://`, trip generator test not importing `conftest`; stale TESTS/PROGRESS/BUGS/README lines.
-3. Refactor step (b): cache anchor components in `AVehicleTwinActor`; widgets gate refreshes on the field mask (top bar, banner, overview,
-   HUD, callout values); `ConnectionViewModel` display name not per frame; callout outline fades with opacity (pops for 0.35 s now).
-4. Build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 MPC on `BP_VehicleTwin`, F2 PIE against the relay, F3 cameras + lights.
-5. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
+**Resume (personal laptop, from 2026-11-04):**
+1. `git stash` the local `DefaultEngine.ini` (`EditorStartupMap=L_VehicleTwin`) and `DefaultGame.ini`, pull, then `git stash pop` and
+   keep only `TelemetrySource=WebSocket` (the committed startup map is now `L_TwinStudio`). Build; headless `CarDigitalTwins`: 41 pass.
+2. Item 2, build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 MPC on `BP_VehicleTwin`, F2 PIE against
+   `relay.py --source live --loop --rate 20`, F3 frame the four cameras + retune the lights. Check on the car: rings round and on the
+   hood / RR wheel (`b980e77` sets their signal and anchor from C++), callouts placed, Critical banner reads "Engine derate requested
+   automatically", Disconnected → retry → Live when the relay restarts.
+3. Re-measure frame time with the car (PERFORMANCE.md "How these were measured"; no `-csvGpuStats` on the command line).
+4. Record the demo (DEMO_SCRIPT.md, dry run first), cut the README GIF into `docs/media/`, link it in the README in place of the
+   GIF comment. `*.gif` is in Git LFS (`.gitattributes`): check that GitHub shows it in the README.
+5. Move each unverified item below that checks out from the README "Known issues" to done.
+6. Rule while switching laptops: `.uasset`/`.umap` can't merge; never edit the same asset on both before push + pull.
 
-**Unverified:** the four audit fixes and the callout collapse (not built); `WBP_PartRing` brush; camera blends; `UViewModelSubsystem` tick in
-PIE. Older, check whether still open: UMG float font sizes, BackgroundBlur Corner Radius, Custom node LWC warning; SPEC §1 25 `Paint` meshes
-vs 8 in the BP; Day 4 `CarRoot` facing warning; doubled outline at PIE start; Day 10 "can't connect: no details" wording.
+**Unverified (README "Known issues"):** `UViewModelSubsystem` engine tick in PIE; camera blends; studio lighting; `CarRoot` facing
+warning; doubled outline at PIE start; BUG-002 (open, parked). Also not yet seen on the car: `WBP_PartRing` brush, callout collapse.
 
-**Open decisions:** SPEC follows the build (four ViewModels, event log text, §8) rather than being fixed now; idle (dim) ring when all
-Normal; showroom mode (after H1); GrabCAD license / mesh redistribution (ASSETS.md); private asset repo for `Content/Jeep/`; Day 8
-LinkedIn clip; BUG-002 parked. Pending: T1 content in the Field Guide; unused font faces in `/Game/Art/UI/Fonts/`; build page path fixes.
+**Not in the wrap-up (audit follow-ups, left as they are):** `relay_client` Ctrl+C summary; U9 own setup + `wss://`; trip generator test
+not importing `conftest`; refactor step (b) (cached anchors, widget refreshes gated on the field mask, callout outline fade).
 
 **Not in git (local only, personal laptop):** `Content/Jeep/` (incl. `BP_VehicleTwin` with callout anchors), `Content/Maps/` levels except
-`L_TwinStudio`, raw CAD in `RawCAD/`. The office laptop has no car: rings and callouts can only be checked here.
+`L_TwinStudio`, raw CAD in `RawCAD/`. The office laptop has no car.
 
 ## Phase A: Single-car digital twin
 
@@ -284,9 +283,7 @@ own; leave room for the Showroom mode idea (Optional / later), which would add a
 - Free tools and assets only (GrabCAD / free marketplace, OBS, DaVinci Resolve, Mosquitto, SUMO, Cesium ion free tier, Omniverse).
 
 ## Pending setup
-- [ ] **Private asset repo for `Content/Jeep/`** (needs personal laptop, WIP door split lives there; **do next**: the Day 4 work was
-      already lost once and only survived in autosaves, 2026-10-03): see ASSETS.md
-      "Syncing work-in-progress assets between machines". Until done, Jeep asset work happens on the personal laptop only.
+- ~~Private asset repo for `Content/Jeep/`~~ (dropped 2026-10-30, wrap-up item 7). Jeep asset work happens on the personal laptop only.
 
 ## Follow-ons (not built)
 Out of scope for this project (wrap-up decision, 2026-10-30). Listed so the ideas aren't lost; none of them is planned here.
