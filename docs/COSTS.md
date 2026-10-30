@@ -64,10 +64,10 @@ accounts (since July 2025) get $100–200 credits, but the Free plan restricts h
 so g4dn may need the Paid plan, where use beyond the credits goes to the card; snapshots / AMIs kept for later are billed per GB-month;
 a USD-billed account can add a bank forex markup (~3.5% + GST on it).
 
-**Decision unchanged (2026-10-08): $0.** The portfolio uses the demo video and live screen-share; Day 14 stays a design.
+**Decision unchanged (2026-10-08): $0.** The portfolio uses the demo video and live screen-share; the deployment stays a design (below).
 
-## Day 14: deployment design (not deployed)
-_TODO (Day 14):_
+## Deployment design (not built)
+Notes for a cloud deployment, kept as a follow-on (wrap-up, 2026-10-30); none of it is built or tested:
 - VM: g4dn.xlarge Windows, ap-south-1, 100 GB gp3
 - Ports / security group: signalling (HTTP/WS), WebRTC UDP range, TURN
 - TURN: coturn on the same VM; when it is needed (strict NAT, mobile data)
