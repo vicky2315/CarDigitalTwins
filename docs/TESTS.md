@@ -102,7 +102,10 @@ the car in its own empty game world; with no game mode, play is started through 
 | R10 | End to end command | Live relay at 500 msg/s, client sends derate at once: exactly one ack (`commandId` 1, `applied`), first `EngineDerate` frame seq = `appliedAtSeq` |
 | R11 | Binary frame | A binary frame that isn't UTF-8 (`b""`) is ignored, not a `UnicodeDecodeError` that drops the client; a derate sent next on the same connection is still answered |
 
-## 5. WebSocket receiver (Unreal C++): planned, Day 10
+## 5. WebSocket receiver (Unreal C++): not written (follow-on, 2026-10-30)
+
+Not automated. The receiver was checked by hand in PIE against the relay (W5, PROGRESS Day 10), and the relay tests (§4) cover the
+protocol from the other side: envelope, gaps, drops, pause, commands and acks. W1–W4 below are the tests it would get.
 
 | # | Test | Checks |
 |---|------|--------|

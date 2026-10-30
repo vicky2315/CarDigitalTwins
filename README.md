@@ -81,6 +81,14 @@ Not yet checked with the car (it is on one machine only): the `UViewModelSubsyst
 studio lighting, the `CarRoot` facing warning and a doubled outline at PIE start. [BUG-002](docs/BUGS.md): the status outline doesn't
 show on `BP_VehicleTwin_Rebuilt` (open, parked).
 
+UE 5.7.4: `-csvGpuStats` on the command line crashes the game at start (`IsRayTracingAllowed() may only be called once RHI is
+initialized`). Start GPU stats after start-up instead: `-ExecCmds="r.GPUCsvStatsEnabled 1,csvprofile frames=N"`
+([PERFORMANCE.md](docs/PERFORMANCE.md)).
+
+Left as they are: `relay_client.py` prints no summary on Ctrl+C; the WebSocket receiver has no automated tests (W1–W4, see
+[TESTS.md](docs/TESTS.md) §5); test U9 bundles several helper checks and fails on a configured `wss://` relay URL, which the
+receiver accepts; the trip generator tests find `trip_generator` only through the `sys.path` entry their `conftest.py` adds.
+
 ## Follow-ons (not built)
 
 An in-car HMI view on the same core; MQTT receiver; VSS signal mapping; a cloud deployment; a real-data clip; a fleet of cars. An
@@ -92,6 +100,8 @@ OpenUSD / Omniverse version is a separate project.
 from the GrabCAD Community Library. Used for non-commercial purposes under the GrabCAD Community terms, with credit to the author.
 
 The CAD files and the Unreal meshes converted from them are **not included** in this repository. To run with the car, download the
-model from the link above and follow the import steps in [ASSETS.md](docs/ASSETS.md).
+model from the link above and follow the import steps in [ASSETS.md](docs/ASSETS.md). In short: the STEP assembly is imported with
+Datasmith (tessellation settings in [SPEC.md](docs/SPEC.md) §7), and the parts get the component tags from SPEC §1; the code finds
+wheels, tyres and callout anchors by those tags, so any car CAD tagged the same way works.
 
 This is a non-commercial portfolio project and is not affiliated with or endorsed by Jeep or Stellantis.

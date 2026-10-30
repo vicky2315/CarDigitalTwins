@@ -1,8 +1,8 @@
 # Progress: Vehicle Digital Twin (Roadmap v2)
 
 Last updated: 2026-10-30
-Current day: **Wrap-up** (decided 2026-10-30). Items 1 and 3–6 done and pushed 2026-10-30; item 7 dropped. Left, all on the personal
-laptop (from 2026-11-04): item 2 (build page F, the dashboard on the car), then the demo recording and the README GIF. Days 1–10
+Current day: **Wrap-up** (decided 2026-10-30). Items 1 and 3–6 done and pushed 2026-10-30; item 7 changed to a zip backup. Left, all on the personal
+laptop (from 2026-11-04): the backup, item 2 (build page F, the dashboard on the car), then the demo recording and the README GIF. Days 1–10
 complete; Day 11 build page A–E done; Day 13 Pixel Streaming runs locally.
 
 **Wrap-up (decided 2026-10-30): ship as-is.** The project is a **vehicle telemetry twin with a remote-operations dashboard**. Omniverse /
@@ -16,7 +16,7 @@ OpenUSD is a separate future project. Everything not in the list below is under 
 | 4 | Measured numbers (2026-10-30: PERFORMANCE.md; car figures from Day 3, re-measure with the dashboard in item 2) | Frame time, end-to-end latency (generator → dashboard), triangles / draw calls, test count in a short PERFORMANCE.md, measured figures only |
 | 5 | Demo video, 60–90 s (script done 2026-10-30: DEMO_SCRIPT.md; recording after item 2) | Overheating Warning → Critical; connection drop and recovery; derate command round trip visible on the dashboard |
 | 6 | README (done 2026-10-30 except the GIF, which comes from the recording after item 2) | GIF, one-line description, architecture diagram, 3–4 measured figures, how to run; Decisions, tests, credits, known issues; no TODOs |
-| 7 | ~~Asset safety~~ (dropped 2026-10-30: no private asset repo; `Content/Jeep/` stays local on the personal laptop) | ~~`Content/Jeep/`, `BP_VehicleTwin` and the levels in the private asset repo~~ |
+| 7 | Asset safety (changed 2026-10-30: no private asset repo, a dated zip backup instead; personal laptop, 2026-11-04, before anything else) | Dated zip of `Content/Jeep/` (incl. `BP_VehicleTwin`) and the car levels on an external drive or cloud storage; refreshed after item 2 |
 
 Unverified items to check in item 2 or list as known issues in the README: `UViewModelSubsystem` engine tick in PIE; camera blends;
 studio lighting; `CarRoot` facing warning; doubled outline at PIE start; BUG-002 (open, parked).
@@ -33,9 +33,11 @@ Commits `231fed4` … `01b5353` on `main`, plus this checkpoint commit, all push
 and anchor set from C++, Pixel Streaming notes, doc fixes, startup map `L_TwinStudio`. Item 3: status evaluator tests S1–S11. Audit
 fixes: editor scripts check every save and print MANUAL lines; relay ignores a non-UTF-8 binary frame (R11). Item 4: PERFORMANCE.md
 (5.0 ms median frame without the car, 2.9 ms latency, 101 tests: 41 UE + 60 Python, all pass). Item 5: DEMO_SCRIPT.md. Item 6: README
-rewritten, no TODOs left in README or docs. Item 7 dropped (no private asset repo).
+rewritten, no TODOs left in README or docs. Item 7: no private asset repo; after the outside review, a dated zip backup on 2026-11-04 instead.
 
 **Resume (personal laptop, from 2026-11-04):**
+0. **Back up the car first:** zip `Content/Jeep/` (incl. `BP_VehicleTwin`) and `Content/Maps/L_VehicleTwin*`, `ImportTestMap*` into
+   `CarDigitalTwins-Jeep-2026-11-04.zip` on an external drive or cloud storage (editor closed). Refresh it after item 2 (wrap-up item 7).
 1. `git stash` the local `DefaultEngine.ini` (`EditorStartupMap=L_VehicleTwin`) and `DefaultGame.ini`, pull, then `git stash pop` and
    keep only `TelemetrySource=WebSocket` (the committed startup map is now `L_TwinStudio`). Build; headless `CarDigitalTwins`: 41 pass.
 2. Item 2, build page F (https://claude.ai/artifact/AtxBFvjTzngZuMV9Z5k87u): F1 MPC on `BP_VehicleTwin`, F2 PIE against
@@ -211,8 +213,9 @@ office laptop). We now rebuild it on `main` one step at a time, with an explanat
 
 ### Day 15: Polish and demo video (wrap-up item 5)
 - [ ] Camera presets, lighting, scripted demo run, video + GIF
-- [x] Demo video script, 60–90 s: [DEMO_SCRIPT.md](DEMO_SCRIPT.md) (2026-10-30): link drop and recovery → overheating Warning →
-      Critical → auto derate round trip (ack, `driveMode` EngineDerate, rpm and speed capped) → back to Warning
+- [x] Demo video script, 60–90 s: [DEMO_SCRIPT.md](DEMO_SCRIPT.md) (2026-10-30, reordered after the review): overheating Warning →
+      Critical → auto derate round trip (ack, `driveMode` EngineDerate, rpm and speed capped) → back to Warning → link drop and
+      recovery; all at 1×, jump cuts instead of 2×
 - [ ] Record and edit it (personal laptop, after item 2)
 
 ### Day 16: Documentation and portfolio (wrap-up item 6)

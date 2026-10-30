@@ -55,6 +55,11 @@ _Open decision:_ keep them out of the public repo (rebuild from the steps above)
 - Permission request to the author via GrabCAD: _not sent yet_. When answered, record date and wording here. Yes → commit meshes to the
   main repo; no / no reply → private asset repo (below).
 
+## Backup (decided 2026-10-30)
+No private asset repo. Instead a dated zip of `Content/Jeep/` (incl. `BP_VehicleTwin`) and the car levels
+(`Content/Maps/L_VehicleTwin`, `ImportTestMap`), editor closed, kept on an external drive or cloud storage. Made first on 2026-11-04,
+refreshed after build page F and after any other car edit worth keeping. Cloud storage is private storage, not redistribution.
+
 ## Syncing work-in-progress assets between machines (suggestion, 2026-09-28; not doing, decided 2026-10-30)
 **Problem:** `Content/Jeep/` is gitignored, so edited meshes (door split, pivots) exist only on the machine that made them.
 A level pulled onto the other machine opens with empty actors, and re-saving it there can clear the missing references.
