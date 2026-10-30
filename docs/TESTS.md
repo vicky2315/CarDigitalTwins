@@ -14,7 +14,7 @@ or `python -m pytest Tools -v` for all Python tests. R6 opens a local WebSocket 
 Runs in a few seconds and doesn't need Unreal. A test marked `xfail` flags an open bug from BUGS.md: it is expected to fail, and
 it turns into an error (`XPASS(strict)`) once the bug is fixed, as a reminder to remove the marker.
 
-**Unreal (C++ automation):** _planned, see sections 2–3 below._ Headless:
+**Unreal (C++ automation):** sections 2, 3, 7 and 8 below (41 tests, all pass 2026-10-30). Headless:
 `UnrealEditor-Cmd.exe CarDigitalTwins.uproject -ExecCmds="Automation RunTests CarDigitalTwins; Quit" -nullrhi -unattended -log`
 `"-ini:EditorPerProjectUserSettings:[/Script/UnrealEd.EditorLoadingSavingSettings]:RestoreOpenAssetTabsOnRestart=NeverRestore"`.
 The `-ini` override matters: without it the editor reopens the asset editors left open last session, and under `-nullrhi` that
@@ -136,7 +136,28 @@ M10–M11: `Source/CarDigitalTwins/Tests/ViewModelSubsystemTests.cpp` (`CarDigit
 bare `UGameInstance` (no world, no telemetry source) and the test calls `Tick` in place of the engine tick; the engine registration
 itself is checked in PIE.
 
+## 8. Status evaluator (Unreal C++, `CarDigitalTwins.Telemetry.StatusEvaluator`): written 2026-10-30
+
+**Run 2026-10-30 (office laptop, headless): S1–S11 all pass.** `Source/CarDigitalTwins/Tests/VehicleStatusEvaluatorTests.cpp`, on
+`FVehicleStatusEvaluator` directly (plain C++, no world or assets). Each threshold is walked up through Warning and Critical and back
+down through both clear values, one step either side of every value in SPEC §3, so a `≥` written as `>` (or the reverse) fails at that
+step. Each walk also checks that the overall status equals the row under test while every other signal stays healthy. S11 reads the
+committed `Data/Trips/trip_sample.json`.
+
+| # | Test | Checks |
+|---|------|--------|
+| S1 | Healthy | Running car with every signal in range: all rows and overall Normal |
+| S2 | Coolant | 104.9 N, 105 W, 114.9 W, 115 C, 112 C, 111.9 W, 102 W, 101.9 N |
+| S3 | Tyre low (lowest wheel) | 180 N, 179.9 W, 140 W, 139.9 C, 144.9 C, 145 W, 184.9 W, 185 N (only RR changed) |
+| S4 | Tyre high (highest wheel) | 300 N, 300.1 W, 400 W (no Critical side), 295.1 W, 295 N |
+| S5 | Fuel | 15 N, 14.9 W, 5 W, 4.9 C, 6.9 C, 7 W, 16.9 W, 17 N |
+| S6 | Battery, engine running | Low: 13.0 N, 12.9 W, 12.0 W, 11.9 C, 12.1 C, 12.2 W, 13.1 W, 13.2 N. High: 14.8 N, 14.9 W, 15.5 W, 15.6 C, 15.4 C, 15.3 W, 14.7 W, 14.6 N |
+| S7 | Engine rpm | 5500 N, 5500.1 W, 6200 W, 6200.1 C, 6000 C, 5999.9 W, 5300 W, 5299.9 N |
+| S8 | Hysteresis | 103 °C is Normal on the way up, Warning on the way down; 113 °C Warning up, Critical down; 90 → 120 → 90 jumps N → C → N |
+| S9 | Memory | `ResetStatusMemory` forgets a Warning (103 °C then Normal); engine off ignores 11 V and clears the battery memory (13.1 V Normal after restart) |
+| S10 | Worst of | Coolant Warning + fuel Critical → overall Critical, rows keep their own status; two Warnings → Warning; one tyre high + one low → tyre row Critical; `WorseStatus` order |
+| S11 | Sample trip | Coolant Warning 88–94 s, Critical 116–122 s; RR tyre Warning 145–151 s, never Critical; fuel, battery and rpm Normal all trip (same windows as P6) |
+
 ## 6. Later (with the roadmap)
 - Day 7 `UTelemetrySubsystem`: receiver chosen from settings, one `OnTelemetryUpdated` per sample.
-- Day 8 status thresholds (SPEC §3): table-driven edges, hysteresis, battery ignored with engine off.
 - Day 8 end-to-end: sample trip at ×50 turns the car amber, then red.

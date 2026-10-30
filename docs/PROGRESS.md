@@ -12,7 +12,7 @@ OpenUSD is a separate future project. Everything not in the list below is under 
 |---|------|-----------|
 | 1 | Commit all open work | V1–V10 tests, ring-target fix, blend-alpha refactor, `Tools/PixelStreaming/` on `main`; doc fixes |
 | 2 | Build page F (personal laptop, from 2026-11-04) | Dashboard runs in PIE against `relay.py --source live`; part rings and callouts correct on the car; four cameras framed; lights retuned |
-| 3 | Status evaluator tests | SPEC §3 thresholds, enter/clear hysteresis and worst-of covered by UE automation tests, all passing |
+| 3 | Status evaluator tests (done 2026-10-30: S1–S11 pass) | SPEC §3 thresholds, enter/clear hysteresis and worst-of covered by UE automation tests, all passing |
 | 4 | Measured numbers | Frame time, end-to-end latency (generator → dashboard), triangles / draw calls, test count in a short PERFORMANCE.md, measured figures only |
 | 5 | Demo video, 60–90 s | Overheating Warning → Critical; connection drop and recovery; derate command round trip visible on the dashboard |
 | 6 | README | GIF, one-line description, architecture diagram, 3–4 measured figures, how to run; Decisions, tests, credits, known issues; no TODOs |
@@ -244,7 +244,7 @@ Written in a separate session alongside the feature days. Plan and how to run: [
 - [x] 1. Trip generator pytest suite, P1–P8 (`Tools/TripGenerator/tests/`); found BUG-001 (`--rate` 3/7 fail validation, fixed 2026-10-07)
 - [x] 2. Telemetry automation tests U1–U9: all pass (2026-10-23, office laptop, headless; TESTS.md §2)
 - [x] 3. `AVehicleTwinActor` automation tests V1–V10 (stand-in actor, no Jeep assets): all pass (2026-10-23, office laptop; TESTS.md §3)
-- [ ] 4. Roadmap tests as days land: relay R1–R10 done, MVVM M1–M11 done; status evaluator thresholds = wrap-up item 3
+- [x] 4. Roadmap tests as days land: relay R1–R10, MVVM M1–M11, status evaluator S1–S11 (2026-10-30, wrap-up item 3; TESTS.md §8)
 
 ## UI design (parallel track, added 2026-10-07; superseded)
 Done in practice as the dashboard mock and build page (Day 11, step 9); SPEC.md §8 describes the dashboard as built. The steps below
