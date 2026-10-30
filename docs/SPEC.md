@@ -12,7 +12,7 @@ parts by **component tag**, never by name or asset path. Mesh names are CAD feat
 | `WheelHub_RL` / `_RR` | `Wheel.RL` / `Wheel.RR` | `speedKmh` | Spin only | `/Vehicle/Wheels/RL`, `/RR` |
 | `Rim_XX`, `Tyre_XX` (`Combine3` / `Combine4`, child actors from Harvest) | `Tyre` on the tyre | | Follow their hub | `/Vehicle/Wheels/XX/Rim`, `/Tyre` |
 | `Rim_Spare`, `Tyre_Spare` | | | Static (tailgate spare, never spins) | `/Vehicle/Body/SpareWheel` |
-| Red body panels (25 meshes, `MI_CarPaint`) | `Paint` | derived status (§3) | Status colour, blend scale 1 | `/Vehicle/Body/Paint` |
+| Red body panels (8 components, `MI_CarPaint`) | `Paint` | derived status (§3) | Status colour, blend scale 1 | `/Vehicle/Body/Paint` |
 | Black parts: bumpers, flares, grille, handles etc. (`MI_CarPaintBlack`) | `Trim` | derived status (§3) | Status colour, blend scale 1 | `/Vehicle/Body/Trim` |
 | Doors, hood, tailgate (inside the body mesh) | | `openings` | Dashboard only; animation optional later | `/Vehicle/Body/Door_FL` … |
 
@@ -24,6 +24,11 @@ wheel meshes are left as imported.
 **Child actors:** Harvest Components wrapped every imported mesh actor in a `ChildActorComponent`. Tags sit on that component; the code
 follows it to the child actor's mesh. Body and trim components keep Harvest's default names (`StaticMeshActor_N`), so the tags, not the
 names, define the groups. Mirrors, headlights and the inner grille have no paint group yet (cosmetic materials: Day 15).
+
+**Paint group sizes:** `BP_VehicleTwin` has 8 components tagged `Paint` and 22 tagged `Trim` (plus 4 `Tyre` and one each
+`Wheel.*`), counted from `Tools/UnrealEditor/vehicle_twin_recipe.json`, which `export_vehicle_twin_recipe.py` wrote from the Blueprint
+on 2026-10-08. An earlier note said 25 `Paint` meshes; that was never a tag count, and the export is the reference. Status in play is
+the outline (below), which covers every mesh regardless of tags, so the paint group size only matters for `SetStatusColor`.
 
 **Status colour (paint groups):** `PaintGroups` on `AVehicleTwinActor` lists the tags that take the status colour, each with a blend
 scale (default `Paint` 1, `Trim` 1). `SetStatusColor(Color, Blend)` sets `StatusColor` and `StatusBlend × scale` on every material slot
@@ -268,6 +273,20 @@ for a measured comparison on Day 12.
                                               └──────────────── commands (pause, speed, source) ◀─────────────┘
 ```
 Arrows into a box = that box subscribes to / is called by the arrow's source. The telemetry subsystem knows no UI class.
+
+## 8. Dashboard screens (as built, 2026-10-30)
+
+The remote-operations dashboard is `WBP_TwinOpsHUD` (`UTwinOpsHudWidget`) over the car in `L_TwinStudio`, run by `ATwinOpsGameMode`
+and `ATwinOpsPlayerController`; sizes are 1080p px as in the mock (https://claude.ai/artifact/TsApXH75XFbcd2muKzLx3m). A top bar
+shows vehicle, trip clock, a tell-tale naming the worst signal, the drive mode chip and the link chip (state, URL, latency). A rail on
+the left switches four views, Overview, Powertrain, Tyres and Body (tabs or keys 1–4); each view is a camera shot of the car blended in
+with `SetViewTargetWithBlend` plus a side panel, and `UDashboardViewModel::ActiveView` drives tabs, panel, callouts and camera so they
+can't disagree. Callouts and pulsing part rings sit on tagged anchors on the car; an Events list shows the five newest events; a
+Critical coolant banner flashes until acknowledged. The Powertrain panel sends the engine derate request and shows its outcome from
+telemetry, never from the request (§5). Until the first sample a "Waiting for the vehicle" card replaces the panels, and while the link
+is Stale or Disconnected they are dimmed because they show the last data received. Colours follow one rule: red and amber only mean
+Critical and Warning, cyan only means selected or pressable, and status is never colour alone (`UTwinHmiStyle`). Data comes from four
+ViewModels: telemetry, connection, event log and dashboard.
 
 ## 7. Rendering budget (decided 2026-09-26)
 

@@ -9,14 +9,14 @@ tried, the recommended one, and how to verify.
 
 | ID | Status | Area | Summary |
 |----|--------|------|---------|
-| BUG-001 | Fixed (2026-10-07, not committed yet) | Trip generator | `--rate` values that don't divide 1000 evenly fail validation |
+| BUG-001 | Fixed (2026-10-07, `e9abe2f`) | Trip generator | `--rate` values that don't divide 1000 evenly fail validation |
 | BUG-002 | Open (low priority) | Car rebuild tooling | Status outline doesn't show on `BP_VehicleTwin_Rebuilt` |
 
 ---
 
 ## BUG-001: `--rate` values that don't divide 1000 evenly fail validation
 
-**Status:** Fixed 2026-10-07 with option A (shared `SAMPLE_TIME_DECIMALS` + `SAMPLE_TIME_GRID_TOLERANCE_S`), not committed yet.
+**Status:** Fixed 2026-10-07 with option A (shared `SAMPLE_TIME_DECIMALS` + `SAMPLE_TIME_GRID_TOLERANCE_S`), committed in `e9abe2f`.
 Found 2026-10-07 by test P3. Verified: `xfail` removed, 39 passed, committed 10 Hz sample unchanged. The sections below describe the
 code before the fix.
 
